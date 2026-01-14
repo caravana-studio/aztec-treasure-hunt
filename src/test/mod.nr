@@ -1,3 +1,3 @@
 mod treasure_hunt;
-mod utils;
-mod helpers;
+pub mod utils;
+pub mod helpers;

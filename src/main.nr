@@ -20,6 +20,7 @@ mod treasure_note;
 mod trap_note;
 mod power_note;
 mod game;
+mod test;
 
 use dep::aztec::macros::aztec;
 
@@ -539,5 +540,75 @@ pub contract TreasureHunt {
             let updated = game.switch_turn();
             self.storage.games.at(game_id).write(updated);
         }
+    }
+
+    // ============ UTILITY FUNCTIONS (READ-ONLY) ============
+
+    /// Get the admin address
+    #[external("utility")]
+    unconstrained fn get_admin() -> pub AztecAddress {
+        self.storage.admin.read()
+    }
+
+    /// Get the complete game state
+    #[external("utility")]
+    unconstrained fn get_game(game_id: Field) -> pub Game {
+        self.storage.games.at(game_id).read()
+    }
+
+    /// Get player1 address for a game
+    #[external("utility")]
+    unconstrained fn get_player1(game_id: Field) -> pub AztecAddress {
+        self.storage.games.at(game_id).read().player1
+    }
+
+    /// Get player2 address for a game
+    #[external("utility")]
+    unconstrained fn get_player2(game_id: Field) -> pub AztecAddress {
+        self.storage.games.at(game_id).read().player2
+    }
+
+    /// Get game status
+    #[external("utility")]
+    unconstrained fn get_game_status(game_id: Field) -> pub u8 {
+        self.storage.games.at(game_id).read().status
+    }
+
+    /// Get current turn player
+    #[external("utility")]
+    unconstrained fn get_current_turn(game_id: Field) -> pub AztecAddress {
+        self.storage.games.at(game_id).read().current_turn
+    }
+
+    /// Get treasures found by player1
+    #[external("utility")]
+    unconstrained fn get_player1_treasures_found(game_id: Field) -> pub u8 {
+        self.storage.games.at(game_id).read().player1_found
+    }
+
+    /// Get treasures found by player2
+    #[external("utility")]
+    unconstrained fn get_player2_treasures_found(game_id: Field) -> pub u8 {
+        self.storage.games.at(game_id).read().player2_found
+    }
+
+    /// Get the winner of a finished game
+    #[external("utility")]
+    unconstrained fn get_winner(game_id: Field) -> pub AztecAddress {
+        self.storage.games.at(game_id).read().winner
+    }
+
+    /// Check if both players have completed setup
+    #[external("utility")]
+    unconstrained fn is_game_ready(game_id: Field) -> pub bool {
+        let game = self.storage.games.at(game_id).read();
+        game.player1_setup_done & game.player2_setup_done
+    }
+
+    /// Get pending action info
+    #[external("utility")]
+    unconstrained fn get_pending_action(game_id: Field) -> pub (u8, u8, u8) {
+        let game = self.storage.games.at(game_id).read();
+        (game.pending_action, game.pending_x, game.pending_y)
     }
 }
