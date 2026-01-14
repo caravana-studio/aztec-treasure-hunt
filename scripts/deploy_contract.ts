@@ -1,4 +1,4 @@
-import { PodRacingContract } from "../src/artifacts/PodRacing.js"
+import { TreasureHuntContract } from "../src/artifacts/TreasureHunt.js"
 import { Logger, createLogger } from "@aztec/aztec.js/log";
 import { SponsoredFeePaymentMethod } from "@aztec/aztec.js/fee/testing";
 import { setupWallet } from "../src/utils/setup_wallet.js";
@@ -10,7 +10,7 @@ import { getTimeouts } from "../config/config.js";
 async function main() {
     let logger: Logger;
 
-    logger = createLogger('aztec:aztec-starter');
+    logger = createLogger('aztec:treasure-hunt');
     logger.info(`🚀 Starting contract deployment process...`);
 
     const timeouts = getTimeouts();
@@ -36,20 +36,20 @@ async function main() {
     const address = accountManager.address;
     logger.info(`✅ Account deployed successfully at: ${address}`);
 
-    // Deploy pod racing contract
-    logger.info('🏎️  Starting pod racing contract deployment...');
-    logger.info(`📋 Admin address for pod racing contract: ${address}`);
+    // Deploy treasure hunt contract
+    logger.info('🏴‍☠️  Starting treasure hunt contract deployment...');
+    logger.info(`📋 Admin address for treasure hunt contract: ${address}`);
 
-    const deployMethod = PodRacingContract.deploy(wallet, address).send({
+    const deployMethod = TreasureHuntContract.deploy(wallet, address).send({
         from: address,
         fee: { paymentMethod: sponsoredPaymentMethod }
     });
 
     logger.info('⏳ Waiting for deployment transaction to be mined...');
-    const podRacingContract = await deployMethod.deployed({ timeout: timeouts.deployTimeout });
+    const treasureHuntContract = await deployMethod.deployed({ timeout: timeouts.deployTimeout });
 
-    logger.info(`🎉 Pod Racing Contract deployed successfully!`);
-    logger.info(`📍 Contract address: ${podRacingContract.address}`);
+    logger.info(`🎉 Treasure Hunt Contract deployed successfully!`);
+    logger.info(`📍 Contract address: ${treasureHuntContract.address}`);
     logger.info(`👤 Admin address: ${address}`);
 
     // Verify deployment
@@ -72,13 +72,13 @@ async function main() {
     }
     logger.info('🏁 Deployment process completed successfully!');
     logger.info(`📋 Summary:`);
-    logger.info(`   - Contract Address: ${podRacingContract.address}`);
+    logger.info(`   - Contract Address: ${treasureHuntContract.address}`);
     logger.info(`   - Admin Address: ${address}`);
     logger.info(`   - Sponsored FPC: ${sponsoredFPC.address}`);
 }
 
 main().catch((error) => {
-    const logger = createLogger('aztec:aztec-starter');
+    const logger = createLogger('aztec:treasure-hunt');
     logger.error(`❌ Deployment failed: ${error.message}`);
     logger.error(`📋 Error details: ${error.stack}`);
     process.exit(1);

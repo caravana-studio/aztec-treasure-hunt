@@ -1,4 +1,4 @@
-import { PodRacingContractArtifact, PodRacingContract } from "../../artifacts/PodRacing.js"
+import { TreasureHuntContractArtifact, TreasureHuntContract } from "../../artifacts/TreasureHunt.js"
 import { generateSchnorrAccounts } from "@aztec/accounts/testing"
 import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee/testing'
 import { createEthereumChain } from '@aztec/ethereum/chain';
@@ -113,19 +113,19 @@ describe("Accounts", () => {
         console.log(`Total claims created: ${claims.length}`);
 
         // arbitrary transactions to progress 2 blocks, and have fee juice on Aztec ready to claim
-        console.log('Deploying first PodRacingContract to progress blocks...');
-        await PodRacingContract.deploy(wallet, ownerAccount.address).send({
+        console.log('Deploying first TreasureHuntContract to progress blocks...');
+        await TreasureHuntContract.deploy(wallet, ownerAccount.address).send({
             from: ownerAccount.address,
             fee: { paymentMethod: sponsoredPaymentMethod }
         }).deployed({ timeout: getTimeouts().deployTimeout }); // deploy contract with first funded wallet
-        console.log('First PodRacingContract deployed');
+        console.log('First TreasureHuntContract deployed');
 
-        console.log('Deploying second PodRacingContract to progress blocks...');
-        await PodRacingContract.deploy(wallet, ownerAccount.address).send({
+        console.log('Deploying second TreasureHuntContract to progress blocks...');
+        await TreasureHuntContract.deploy(wallet, ownerAccount.address).send({
             from: ownerAccount.address,
             fee: { paymentMethod: sponsoredPaymentMethod }
         }).deployed({ timeout: getTimeouts().deployTimeout }); // deploy contract with first funded wallet
-        console.log('Second PodRacingContract deployed');
+        console.log('Second TreasureHuntContract deployed');
 
         // Now deploy random accounts using FeeJuicePaymentMethodWithClaim (which claims and pays in one tx)
         console.log('Starting account deployments with FeeJuicePaymentMethodWithClaim...');
@@ -155,7 +155,7 @@ describe("Accounts", () => {
         logger.info('Starting "Sponsored contract deployment" test');
         const salt = Fr.random();
         logger.info(`Using salt: ${salt.toString()}`);
-        const PodRacingArtifact = PodRacingContractArtifact
+        const TreasureHuntArtifact = TreasureHuntContractArtifact
 
         logger.info('Generating 2 Schnorr accounts...');
         const accounts = await Promise.all(
@@ -178,13 +178,13 @@ describe("Accounts", () => {
         logger.info(`Deployer address: ${deployerAddress.toString()}`);
         logger.info(`Admin address: ${adminAddress.toString()}`);
 
-        const deploymentData = await getContractInstanceFromInstantiationParams(PodRacingArtifact,
+        const deploymentData = await getContractInstanceFromInstantiationParams(TreasureHuntArtifact,
             {
                 constructorArgs: [adminAddress],
                 salt,
                 deployer: deployerAccount.getAddress()
             });
-        const deployer = new ContractDeployer(PodRacingArtifact, wallet);
+        const deployer = new ContractDeployer(TreasureHuntArtifact, wallet);
         const tx = deployer.deploy(adminAddress).send({
             from: deployerAddress,
             contractAddressSalt: salt,
