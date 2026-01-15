@@ -33,8 +33,8 @@ export function Lobby() {
   return (
     <div className="lobby-container">
       <div className="lobby-card">
-        <h1 className="lobby-title">Treasure Hunt</h1>
-        <p className="lobby-subtitle">A two-player game on Aztec Protocol</p>
+        <img src="/images/logo.png" alt="Treasure Hunt" className="lobby-title" />
+        <p className="lobby-subtitle">Strategic treasure hunting with truly private game state on Aztec Network</p>
 
         {error && (
           <div className="error-toast" onClick={() => setError(null)}>

@@ -418,19 +418,12 @@
   border-bottom: none;
 }
 
-/* Lobby styles - iOS 26 Liquid Glass */
 .lobby-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
+  background-image: url('/images/background.png');
   justify-content: center;
-  background: linear-gradient(
-    145deg,
-    #f5ebe0 0%,
-    #e8dcc8 30%,
-    #d4b896 70%,
-    #c9a882 100%
-  );
   padding: var(--space-xl);
   position: relative;
   overflow: hidden;
@@ -458,8 +451,9 @@
   padding: var(--space-xl) var(--space-lg);
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.85) 100%
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.2) 100%
   );
   border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -473,15 +467,11 @@
 }
 
 .lobby-title {
-  font-size: 34px;
-  font-weight: var(--font-weight-bold);
-  background: linear-gradient(135deg, var(--color-brown) 0%, #8b5a2b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-align: center;
-  margin-bottom: var(--space-sm);
-  letter-spacing: -0.5px;
+  display: block;
+  margin: 0 auto var(--space-sm) auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 .lobby-subtitle {
