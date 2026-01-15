@@ -5,7 +5,65 @@ import { setupWallet } from "../src/utils/setup_wallet.js";
 import { getSponsoredFPCInstance } from "../src/utils/sponsored_fpc.js";
 import { SponsoredFPCContract } from "@aztec/noir-contracts.js/SponsoredFPC";
 import { deploySchnorrAccount } from "../src/utils/deploy_account.js";
-import { getTimeouts } from "../config/config.js";
+import { getTimeouts, getAztecNodeUrl } from "../config/config.js";
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
+
+const CLIENT_DIR = path.resolve(process.cwd(), "../client");
+
+function copyArtifactsToClient(logger: Logger) {
+    logger.info('📦 Copying artifacts to client...');
+
+    const artifactsSource = path.resolve(process.cwd(), "src/artifacts");
+    const targetSource = path.resolve(process.cwd(), "target");
+    const artifactsDest = path.resolve(CLIENT_DIR, "src/artifacts");
+    const targetDest = path.resolve(CLIENT_DIR, "target");
+
+    // Create artifacts directory if it doesn't exist
+    if (!fs.existsSync(artifactsDest)) {
+        fs.mkdirSync(artifactsDest, { recursive: true });
+    }
+
+    // Copy .ts files from artifacts
+    const artifactFiles = fs.readdirSync(artifactsSource).filter(f => f.endsWith('.ts'));
+    for (const file of artifactFiles) {
+        fs.copyFileSync(
+            path.join(artifactsSource, file),
+            path.join(artifactsDest, file)
+        );
+        logger.info(`   Copied ${file}`);
+    }
+
+    // Copy target directory
+    if (fs.existsSync(targetSource)) {
+        execSync(`cp -r "${targetSource}" "${targetDest}"`, { stdio: 'inherit' });
+        logger.info(`   Copied target/ directory`);
+    }
+
+    logger.info('✅ Artifacts copied to client successfully');
+}
+
+function writeClientEnv(
+    logger: Logger,
+    contractAddress: string,
+    deployerAddress: string,
+    deploymentSalt: string
+) {
+    logger.info('📝 Writing client .env file...');
+
+    const envFilePath = path.resolve(CLIENT_DIR, ".env");
+    const nodeUrl = getAztecNodeUrl();
+
+    const envContent = `VITE_CONTRACT_ADDRESS=${contractAddress}
+VITE_DEPLOYER_ADDRESS=${deployerAddress}
+VITE_DEPLOYMENT_SALT=${deploymentSalt}
+VITE_AZTEC_NODE_URL=${nodeUrl}
+`;
+
+    fs.writeFileSync(envFilePath, envContent);
+    logger.info(`✅ Client .env written to ${envFilePath}`);
+}
 
 async function main() {
     let logger: Logger;
@@ -70,11 +128,24 @@ async function main() {
         }
         logger.info(`Constructor args: ${JSON.stringify([address.toString()])}`);
     }
+    // Copy artifacts and write client .env
+    if (instance) {
+        copyArtifactsToClient(logger);
+        writeClientEnv(
+            logger,
+            treasureHuntContract.address.toString(),
+            instance.deployer.toString(),
+            instance.salt.toString()
+        );
+    }
+
     logger.info('🏁 Deployment process completed successfully!');
     logger.info(`📋 Summary:`);
     logger.info(`   - Contract Address: ${treasureHuntContract.address}`);
     logger.info(`   - Admin Address: ${address}`);
     logger.info(`   - Sponsored FPC: ${sponsoredFPC.address}`);
+    logger.info(`   - Client .env: Updated ✅`);
+    logger.info(`   - Client artifacts: Copied ✅`);
 }
 
 main().catch((error) => {
