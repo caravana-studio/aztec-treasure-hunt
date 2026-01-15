@@ -22,7 +22,8 @@ const powerIcons: Record<PowerType, string> = {
   trap: '/images/trap.png',
 };
 
-const powerOrder: PowerType[] = ['dig', 'shovel', 'detector', 'trap'];
+// Objects: golden shovel, compass, radar, trap (dig is common action, not shown here)
+const powerOrder: PowerType[] = ['shovel', 'compass', 'detector', 'trap'];
 
 export function PowersPanel({
   powers,

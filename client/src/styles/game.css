@@ -15,28 +15,42 @@
 /* Game layout */
 .game-layout {
   display: grid;
-  grid-template-columns: 220px 1fr 220px;
+  grid-template-columns: 240px 1fr 240px;
   grid-template-rows: auto 1fr auto;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   height: 100%;
   padding: var(--space-md);
 }
 
-/* Turn indicator */
+/* Turn indicator - iOS 26 Liquid Glass */
 .turn-indicator {
   grid-column: 1 / -1;
   display: flex;
   justify-content: center;
-  padding: var(--space-sm) 0;
+  padding: var(--space-xs) 0;
+  z-index: 10;
+}
+
+.turn-indicator-box {
+  padding: var(--space-sm) var(--space-xl);
+  background: linear-gradient(
+    145deg,
+    rgba(55, 50, 42, 0.85) 0%,
+    rgba(45, 42, 36, 0.9) 100%
+  );
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .turn-text {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: var(--font-weight-bold);
-  color: white;
-  text-shadow:
-    2px 2px 4px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.95);
   text-transform: uppercase;
   letter-spacing: 2px;
 }
@@ -46,23 +60,24 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  align-self: start;
-  padding-top: var(--space-md);
+  align-self: center;
+  justify-self: center;
 }
 
 .player-panel.left {
-  align-items: flex-start;
+  align-items: flex-end;
+  justify-self: end;
 }
 
 .player-panel.right {
-  align-items: flex-end;
+  align-items: flex-start;
+  justify-self: start;
 }
 
 /* Player card - iOS 26 Liquid Glass */
 .player-card {
   position: relative;
-  width: 180px;
-  padding: 8px;
+  padding: 10px;
   background: linear-gradient(
     145deg,
     rgba(210, 180, 140, 0.95) 0%,
@@ -135,31 +150,51 @@
   box-shadow: 0 2px 6px rgba(45, 125, 210, 0.4);
 }
 
-/* Objects panel */
+/* Objects panel - iOS 26 Liquid Glass */
 .objects-panel {
   width: 100%;
-  max-width: 160px;
+  max-width: 300px;
 }
 
 .objects-header {
-  background: var(--color-olive-dark);
-  color: white;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(70, 65, 55, 0.9) 0%,
+    rgba(55, 50, 42, 0.95) 100%
+  );
+  color: rgba(255, 255, 255, 0.95);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   font-weight: var(--font-weight-bold);
-  font-size: 12px;
+  font-size: 13px;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .objects-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  padding: 8px;
-  background: rgba(60, 55, 45, 0.85);
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(55, 50, 42, 0.9) 0%,
+    rgba(45, 42, 36, 0.95) 100%
+  );
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: none;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Grid container */
@@ -169,9 +204,8 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-sm);
-  height: 100%;
-  min-height: 0;
   position: relative;
+  flex: 1;
 }
 
 /* Grid actions (below grid) */
@@ -190,41 +224,62 @@
   margin: 0;
 }
 
-/* Game grid */
+/* Game grid - iOS 26 Liquid Glass */
 .game-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 6px;
   padding: var(--space-lg);
-  background: rgba(180, 160, 130, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: linear-gradient(
+    145deg,
+    rgba(190, 170, 145, 0.8) 0%,
+    rgba(175, 155, 130, 0.75) 50%,
+    rgba(165, 145, 120, 0.8) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  width: 100%;
-  height: 100%;
-  max-height: calc(100vh - 180px);
-  max-width: calc(100vh - 180px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  width: min(calc(100vh - 200px), 600px);
+  height: min(calc(100vh - 200px), 600px);
   aspect-ratio: 1;
 }
 
-/* Grid cell */
+/* Grid cell - iOS 26 Liquid Glass */
 .grid-cell {
   aspect-ratio: 1;
-  background: var(--cell-normal);
+  background: linear-gradient(
+    145deg,
+    rgba(220, 200, 170, 0.9) 0%,
+    rgba(210, 190, 160, 0.85) 100%
+  );
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .grid-cell:hover:not(.disabled) {
-  background: var(--cell-hover);
-  transform: scale(1.03);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(
+    145deg,
+    rgba(235, 215, 185, 0.95) 0%,
+    rgba(225, 205, 175, 0.9) 100%
+  );
+  transform: scale(1.04);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .grid-cell.clickable {
@@ -233,24 +288,47 @@
 
 .grid-cell.disabled {
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* Cell states */
 .grid-cell.your-treasure {
-  background: var(--cell-your-treasure);
+  background: linear-gradient(
+    145deg,
+    rgba(135, 180, 220, 0.85) 0%,
+    rgba(115, 160, 200, 0.8) 100%
+  );
+  border-color: rgba(100, 150, 200, 0.3);
 }
 
 .grid-cell.dug-empty {
-  background: var(--cell-dug-empty);
+  background: linear-gradient(
+    145deg,
+    rgba(160, 130, 100, 0.9) 0%,
+    rgba(140, 110, 80, 0.85) 100%
+  );
+  border-color: rgba(120, 90, 60, 0.3);
 }
 
 .grid-cell.dug-found {
-  background: var(--cell-dug-found);
+  background: linear-gradient(
+    145deg,
+    rgba(120, 180, 120, 0.9) 0%,
+    rgba(100, 160, 100, 0.85) 100%
+  );
+  border-color: rgba(80, 140, 80, 0.3);
 }
 
 .grid-cell.selected {
-  background: #f39c12;
-  box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.4);
+  background: linear-gradient(
+    145deg,
+    rgba(243, 180, 100, 0.95) 0%,
+    rgba(230, 165, 80, 0.9) 100%
+  );
+  box-shadow:
+    0 0 0 3px rgba(243, 156, 18, 0.4),
+    0 4px 12px rgba(243, 156, 18, 0.25);
+  border-color: rgba(243, 156, 18, 0.5);
 }
 
 /* Cell content */
@@ -269,13 +347,23 @@
   animation: pop 0.5s ease forwards;
 }
 
-/* Logs panel */
+/* Logs panel - iOS 26 Liquid Glass */
 .logs-panel {
   grid-column: 1 / -1;
-  background: var(--color-olive-dark);
-  border-radius: var(--radius-md);
+  background: linear-gradient(
+    180deg,
+    rgba(55, 50, 42, 0.92) 0%,
+    rgba(45, 42, 36, 0.95) 100%
+  );
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: max-height var(--transition-normal);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 -4px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .logs-header {
@@ -283,16 +371,22 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  color: white;
+  padding: var(--space-md) var(--space-lg);
+  color: rgba(255, 255, 255, 0.95);
   cursor: pointer;
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.logs-header:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .logs-header svg {
-  transition: transform var(--transition-fast);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .logs-header.expanded svg {
@@ -302,7 +396,7 @@
 .logs-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height var(--transition-normal);
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .logs-content.expanded {
@@ -310,52 +404,92 @@
 }
 
 .logs-list {
-  padding: var(--space-md);
-  color: rgba(255, 255, 255, 0.8);
+  padding: var(--space-md) var(--space-lg);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 14px;
 }
 
 .log-entry {
-  padding: var(--space-xs) 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .log-entry:last-child {
   border-bottom: none;
 }
 
-/* Lobby styles */
+/* Lobby styles - iOS 26 Liquid Glass */
 .lobby-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8dcc8 0%, #d4b896 100%);
+  background: linear-gradient(
+    145deg,
+    #f5ebe0 0%,
+    #e8dcc8 30%,
+    #d4b896 70%,
+    #c9a882 100%
+  );
   padding: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.lobby-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255, 255, 255, 0.4) 0%,
+    transparent 40%
+  );
+  pointer-events: none;
 }
 
 .lobby-card {
+  position: relative;
   width: 100%;
-  max-width: 420px;
-  padding: var(--space-xl);
-  background: white;
+  max-width: 440px;
+  padding: var(--space-xl) var(--space-lg);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.85) 100%
+  );
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .lobby-title {
-  font-size: 32px;
+  font-size: 34px;
   font-weight: var(--font-weight-bold);
-  color: var(--color-brown);
+  background: linear-gradient(135deg, var(--color-brown) 0%, #8b5a2b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   text-align: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.5px;
 }
 
 .lobby-subtitle {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--color-olive);
   text-align: center;
   margin-bottom: var(--space-xl);
+  opacity: 0.8;
 }
 
 .lobby-form {
@@ -373,11 +507,13 @@
   flex: 1;
 }
 
-/* Loading overlay */
+/* Loading overlay - iOS 26 Liquid Glass */
 .loading-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,75 +521,176 @@
 }
 
 .loading-content {
-  background: white;
-  padding: var(--space-xl);
-  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  min-width: 200px;
+  padding: var(--space-xl) var(--space-lg);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   text-align: center;
 }
 
+.loading-content p {
+  margin: 0;
+  color: var(--color-olive-dark);
+  font-weight: var(--font-weight-medium);
+}
+
 .loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(92, 90, 69, 0.2);
   border-left-color: var(--color-olive);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Status message */
+/* Status message - iOS 26 Liquid Glass */
 .status-toast {
   position: fixed;
   bottom: var(--space-xl);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-olive-dark);
-  color: white;
+  background: linear-gradient(
+    145deg,
+    rgba(55, 50, 42, 0.95) 0%,
+    rgba(45, 42, 36, 0.98) 100%
+  );
+  color: rgba(255, 255, 255, 0.95);
   padding: var(--space-md) var(--space-xl);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
+  font-weight: var(--font-weight-medium);
 }
 
-/* Error message */
+/* Error message - iOS 26 Liquid Glass */
 .error-toast {
   position: fixed;
   top: var(--space-xl);
   left: 50%;
   transform: translateX(-50%);
-  background: #e74c3c;
+  background: linear-gradient(
+    145deg,
+    rgba(231, 76, 60, 0.95) 0%,
+    rgba(192, 57, 43, 0.98) 100%
+  );
   color: white;
   padding: var(--space-md) var(--space-xl);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 8px 32px rgba(231, 76, 60, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
 }
 
 /* Responsive */
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .game-layout {
-    grid-template-columns: 150px 1fr 150px;
+    grid-template-columns: 220px 1fr 220px;
   }
 
   .player-card {
-    width: 130px;
+    width: 180px;
   }
 
   .objects-panel {
-    max-width: 150px;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .game-layout {
+    grid-template-columns: 200px 1fr 200px;
+  }
+
+  .player-card {
+    width: 160px;
+  }
+
+  .objects-panel {
+    max-width: 180px;
   }
 }
 
 @media (max-width: 900px) {
   .game-layout {
-    grid-template-columns: 140px 1fr 140px;
+    grid-template-columns: 180px 1fr 180px;
     gap: var(--space-xs);
     padding: var(--space-sm);
+  }
+
+  .player-card {
+    width: 150px;
+  }
+
+  .objects-panel {
+    max-width: 170px;
+  }
+
+  .objects-grid {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .turn-text {
+    font-size: 18px;
+  }
+
+  .turn-indicator-box {
+    padding: var(--space-xs) var(--space-lg);
+  }
+
+  .game-grid {
+    width: min(calc(100vh - 220px), 480px);
+    height: min(calc(100vh - 220px), 480px);
+    padding: var(--space-md);
+    gap: 4px;
+  }
+}
+
+@media (max-width: 750px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
+    gap: var(--space-sm);
+  }
+
+  .player-panel {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--space-md);
+  }
+
+  .player-panel.left, .player-panel.right {
+    align-items: center;
   }
 
   .player-card {
@@ -461,43 +698,19 @@
   }
 
   .objects-panel {
-    max-width: 140px;
-  }
-
-  .turn-text {
-    font-size: 22px;
-  }
-
-  .game-grid {
-    max-height: calc(100vh - 200px);
-    max-width: calc(100vh - 200px);
-    padding: var(--space-md);
-    gap: 4px;
-  }
-}
-
-@media (max-width: 700px) {
-  .game-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr auto auto;
-  }
-
-  .player-panel {
-    flex-direction: row;
-    justify-content: center;
-  }
-
-  .player-panel.left, .player-panel.right {
-    align-items: center;
-  }
-
-  .objects-panel {
-    max-width: none;
-    width: auto;
+    max-width: 200px;
   }
 
   .objects-grid {
     grid-template-columns: repeat(4, 1fr);
-    max-width: 200px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .game-grid {
+    width: min(80vw, 400px);
+    height: min(80vw, 400px);
+    padding: var(--space-sm);
+    gap: 3px;
   }
 }

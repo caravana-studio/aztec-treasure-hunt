@@ -27,7 +27,9 @@ export function TurnIndicator({ isMyTurn, gamePhase }: TurnIndicatorProps) {
 
   return (
     <div className="turn-indicator">
-      <span className="turn-text">{text}</span>
+      <div className="turn-indicator-box">
+        <span className="turn-text">{text}</span>
+      </div>
     </div>
   );
 }

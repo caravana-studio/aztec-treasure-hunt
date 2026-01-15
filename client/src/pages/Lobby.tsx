@@ -44,7 +44,7 @@ export function Lobby() {
 
         {!myAddress ? (
           <div className="lobby-form">
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <select
                 className="glass-input"
                 value={testAccountIndex}
@@ -64,7 +64,15 @@ export function Lobby() {
               </button>
             </div>
 
-            <div style={{ textAlign: 'center', color: '#888', fontSize: '14px' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                color: 'rgba(0,0,0,0.4)',
+                fontSize: '13px',
+                fontWeight: 500,
+                letterSpacing: '0.5px',
+              }}
+            >
               or
             </div>
 
@@ -81,13 +89,16 @@ export function Lobby() {
           <div className="lobby-form">
             <div
               style={{
-                padding: '12px 16px',
-                background: 'rgba(0,0,0,0.05)',
-                borderRadius: '12px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
+                padding: '14px 18px',
+                background: 'linear-gradient(145deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.06) 100%)',
+                borderRadius: '16px',
+                fontSize: '13px',
+                fontFamily: 'ui-monospace, monospace',
                 textAlign: 'center',
                 marginBottom: '8px',
+                color: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(0,0,0,0.05)',
+                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)',
               }}
             >
               {myAddress.toString().slice(0, 10)}...{myAddress.toString().slice(-8)}
@@ -122,8 +133,18 @@ export function Lobby() {
         )}
 
         {isLoading && (
-          <div style={{ textAlign: 'center', marginTop: '16px', color: '#666' }}>
-            <div className="loading-spinner" style={{ margin: '0 auto 8px' }} />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px',
+              marginTop: '20px',
+              color: 'rgba(0,0,0,0.5)',
+              fontWeight: 500,
+            }}
+          >
+            <div className="loading-spinner" />
             Processing...
           </div>
         )}

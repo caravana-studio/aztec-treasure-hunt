@@ -282,7 +282,7 @@ confirmTreasuresBtn.addEventListener('click', async () => {
     displayError(error instanceof Error ? error.message : 'Failed to place treasures');
   } finally {
     confirmTreasuresBtn.disabled = false;
-    confirmTreasuresBtn.textContent = 'Confirm Treasures';
+    confirmTreasuresBtn.textContent = 'Confirm Treasures Position';
   }
 });
 

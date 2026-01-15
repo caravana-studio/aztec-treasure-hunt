@@ -98,7 +98,7 @@ export function Game() {
         <div className="loading-overlay">
           <div className="loading-content">
             <div className="loading-spinner" />
-            <p style={{ marginTop: '16px' }}>{statusMessage || 'Processing...'}</p>
+            <p>{statusMessage || 'Processing...'}</p>
           </div>
         </div>
       )}
@@ -144,15 +144,12 @@ export function Game() {
                 onCellClick={handleGridClick}
               />
               <div className="grid-actions">
-                <p className="grid-hint">
-                  Select {3 - selectedTreasures.length} more position{selectedTreasures.length !== 2 ? 's' : ''}
-                </p>
                 <button
                   className="glass-btn"
                   onClick={placeTreasures}
                   disabled={selectedTreasures.length !== 3 || isLoading}
                 >
-                  Confirm Treasures
+                  Confirm Treasures Position
                 </button>
               </div>
             </>
@@ -218,8 +215,10 @@ export function Game() {
           />
         </div>
 
-        {/* Logs panel */}
-        <GameLogs logs={logs} />
+        {/* Logs panel - only show when both players have joined (setup phase or later) */}
+        {gamePhase !== 'lobby' && (
+          <GameLogs logs={logs} />
+        )}
       </div>
 
       {/* Refresh button */}
