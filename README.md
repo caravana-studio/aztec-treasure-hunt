@@ -55,8 +55,6 @@ yarn codegen
 yarn deploy
 ```
 
-Tomar nota del `CONTRACT_ADDRESS` que se muestra al desplegar.
-
 ### 3. Configurar y Ejecutar el Cliente
 
 ```bash
@@ -65,25 +63,12 @@ cd client
 # Instalar dependencias
 yarn install
 
-# Copiar archivo de configuración
-cp .env.example .env
-```
-
-Editar `.env` con los valores del deployment:
-
-```env
-VITE_CONTRACT_ADDRESS=<dirección del contrato>
-VITE_DEPLOYER_ADDRESS=<dirección del deployer>
-VITE_DEPLOYMENT_SALT=<salt usado en deployment>
-VITE_AZTEC_NODE_URL=http://localhost:8080
-```
-
 ```bash
 # Iniciar servidor de desarrollo
 yarn dev
 ```
 
-El cliente estará disponible en `http://localhost:5173`
+El cliente estará disponible en `http://localhost:3001`
 
 ## Comandos Útiles
 
