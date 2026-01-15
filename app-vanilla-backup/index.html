@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Treasure Hunt on Aztec</title>
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <div class="nav-title">Treasure Hunt</div>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div id="account-display" class="account-display"></div>
+
+        <select id="test-account-number" style="display: none">
+          <option value="1">Account 1</option>
+          <option value="2">Account 2</option>
+          <option value="3">Account 3</option>
+        </select>
+        <button id="connect-test-account" type="button" style="display: none">
+          Connect Test Account
+        </button>
+        <button id="create-account" type="button" style="display: none">
+          Create Account
+        </button>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <!-- Game Lobby Section -->
+      <div id="lobby-section" class="card lobby-card">
+        <h2>Game Lobby</h2>
+        <div class="lobby-form">
+          <input type="number" id="game-id-input" placeholder="Game ID (e.g. 1)" min="1" />
+          <div class="lobby-buttons">
+            <button id="create-game-btn" type="button">Create Game</button>
+            <button id="join-game-btn" type="button">Join Game</button>
+          </div>
+        </div>
+        <div id="game-info" class="game-info" style="display: none;">
+          <div>Game ID: <span id="current-game-id">-</span></div>
+          <div>Status: <span id="game-status">-</span></div>
+          <div>Turn: <span id="turn-indicator">-</span></div>
+        </div>
+      </div>
+
+      <!-- Setup Phase Section -->
+      <div id="setup-section" class="card" style="display: none;">
+        <h2>Place Your Treasures (3)</h2>
+        <p class="setup-info">Click on 3 cells to place your treasures. Selected: <span id="selected-count">0</span>/3</p>
+        <div id="setup-grid" class="grid"></div>
+        <button id="confirm-treasures-btn" type="button" disabled>Confirm Treasures</button>
+      </div>
+
+      <!-- Game Play Section -->
+      <div id="game-section" style="display: none;">
+        <div class="grids-container">
+          <!-- Your Grid -->
+          <div class="grid-panel">
+            <h3>Your Treasures</h3>
+            <div id="your-grid" class="grid"></div>
+          </div>
+
+          <!-- Opponent Grid -->
+          <div class="grid-panel">
+            <h3>Opponent's Grid</h3>
+            <div id="opponent-grid" class="grid clickable"></div>
+          </div>
+        </div>
+
+        <!-- Powers Panel -->
+        <div class="card powers-card">
+          <h3>Actions</h3>
+          <div class="powers-buttons">
+            <button id="dig-btn" type="button" class="power-btn active">Dig</button>
+            <button id="detector-btn" type="button" class="power-btn">Detector</button>
+            <button id="compass-btn" type="button" class="power-btn">Compass</button>
+            <button id="shovel-btn" type="button" class="power-btn">Shovel</button>
+            <button id="trap-btn" type="button" class="power-btn">Trap</button>
+          </div>
+          <p id="action-hint" class="action-hint">Click on opponent's grid to dig</p>
+        </div>
+
+        <!-- Score Panel -->
+        <div class="card score-card">
+          <div class="score-display">
+            <span>You: <span id="your-score">0</span>/2</span>
+            <span>Opponent: <span id="opponent-score">0</span>/2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Response Section (when opponent needs to respond) -->
+      <div id="response-section" class="card" style="display: none;">
+        <h3>Action Required</h3>
+        <p id="response-message">Your opponent is waiting for your response</p>
+        <button id="respond-btn" type="button">Respond</button>
+      </div>
+
+      <!-- Winner Section -->
+      <div id="winner-section" class="card" style="display: none;">
+        <h2 id="winner-message">Game Over!</h2>
+        <button id="new-game-btn" type="button">New Game</button>
+      </div>
+
+      <!-- Status Message -->
+      <div id="status-message" class="status-message"></div>
+
+      <!-- Refresh Button -->
+      <button id="refresh-btn" type="button" class="refresh-btn" style="display: none;">
+        Refresh Game State
+      </button>
+    </main>
+  </body>
+</html>

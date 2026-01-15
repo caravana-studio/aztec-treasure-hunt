@@ -1,0 +1,275 @@
+:root {
+  font-family: system-ui, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  color: #213547;
+  background-color: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #2c3e50;
+  color: white;
+}
+
+.nav-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #f1c40f;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.account-display {
+  color: #ecf0f1;
+  font-family: monospace;
+}
+
+/* Main content */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  gap: 1.5rem;
+}
+
+/* Cards */
+.card {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.card h2 {
+  margin-bottom: 1rem;
+}
+
+/* Buttons */
+button {
+  border-radius: 6px;
+  border: none;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  background-color: #3498db;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+input {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+/* Lobby */
+.lobby-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.lobby-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.game-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(8, 40px);
+  gap: 2px;
+  background-color: #34495e;
+  padding: 4px;
+  border-radius: 4px;
+  width: fit-content;
+  margin: 1rem auto;
+}
+
+.grid-cell {
+  width: 40px;
+  height: 40px;
+  background-color: #ecf0f1;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.grid-cell:hover {
+  background-color: #bdc3c7;
+}
+
+.grid-cell.selected {
+  background-color: #f39c12;
+  border: 2px solid #e67e22;
+}
+
+.grid-cell.treasure {
+  background-color: #f1c40f;
+}
+
+.grid-cell.dug-empty {
+  background-color: #95a5a6;
+}
+
+.grid-cell.dug-found {
+  background-color: #27ae60;
+}
+
+/* Grids container */
+.grids-container {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.grid-panel {
+  text-align: center;
+}
+
+.grid-panel h3 {
+  margin-bottom: 0.5rem;
+}
+
+.clickable .grid-cell {
+  cursor: pointer;
+}
+
+/* Powers */
+.powers-card h3 {
+  margin-bottom: 1rem;
+}
+
+.powers-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.power-btn {
+  background-color: #7f8c8d;
+}
+
+.power-btn.active {
+  background-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.action-hint {
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
+/* Score */
+.score-card {
+  max-width: 400px;
+}
+
+.score-display {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+/* Status */
+.status-message {
+  background-color: #efefef;
+  padding: 1rem;
+  border-radius: 6px;
+  max-width: 600px;
+  text-align: center;
+}
+
+.error-message {
+  background-color: #fadbd8;
+  color: #e74c3c;
+  padding: 1rem;
+  border-radius: 6px;
+  max-width: 600px;
+  text-align: center;
+}
+
+/* Refresh button */
+.refresh-btn {
+  background-color: #95a5a6;
+  margin-top: 1rem;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background-color: #7f8c8d;
+}
+
+/* Winner/Loser */
+.winner {
+  color: #27ae60;
+}
+
+.loser {
+  color: #e74c3c;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .grids-container {
+    flex-direction: column;
+  }
+
+  .grid {
+    grid-template-columns: repeat(8, 35px);
+  }
+
+  .grid-cell {
+    width: 35px;
+    height: 35px;
+  }
+}
