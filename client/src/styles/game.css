@@ -19,8 +19,8 @@
   grid-template-rows: auto 1fr auto;
   height: 100%;
   padding: var(--space-md);
-  column-gap: 12px;
-  row-gap: 8px;
+  column-gap: 4px;
+  row-gap: 4px;
   align-items: center;
   justify-items: center;
 }
@@ -31,7 +31,8 @@
   grid-row: 1;
   display: flex;
   justify-content: center;
-  padding: 0 0 8px 0;
+  padding: 0;
+  margin-bottom: 4px;
   z-index: 10;
   width: 100%;
 }
@@ -213,7 +214,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-sm);
+  padding: 4px var(--space-sm) var(--space-sm) var(--space-sm);
   position: relative;
   width: 100%;
   height: 100%;
