@@ -15,20 +15,25 @@
 /* Game layout */
 .game-layout {
   display: grid;
-  grid-template-columns: 240px 1fr 240px;
+  grid-template-columns: auto 1fr auto;
   grid-template-rows: auto 1fr auto;
-  gap: var(--space-sm);
   height: 100%;
   padding: var(--space-md);
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+  justify-items: center;
 }
 
 /* Turn indicator - iOS 26 Liquid Glass */
 .turn-indicator {
-  grid-column: 1 / -1;
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   justify-content: center;
-  padding: var(--space-xs) 0;
+  padding: 0 0 8px 0;
   z-index: 10;
+  width: 100%;
 }
 
 .turn-indicator-box {
@@ -61,15 +66,18 @@
   flex-direction: column;
   gap: var(--space-sm);
   align-self: center;
-  justify-self: center;
 }
 
 .player-panel.left {
+  grid-column: 1;
+  grid-row: 2;
   align-items: flex-end;
   justify-self: end;
 }
 
 .player-panel.right {
+  grid-column: 3;
+  grid-row: 2;
   align-items: flex-start;
   justify-self: start;
 }
@@ -199,13 +207,16 @@
 
 /* Grid container */
 .grid-container {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: var(--space-sm);
   position: relative;
-  flex: 1;
+  width: 100%;
+  height: 100%;
 }
 
 /* Grid actions (below grid) */
@@ -244,8 +255,10 @@
     0 8px 32px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  width: min(calc(100vh - 200px), 600px);
-  height: min(calc(100vh - 200px), 600px);
+  width: min(calc(100vh - 300px), 600px);
+  height: min(calc(100vh - 300px), 600px);
+  max-width: 100%;
+  max-height: 100%;
   aspect-ratio: 1;
 }
 
@@ -350,6 +363,7 @@
 /* Logs panel - iOS 26 Liquid Glass */
 .logs-panel {
   grid-column: 1 / -1;
+  grid-row: 3;
   background: linear-gradient(
     180deg,
     rgba(55, 50, 42, 0.92) 0%,
@@ -427,6 +441,9 @@
   padding: var(--space-xl);
   position: relative;
   overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .lobby-container::before {
