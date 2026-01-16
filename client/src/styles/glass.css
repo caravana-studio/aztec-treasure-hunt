@@ -31,7 +31,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Glass button - primary - iOS 26 Liquid Glass */
+/* Glass button - primary - Golden yellow from logo */
 .glass-btn {
   display: inline-flex;
   align-items: center;
@@ -40,36 +40,37 @@
   padding: var(--space-md) var(--space-lg);
   background: linear-gradient(
     145deg,
-    rgba(74, 157, 74, 0.95) 0%,
-    rgba(61, 139, 61, 0.98) 100%
+    rgba(245, 200, 60, 0.98) 0%,
+    rgba(220, 170, 40, 0.98) 100%
   );
-  color: white;
-  font-weight: var(--font-weight-semibold);
+  color: rgba(70, 50, 20, 0.95);
+  font-weight: var(--font-weight-bold);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 220, 100, 0.5);
   box-shadow:
-    0 4px 16px rgba(74, 157, 74, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 4px 16px rgba(220, 170, 40, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .glass-btn:hover:not(:disabled) {
   background: linear-gradient(
     145deg,
-    rgba(84, 170, 84, 0.98) 0%,
-    rgba(71, 150, 71, 1) 100%
+    rgba(255, 215, 80, 1) 0%,
+    rgba(235, 185, 50, 1) 100%
   );
   transform: translateY(-2px);
   box-shadow:
-    0 6px 20px rgba(74, 157, 74, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 6px 20px rgba(220, 170, 40, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .glass-btn:active:not(:disabled) {
   transform: translateY(0);
   box-shadow:
-    0 2px 8px rgba(74, 157, 74, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 2px 8px rgba(220, 170, 40, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .glass-btn:disabled {
@@ -77,7 +78,7 @@
   cursor: not-allowed;
 }
 
-/* Glass button - secondary - iOS 26 Liquid Glass */
+/* Glass button - secondary - Dark gray from objects panel */
 .glass-btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -86,33 +87,35 @@
   padding: var(--space-md) var(--space-lg);
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.6) 0%,
-    rgba(255, 255, 255, 0.45) 100%
+    rgba(70, 65, 55, 0.92) 0%,
+    rgba(55, 50, 42, 0.95) 100%
   );
-  color: rgba(60, 50, 40, 0.95);
+  color: rgba(255, 255, 255, 0.95);
   font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-btn-secondary:hover:not(:disabled) {
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.75) 0%,
-    rgba(255, 255, 255, 0.6) 100%
+    rgba(85, 78, 65, 0.95) 0%,
+    rgba(65, 60, 50, 0.98) 100%
   );
   transform: translateY(-2px);
   box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 6px 16px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .glass-btn-secondary:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
