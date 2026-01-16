@@ -43,6 +43,18 @@ pub contract TreasureHunt {
     global MAP_SIZE: u8 = 8;
     global TREASURES_TO_WIN: u8 = 2;
 
+    // Dig result values - encodes both result and who dug
+    // Format: (digger * 4) + result, where digger: 1=player1, 2=player2, result: 1=empty, 2=treasure, 3=trap
+    global DIG_NOT_DUG: u8 = 0;
+    // Player 1 results: 5, 6, 7 (1*4 + 1, 1*4 + 2, 1*4 + 3)
+    global DIG_P1_EMPTY: u8 = 5;
+    global DIG_P1_TREASURE: u8 = 6;
+    global DIG_P1_TRAP: u8 = 7;
+    // Player 2 results: 9, 10, 11 (2*4 + 1, 2*4 + 2, 2*4 + 3)
+    global DIG_P2_EMPTY: u8 = 9;
+    global DIG_P2_TREASURE: u8 = 10;
+    global DIG_P2_TRAP: u8 = 11;
+
     #[storage]
     struct Storage<Context> {
         admin: PublicMutable<AztecAddress, Context>,
@@ -51,6 +63,8 @@ pub contract TreasureHunt {
         treasures: Map<Field, Owned<PrivateSet<TreasureNote, Context>, Context>, Context>,
         traps: Map<Field, Owned<PrivateSet<TrapNote, Context>, Context>, Context>,
         powers: Map<Field, Owned<PrivateSet<PowerNote, Context>, Context>, Context>,
+        // Dig results: game_id -> position (y*8+x) -> result (0=not dug, 1=empty, 2=treasure, 3=trap)
+        dig_results: Map<Field, Map<Field, PublicMutable<u8, Context>, Context>, Context>,
     }
 
     #[external("public")]
@@ -238,6 +252,17 @@ pub contract TreasureHunt {
     fn record_dig_result(responder: AztecAddress, game_id: Field, hit_trap: bool, hit_treasure: bool) {
         let game = self.storage.games.at(game_id).read();
         let digger = game.get_opponent(responder);
+
+        // Store dig result at the pending position
+        let position = (game.pending_y as Field) * 8 + (game.pending_x as Field);
+        let result = if hit_trap {
+            DIG_HIT_TRAP
+        } else if hit_treasure {
+            DIG_FOUND_TREASURE
+        } else {
+            DIG_EMPTY
+        };
+        self.storage.dig_results.at(game_id).at(position).write(result);
 
         let updated = if hit_trap {
             game.set_skip_turn(digger)
@@ -649,5 +674,24 @@ pub contract TreasureHunt {
         }
 
         (detector_count, compass_count, shovel_count, trap_count)
+    }
+
+    /// Get dig result at a specific position
+    /// Returns: 0=not dug, 1=empty, 2=treasure found, 3=hit trap
+    #[external("utility")]
+    unconstrained fn get_dig_result(game_id: Field, x: u8, y: u8) -> pub u8 {
+        let position = (y as Field) * 8 + (x as Field);
+        self.storage.dig_results.at(game_id).at(position).read()
+    }
+
+    /// Get all dig results for a game as a flat array of 64 values
+    /// Index = y * 8 + x, value = 0 (not dug), 1 (empty), 2 (treasure), 3 (trap)
+    #[external("utility")]
+    unconstrained fn get_all_dig_results(game_id: Field) -> pub [u8; 64] {
+        let mut results: [u8; 64] = [0; 64];
+        for i in 0..64 {
+            results[i] = self.storage.dig_results.at(game_id).at(i as Field).read();
+        }
+        results
     }
 }

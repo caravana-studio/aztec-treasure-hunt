@@ -63,7 +63,7 @@ function extractErrorMessage(err: unknown): string {
 
   if (err instanceof Error) {
     // Check for nested cause or reason
-    const anyErr = err as Record<string, unknown>;
+    const anyErr = err as unknown as Record<string, unknown>;
     if (anyErr.cause) {
       console.log('Error cause:', anyErr.cause);
     }
@@ -148,10 +148,12 @@ export function useGame() {
         const p1Score = await contract.methods.get_player1_treasures_found(gameIdToUse).simulate({ from: myAddress });
         const p2Score = await contract.methods.get_player2_treasures_found(gameIdToUse).simulate({ from: myAddress });
         const currentTurn = await contract.methods.get_current_turn(gameIdToUse).simulate({ from: myAddress });
-        const pending = await contract.methods.get_pending_action(gameIdToUse).simulate({ from: myAddress });
+        const pendingResult = await contract.methods.get_pending_action(gameIdToUse).simulate({ from: myAddress });
+        // pendingResult is a tuple (action_type, x, y) - extract just the action type
+        const pendingActionType = BigInt(pendingResult[0]);
 
         const isP1 = player1.toString() === myAddress.toString();
-        const myTurn = (currentTurn === 1n && isP1) || (currentTurn === 2n && !isP1);
+        const myTurn = currentTurn.toString() === myAddress.toString();
 
         let gamePhase: GamePhase = 'lobby';
         let winner: string | null = null;
@@ -188,16 +190,40 @@ export function useGame() {
           }
         }
 
+        // Fetch dig results (history of all digs)
+        let dugCells: (Position & { found: boolean })[] = [];
+        if (status === STATUS_PLAYING || status === STATUS_AWAITING || status === STATUS_FINISHED) {
+          try {
+            const digResults = await contract.methods.get_all_dig_results(gameIdToUse).simulate({ from: myAddress });
+            // digResults is a flat array of 64 values: 0=not dug, 1=empty, 2=treasure, 3=trap
+            for (let i = 0; i < 64; i++) {
+              const result = Number(digResults[i]);
+              if (result > 0) {
+                const x = i % 8;
+                const y = Math.floor(i / 8);
+                dugCells.push({
+                  x,
+                  y,
+                  found: result === 2, // 2 = treasure found
+                });
+              }
+            }
+          } catch (err) {
+            console.error('Failed to fetch dig results:', err);
+          }
+        }
+
         setState((prev) => ({
           ...prev,
           isPlayer1: isP1,
           isMyTurn: myTurn,
           myScore: Number(isP1 ? p1Score : p2Score),
           opponentScore: Number(isP1 ? p2Score : p1Score),
-          pendingAction: pending,
+          pendingAction: pendingActionType,
           gamePhase,
           winner,
           powers,
+          dugCells,
           isLoading: false,
           statusMessage: '',
         }));
@@ -332,13 +358,22 @@ export function useGame() {
   const respondDig = useCallback(async () => {
     if (!wallet || !myAddress || !contractAddress || !state.gameId) return;
 
-    setLoading(true, 'Responding...');
+    setLoading(true, 'Checking dig result...');
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
-      await contract.methods.respond_dig(state.gameId).send({ from: myAddress }).wait();
 
-      addLog('Responded to dig action');
+      // Get the pending action coordinates
+      const pendingResult = await contract.methods.get_pending_action(state.gameId).simulate({ from: myAddress });
+      const pendingX = Number(pendingResult[1]);
+      const pendingY = Number(pendingResult[2]);
+
+      console.log('Responding to dig at:', pendingX, pendingY);
+
+      // Call check_dig_result which actually verifies if treasure was found
+      await contract.methods.check_dig_result(state.gameId, pendingX, pendingY).send({ from: myAddress }).wait();
+
+      addLog(`Responded to dig at (${pendingX}, ${pendingY})`);
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to respond - Full error:', err);

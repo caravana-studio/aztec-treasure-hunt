@@ -90,7 +90,7 @@ export class TreasureHuntContract extends ContractBase {
   }
   
 
-  public static get storage(): ContractStorageLayout<'admin' | 'next_game_id' | 'games' | 'treasures' | 'traps' | 'powers'> {
+  public static get storage(): ContractStorageLayout<'admin' | 'next_game_id' | 'games' | 'treasures' | 'traps' | 'powers' | 'dig_results'> {
       return {
         admin: {
       slot: new Fr(1n),
@@ -109,8 +109,11 @@ traps: {
     },
 powers: {
       slot: new Fr(6n),
+    },
+dig_results: {
+      slot: new Fr(7n),
     }
-      } as ContractStorageLayout<'admin' | 'next_game_id' | 'games' | 'treasures' | 'traps' | 'powers'>;
+      } as ContractStorageLayout<'admin' | 'next_game_id' | 'games' | 'treasures' | 'traps' | 'powers' | 'dig_results'>;
     }
     
 
@@ -132,8 +135,14 @@ powers: {
     /** get_admin() */
     get_admin: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** get_all_dig_results(game_id: field) */
+    get_all_dig_results: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** get_current_turn(game_id: field) */
     get_current_turn: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** get_dig_result(game_id: field, x: integer, y: integer) */
+    get_dig_result: ((game_id: FieldLike, x: (bigint | number), y: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** get_game(game_id: field) */
     get_game: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;

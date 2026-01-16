@@ -69,8 +69,12 @@ export function Game() {
 
   // Handle action response
   const handleRespond = () => {
+    console.log('handleRespond called, pendingAction:', pendingAction);
     if (pendingAction === 1n) {
+      console.log('Calling respondDig...');
       respondDig();
+    } else {
+      console.log('pendingAction is not DIG (1n), it is:', pendingAction);
     }
   };
 
