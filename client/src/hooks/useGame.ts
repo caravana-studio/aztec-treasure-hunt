@@ -266,7 +266,9 @@ export function useGame() {
 
         addLog(`Game #${nextGameId.toString()} created. Waiting for opponent...`);
         await refreshGameState(id);
-        return id;
+        // Return the numeric value for URL, not the Fr object
+        // Convert bigint to number if needed
+        return typeof nextGameId === 'bigint' ? Number(nextGameId) : nextGameId;
       } catch (err: unknown) {
         console.error('Failed to create game - Full error:', err);
         const errorMessage = extractErrorMessage(err);
