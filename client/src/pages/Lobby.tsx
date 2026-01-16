@@ -6,7 +6,7 @@ import { useGame } from '../hooks/useGame';
 export function Lobby() {
   const navigate = useNavigate();
   const { myAddress, isConnecting, createAccount, connectTestAccount } = useWallet();
-  const { createGame, joinGame, isLoading, error, setError } = useGame();
+  const { createGame, joinGame, isLoading, statusMessage, error, setError } = useGame();
   const [gameIdInput, setGameIdInput] = useState('');
   const [testAccountIndex, setTestAccountIndex] = useState(0);
 
@@ -31,8 +31,8 @@ export function Lobby() {
 
   return (
     <div className="lobby-container">
+      <img src="/images/logo.png" alt="Treasure Hunt" className="lobby-logo" />
       <div className="lobby-card">
-        <img src="/images/logo.png" alt="Treasure Hunt" className="lobby-title" />
         <p className="lobby-subtitle">Strategic treasure hunting with truly private game state on Aztec Network</p>
 
         {error && (
@@ -108,13 +108,17 @@ export function Lobby() {
           </div>
         )}
 
-        {isLoading && (
-          <div className="lobby-loading">
-            <div className="loading-spinner" />
-            Processing...
-          </div>
-        )}
       </div>
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner" />
+            <p>{statusMessage || 'Processing...'}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

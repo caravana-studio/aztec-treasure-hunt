@@ -454,6 +454,7 @@
 .lobby-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   background-image: url('/images/background.png');
   justify-content: center;
@@ -500,6 +501,30 @@
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+}
+
+.lobby-logo {
+  display: block;
+  margin: 0 auto var(--space-xl) auto;
+  max-width: 500px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)) 
+          drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
+          drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+  animation: logoFloat 3s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .lobby-title {
@@ -584,7 +609,7 @@
   align-items: center;
   gap: 12px;
   margin-top: 20px;
-  color: rgba(60, 50, 40, 0.8);
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -630,10 +655,11 @@
 
 .loading-content p {
   margin: 0;
-  color: rgba(60, 50, 40, 0.9);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 16px;
   font-weight: var(--font-weight-semibold);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-align: center;
 }
 
 .loading-spinner {
