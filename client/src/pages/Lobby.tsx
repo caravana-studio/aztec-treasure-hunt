@@ -11,10 +11,9 @@ export function Lobby() {
   const [testAccountIndex, setTestAccountIndex] = useState(0);
 
   const handleCreateGame = async () => {
-    if (!gameIdInput) return;
-    const id = await createGame(gameIdInput);
+    const id = await createGame();
     if (id) {
-      navigate(`/game/${gameIdInput}`);
+      navigate(`/game/${id.toBigInt().toString()}`);
     }
   };
 
@@ -104,29 +103,43 @@ export function Lobby() {
               {myAddress.toString().slice(0, 10)}...{myAddress.toString().slice(-8)}
             </div>
 
-            <input
-              type="number"
-              className="glass-input"
-              placeholder="Enter Game ID"
-              value={gameIdInput}
-              onChange={(e) => setGameIdInput(e.target.value)}
-              min="1"
-            />
+            <button
+              className="glass-btn"
+              onClick={handleCreateGame}
+              disabled={isLoading}
+              style={{ width: '100%' }}
+            >
+              {isLoading ? 'Creating...' : 'Create New Game'}
+            </button>
 
-            <div className="lobby-buttons">
-              <button
-                className="glass-btn"
-                onClick={handleCreateGame}
-                disabled={isLoading || !gameIdInput}
-              >
-                {isLoading ? 'Creating...' : 'Create Game'}
-              </button>
+            <div
+              style={{
+                textAlign: 'center',
+                color: 'rgba(0,0,0,0.4)',
+                fontSize: '13px',
+                fontWeight: 500,
+                letterSpacing: '0.5px',
+              }}
+            >
+              or join existing
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <input
+                type="number"
+                className="glass-input"
+                placeholder="Game ID"
+                value={gameIdInput}
+                onChange={(e) => setGameIdInput(e.target.value)}
+                min="1"
+                style={{ flex: 1 }}
+              />
               <button
                 className="glass-btn-secondary"
                 onClick={handleJoinGame}
                 disabled={isLoading || !gameIdInput}
               >
-                {isLoading ? 'Joining...' : 'Join Game'}
+                {isLoading ? 'Joining...' : 'Join'}
               </button>
             </div>
           </div>

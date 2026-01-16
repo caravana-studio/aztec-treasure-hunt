@@ -155,16 +155,21 @@ export function useGame() {
   );
 
   const createGame = useCallback(
-    async (gameIdStr: string) => {
-      if (!wallet || !myAddress || !contractAddress || !gameIdStr) return;
+    async () => {
+      if (!wallet || !myAddress || !contractAddress) return;
 
       setLoading(true, 'Creating game...');
       setError(null);
 
       try {
         const contract = TreasureHuntContract.at(contractAddress, wallet);
-        const id = new Fr(Number(gameIdStr));
-        await contract.methods.create_game(id).send({ from: myAddress }).wait();
+
+        // Get the next game ID that will be assigned
+        const nextGameId = await contract.methods.get_next_game_id().simulate({ from: myAddress });
+        const id = new Fr(nextGameId);
+
+        // Create game (ID is auto-assigned)
+        await contract.methods.create_game().send({ from: myAddress }).wait();
 
         setState((prev) => ({
           ...prev,
@@ -172,7 +177,7 @@ export function useGame() {
           isPlayer1: true,
         }));
 
-        addLog(`Game ${gameIdStr} created. Waiting for opponent...`);
+        addLog(`Game #${nextGameId.toString()} created. Waiting for opponent...`);
         await refreshGameState(id);
         return id;
       } catch (err) {

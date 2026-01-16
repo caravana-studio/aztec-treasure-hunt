@@ -1,9 +1,8 @@
 use crate::TreasureHunt;
 use crate::test::utils::setup;
 use crate::test::helpers::{
-    TEST_GAME_ID_1, TEST_GAME_ID_2, TEST_GAME_ID_3, TEST_GAME_ID_4, TEST_GAME_ID_5,
-    setup_two_player_game, place_player_treasures, setup_complete_game,
-    sample_treasures_player1, sample_treasures_player2
+    create_game_and_get_id, setup_two_player_game, place_player_treasures, setup_complete_game,
+    sample_treasures_player1
 };
 use crate::game::{
     STATUS_CREATED, STATUS_SETUP, STATUS_PLAYING, STATUS_AWAITING,
@@ -68,9 +67,8 @@ unconstrained fn test_admin_is_set_correctly() {
 unconstrained fn test_create_game_sets_initial_state() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
-    let game_id = TEST_GAME_ID_1;
 
-    env.call_public(player1, TreasureHunt::at(contract_address).create_game(game_id));
+    let game_id = create_game_and_get_id(&mut env, contract_address, player1);
 
     env.public_context_at(contract_address, |context| {
         let game_slot = derive_storage_slot_in_map(TreasureHunt::storage_layout().games.slot, game_id);
@@ -89,18 +87,23 @@ unconstrained fn test_create_game_sets_initial_state() {
     });
 }
 
-/// Test: Cannot create a game with duplicate game_id
-#[test(should_fail)]
-unconstrained fn test_fail_create_duplicate_game() {
+/// Test: Creating multiple games assigns sequential IDs
+#[test]
+unconstrained fn test_create_multiple_games_sequential_ids() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
-    let game_id = TEST_GAME_ID_1;
 
-    // Create game once
-    env.call_public(player1, TreasureHunt::at(contract_address).create_game(game_id));
+    // Create first game
+    let game_id_1 = create_game_and_get_id(&mut env, contract_address, player1);
+    assert_eq(game_id_1, 1);
 
-    // Try to create the same game_id again (should fail)
-    env.call_public(player1, TreasureHunt::at(contract_address).create_game(game_id));
+    // Create second game
+    let game_id_2 = create_game_and_get_id(&mut env, contract_address, player1);
+    assert_eq(game_id_2, 2);
+
+    // Create third game
+    let game_id_3 = create_game_and_get_id(&mut env, contract_address, player1);
+    assert_eq(game_id_3, 3);
 }
 
 // ============================================================================
@@ -113,10 +116,9 @@ unconstrained fn test_join_game_updates_state() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_2;
 
     // Player 1 creates game
-    env.call_public(player1, TreasureHunt::at(contract_address).create_game(game_id));
+    let game_id = create_game_and_get_id(&mut env, contract_address, player1);
 
     // Verify initial status is CREATED
     env.public_context_at(contract_address, |context| {
@@ -149,10 +151,10 @@ unconstrained fn test_join_game_updates_state() {
 unconstrained fn test_fail_join_nonexistent_game() {
     let (mut env, contract_address, _admin) = setup();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_2;
+    let non_existent_game_id = 999;
 
     // Try to join without game being created (should fail)
-    env.call_public(player2, TreasureHunt::at(contract_address).join_game(game_id));
+    env.call_public(player2, TreasureHunt::at(contract_address).join_game(non_existent_game_id));
 }
 
 /// Test: Same player cannot join as both player1 and player2
@@ -160,9 +162,8 @@ unconstrained fn test_fail_join_nonexistent_game() {
 unconstrained fn test_fail_same_player_joins_own_game() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
-    let game_id = TEST_GAME_ID_2;
 
-    env.call_public(player1, TreasureHunt::at(contract_address).create_game(game_id));
+    let game_id = create_game_and_get_id(&mut env, contract_address, player1);
 
     // Try to join own game (should fail)
     env.call_public(player1, TreasureHunt::at(contract_address).join_game(game_id));
@@ -178,9 +179,8 @@ unconstrained fn test_place_treasures_success() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_3;
 
-    setup_two_player_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_two_player_game(&mut env, contract_address, player1, player2);
 
     // Player 1 places treasures
     place_player_treasures(&mut env, contract_address, player1, game_id, sample_treasures_player1());
@@ -203,10 +203,9 @@ unconstrained fn test_both_players_place_treasures_starts_game() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_3;
 
     // Setup complete game (both players place treasures)
-    setup_complete_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_complete_game(&mut env, contract_address, player1, player2);
 
     // Verify game state
     env.public_context_at(contract_address, |context| {
@@ -240,9 +239,8 @@ unconstrained fn test_fail_place_duplicate_positions() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_4;
 
-    setup_two_player_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_two_player_game(&mut env, contract_address, player1, player2);
 
     // Try to place two treasures at the same position
     env.call_private(
@@ -262,9 +260,8 @@ unconstrained fn test_fail_place_out_of_bounds() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_4;
 
-    setup_two_player_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_two_player_game(&mut env, contract_address, player1, player2);
 
     // Try to place treasure outside grid (x=10 > 7)
     env.call_private(
@@ -288,10 +285,9 @@ unconstrained fn test_dig_sets_pending_action() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_4;
 
     // Setup complete game
-    setup_complete_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_complete_game(&mut env, contract_address, player1, player2);
 
     // Player 1 digs at position (2, 3)
     env.call_public(player1, TreasureHunt::at(contract_address).dig(game_id, 2, 3));
@@ -322,10 +318,9 @@ unconstrained fn test_use_shovel_switches_turn() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_5;
 
     // Setup complete game
-    setup_complete_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_complete_game(&mut env, contract_address, player1, player2);
 
     // Verify it's player1's turn initially
     env.public_context_at(contract_address, |context| {
@@ -360,10 +355,9 @@ unconstrained fn test_use_trap_switches_turn() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_5;
 
     // Setup complete game
-    setup_complete_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_complete_game(&mut env, contract_address, player1, player2);
 
     // Player 1 places a trap at (2, 2)
     env.call_private(
@@ -395,9 +389,8 @@ unconstrained fn test_winner_is_zero_before_game_ends() {
     let (mut env, contract_address, _admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_5;
 
-    setup_complete_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_complete_game(&mut env, contract_address, player1, player2);
 
     env.public_context_at(contract_address, |context| {
         let game_slot = derive_storage_slot_in_map(TreasureHunt::storage_layout().games.slot, game_id);
@@ -418,10 +411,9 @@ unconstrained fn test_full_game_state_after_setup() {
     let (mut env, contract_address, admin) = setup();
     let player1 = env.create_light_account();
     let player2 = env.create_light_account();
-    let game_id = TEST_GAME_ID_1;
 
     // Complete game setup
-    setup_complete_game(&mut env, contract_address, player1, player2, game_id);
+    let game_id = setup_complete_game(&mut env, contract_address, player1, player2);
 
     // Verify ALL game state fields
     env.public_context_at(contract_address, |context| {

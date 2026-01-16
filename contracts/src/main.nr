@@ -45,6 +45,7 @@ pub contract TreasureHunt {
     #[storage]
     struct Storage<Context> {
         admin: PublicMutable<AztecAddress, Context>,
+        next_game_id: PublicMutable<Field, Context>,
         games: Map<Field, PublicMutable<Game, Context>, Context>,
         treasures: Map<Field, Owned<PrivateSet<TreasureNote, Context>, Context>, Context>,
         traps: Map<Field, Owned<PrivateSet<TrapNote, Context>, Context>, Context>,
@@ -55,14 +56,16 @@ pub contract TreasureHunt {
     #[initializer]
     fn constructor(admin: AztecAddress) {
         self.storage.admin.write(admin);
+        self.storage.next_game_id.write(1);
     }
 
     // ============ SETUP FUNCTIONS ============
 
     #[external("public")]
-    fn create_game(game_id: Field) {
-        let existing = self.storage.games.at(game_id).read();
-        assert(existing.player1.eq(AztecAddress::zero()));
+    fn create_game() {
+        // Get and increment game ID
+        let game_id = self.storage.next_game_id.read();
+        self.storage.next_game_id.write(game_id + 1);
 
         let game = Game::new(self.context.msg_sender().unwrap());
         self.storage.games.at(game_id).write(game);
@@ -548,6 +551,12 @@ pub contract TreasureHunt {
     #[external("utility")]
     unconstrained fn get_admin() -> pub AztecAddress {
         self.storage.admin.read()
+    }
+
+    /// Get the next game ID that will be assigned
+    #[external("utility")]
+    unconstrained fn get_next_game_id() -> pub Field {
+        self.storage.next_game_id.read()
     }
 
     /// Get the complete game state

@@ -90,24 +90,27 @@ export class TreasureHuntContract extends ContractBase {
   }
   
 
-  public static get storage(): ContractStorageLayout<'admin' | 'games' | 'treasures' | 'traps' | 'powers'> {
+  public static get storage(): ContractStorageLayout<'admin' | 'next_game_id' | 'games' | 'treasures' | 'traps' | 'powers'> {
       return {
         admin: {
       slot: new Fr(1n),
     },
-games: {
+next_game_id: {
       slot: new Fr(2n),
     },
-treasures: {
+games: {
       slot: new Fr(3n),
     },
-traps: {
+treasures: {
       slot: new Fr(4n),
     },
-powers: {
+traps: {
       slot: new Fr(5n),
+    },
+powers: {
+      slot: new Fr(6n),
     }
-      } as ContractStorageLayout<'admin' | 'games' | 'treasures' | 'traps' | 'powers'>;
+      } as ContractStorageLayout<'admin' | 'next_game_id' | 'games' | 'treasures' | 'traps' | 'powers'>;
     }
     
 
@@ -120,8 +123,8 @@ powers: {
     /** constructor(admin: struct) */
     constructor: ((admin: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** create_game(game_id: field) */
-    create_game: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** create_game() */
+    create_game: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** dig(game_id: field, x: integer, y: integer) */
     dig: ((game_id: FieldLike, x: (bigint | number), y: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -137,6 +140,9 @@ powers: {
 
     /** get_game_status(game_id: field) */
     get_game_status: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** get_next_game_id() */
+    get_next_game_id: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** get_pending_action(game_id: field) */
     get_pending_action: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;

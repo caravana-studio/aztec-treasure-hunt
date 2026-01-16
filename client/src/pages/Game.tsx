@@ -82,10 +82,12 @@ export function Game() {
     return (
       <div className="lobby-container">
         <div className="lobby-card">
-          <p>Please connect your wallet first.</p>
-          <button className="glass-btn" onClick={() => navigate('/lobby')}>
-            Go to Lobby
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-md)' }}>
+            <p style={{ margin: 0, textAlign: 'center' }}>Please connect your wallet first.</p>
+            <button className="glass-btn" onClick={() => navigate('/lobby')}>
+              Go to Lobby
+            </button>
+          </div>
         </div>
       </div>
     );
