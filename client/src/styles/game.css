@@ -1,0 +1,805 @@
+/* Game Page Styles */
+
+/* Game background */
+.game-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-image: url('/images/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Game layout */
+.game-layout {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  padding: var(--space-md);
+  column-gap: 4px;
+  row-gap: 4px;
+  align-items: center;
+  justify-items: center;
+}
+
+/* Turn indicator - iOS 26 Liquid Glass */
+.turn-indicator {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  margin-bottom: 4px;
+  z-index: 10;
+  width: 100%;
+}
+
+.turn-indicator-box {
+  padding: var(--space-sm) var(--space-xl);
+  background: linear-gradient(
+    145deg,
+    rgba(55, 50, 42, 0.85) 0%,
+    rgba(45, 42, 36, 0.9) 100%
+  );
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.turn-text {
+  font-size: 22px;
+  font-weight: var(--font-weight-bold);
+  color: rgba(255, 255, 255, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Player panels */
+.player-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-self: center;
+}
+
+.player-panel.left {
+  grid-column: 1;
+  grid-row: 2;
+  align-items: flex-end;
+  justify-self: end;
+}
+
+.player-panel.right {
+  grid-column: 3;
+  grid-row: 2;
+  align-items: flex-start;
+  justify-self: start;
+}
+
+/* Player card - iOS 26 Liquid Glass */
+.player-card {
+  position: relative;
+  padding: 10px;
+  background: linear-gradient(
+    145deg,
+    rgba(210, 180, 140, 0.95) 0%,
+    rgba(195, 165, 125, 0.9) 50%,
+    rgba(180, 150, 110, 0.95) 100%
+  );
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.player-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.player-score-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(245, 245, 245, 0.9) 100%
+  );
+  border-radius: var(--radius-sm);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.player-score-badge img {
+  width: 26px;
+  height: 26px;
+}
+
+.score-count {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(45, 125, 210, 0.4);
+}
+
+/* Objects panel - iOS 26 Liquid Glass */
+.objects-panel {
+  width: 100%;
+  max-width: 300px;
+}
+
+.objects-header {
+  background: linear-gradient(
+    180deg,
+    rgba(70, 65, 55, 0.9) 0%,
+    rgba(55, 50, 42, 0.95) 100%
+  );
+  color: rgba(255, 255, 255, 0.95);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-weight: var(--font-weight-bold);
+  font-size: 13px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.objects-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(55, 50, 42, 0.9) 0%,
+    rgba(45, 42, 36, 0.95) 100%
+  );
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: none;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Grid container */
+.grid-container {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px var(--space-sm) var(--space-sm) var(--space-sm);
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Grid actions (below grid) */
+.grid-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.grid-hint {
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Game grid - iOS 26 Liquid Glass */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  padding: var(--space-lg);
+  background: linear-gradient(
+    145deg,
+    rgba(190, 170, 145, 0.8) 0%,
+    rgba(175, 155, 130, 0.75) 50%,
+    rgba(165, 145, 120, 0.8) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  width: min(calc(100vh - 300px), 600px);
+  height: min(calc(100vh - 300px), 600px);
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+}
+
+/* Grid cell - iOS 26 Liquid Glass */
+.grid-cell {
+  aspect-ratio: 1;
+  background: linear-gradient(
+    145deg,
+    rgba(220, 200, 170, 0.9) 0%,
+    rgba(210, 190, 160, 0.85) 100%
+  );
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.grid-cell:hover:not(.disabled) {
+  background: linear-gradient(
+    145deg,
+    rgba(235, 215, 185, 0.95) 0%,
+    rgba(225, 205, 175, 0.9) 100%
+  );
+  transform: scale(1.04);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.grid-cell.clickable {
+  cursor: pointer;
+}
+
+.grid-cell.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Cell states */
+.grid-cell.your-treasure {
+  background: linear-gradient(
+    145deg,
+    rgba(135, 180, 220, 0.85) 0%,
+    rgba(115, 160, 200, 0.8) 100%
+  );
+  border-color: rgba(100, 150, 200, 0.3);
+}
+
+.grid-cell.dug-empty {
+  background: linear-gradient(
+    145deg,
+    rgba(160, 130, 100, 0.9) 0%,
+    rgba(140, 110, 80, 0.85) 100%
+  );
+  border-color: rgba(120, 90, 60, 0.3);
+}
+
+.grid-cell.dug-found {
+  background: linear-gradient(
+    145deg,
+    rgba(120, 180, 120, 0.9) 0%,
+    rgba(100, 160, 100, 0.85) 100%
+  );
+  border-color: rgba(80, 140, 80, 0.3);
+}
+
+.grid-cell.selected {
+  background: linear-gradient(
+    145deg,
+    rgba(243, 180, 100, 0.95) 0%,
+    rgba(230, 165, 80, 0.9) 100%
+  );
+  box-shadow:
+    0 0 0 3px rgba(243, 156, 18, 0.4),
+    0 4px 12px rgba(243, 156, 18, 0.25);
+  border-color: rgba(243, 156, 18, 0.5);
+}
+
+/* Cell content */
+.cell-content {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+}
+
+/* Cell animations */
+.grid-cell.digging {
+  animation: dig 0.4s ease;
+}
+
+.grid-cell.found .cell-content {
+  animation: pop 0.5s ease forwards;
+}
+
+/* Logs panel - iOS 26 Liquid Glass */
+.logs-panel {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  background: linear-gradient(
+    180deg,
+    rgba(55, 50, 42, 0.92) 0%,
+    rgba(45, 42, 36, 0.95) 100%
+  );
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 -4px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.logs-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.logs-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.logs-header svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logs-header.expanded svg {
+  transform: rotate(180deg);
+}
+
+.logs-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logs-content.expanded {
+  max-height: 200px;
+}
+
+.logs-list {
+  padding: var(--space-md) var(--space-lg);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}
+
+.log-entry {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.lobby-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background-image: url('/images/background.png');
+  justify-content: center;
+  padding: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.lobby-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 40%
+  );
+  pointer-events: none;
+}
+
+.lobby-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-xl) var(--space-lg);
+  background: linear-gradient(
+    145deg,
+    rgba(210, 180, 140, 0.95) 0%,
+    rgba(195, 165, 125, 0.9) 50%,
+    rgba(180, 150, 110, 0.95) 100%
+  );
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.lobby-title {
+  display: block;
+  margin: 0 auto var(--space-sm) auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.lobby-subtitle {
+  font-size: 15px;
+  color: rgba(60, 50, 40, 0.85);
+  text-align: center;
+  margin-bottom: var(--space-xl);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.lobby-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.lobby-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.lobby-row .glass-input {
+  flex: 1;
+}
+
+.lobby-btn-full {
+  width: 100%;
+}
+
+.lobby-buttons {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.lobby-buttons button {
+  flex: 1;
+}
+
+/* Address display */
+.lobby-address {
+  padding: 14px 18px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.35) 100%
+  );
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+  text-align: center;
+  margin-bottom: 8px;
+  color: rgba(60, 50, 40, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Text divider */
+.lobby-divider {
+  text-align: center;
+  color: rgba(60, 50, 40, 0.6);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Lobby loading state */
+.lobby-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  color: rgba(60, 50, 40, 0.8);
+  font-weight: 500;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Loading overlay - iOS 26 Liquid Glass */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  min-width: 200px;
+  padding: var(--space-xl) var(--space-lg);
+  background: linear-gradient(
+    145deg,
+    rgba(210, 180, 140, 0.95) 0%,
+    rgba(195, 165, 125, 0.9) 50%,
+    rgba(180, 150, 110, 0.95) 100%
+  );
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  text-align: center;
+}
+
+.loading-content p {
+  margin: 0;
+  color: rgba(60, 50, 40, 0.9);
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-left-color: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Status message - iOS 26 Liquid Glass */
+.status-toast {
+  position: fixed;
+  bottom: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    145deg,
+    rgba(55, 50, 42, 0.95) 0%,
+    rgba(45, 42, 36, 0.98) 100%
+  );
+  color: rgba(255, 255, 255, 0.95);
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Error message - iOS 26 Liquid Glass with red tint */
+.error-toast {
+  position: fixed;
+  top: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    145deg,
+    rgba(228, 80, 66, 0.85) 0%,
+    rgba(181, 55, 48, 0.9) 100%
+  );
+  color: rgba(255, 255, 255, 0.95);
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(248, 9, 9, 0.3);
+  box-shadow:
+    0 8px 32px rgba(150, 45, 40, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  font-weight: var(--font-weight-semibold);
+  font-size: 15px;
+  cursor: pointer;
+  max-width: 90vw;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .game-layout {
+    grid-template-columns: 220px 1fr 220px;
+  }
+
+  .player-card {
+    width: 180px;
+  }
+
+  .objects-panel {
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .game-layout {
+    grid-template-columns: 200px 1fr 200px;
+  }
+
+  .player-card {
+    width: 160px;
+  }
+
+  .objects-panel {
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 900px) {
+  .game-layout {
+    grid-template-columns: 180px 1fr 180px;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+  }
+
+  .player-card {
+    width: 150px;
+  }
+
+  .objects-panel {
+    max-width: 170px;
+  }
+
+  .objects-grid {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .turn-text {
+    font-size: 18px;
+  }
+
+  .turn-indicator-box {
+    padding: var(--space-xs) var(--space-lg);
+  }
+
+  .game-grid {
+    width: min(calc(100vh - 220px), 480px);
+    height: min(calc(100vh - 220px), 480px);
+    padding: var(--space-md);
+    gap: 4px;
+  }
+}
+
+@media (max-width: 750px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
+    gap: var(--space-sm);
+  }
+
+  .player-panel {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--space-md);
+  }
+
+  .player-panel.left, .player-panel.right {
+    align-items: center;
+  }
+
+  .player-card {
+    width: 120px;
+  }
+
+  .objects-panel {
+    max-width: 200px;
+  }
+
+  .objects-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .game-grid {
+    width: min(80vw, 400px);
+    height: min(80vw, 400px);
+    padding: var(--space-sm);
+    gap: 3px;
+  }
+}

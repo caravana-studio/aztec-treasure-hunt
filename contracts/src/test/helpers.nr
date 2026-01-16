@@ -3,13 +3,6 @@ use dep::aztec::{
 };
 use crate::TreasureHunt;
 
-// Test constants
-pub global TEST_GAME_ID_1: Field = 1;
-pub global TEST_GAME_ID_2: Field = 2;
-pub global TEST_GAME_ID_3: Field = 3;
-pub global TEST_GAME_ID_4: Field = 4;
-pub global TEST_GAME_ID_5: Field = 5;
-
 // Sample treasure positions for testing
 pub unconstrained fn sample_treasures_player1() -> (u8, u8, u8, u8, u8, u8) {
     // Player 1 places at corners: (0,0), (7,7), (0,7)
@@ -21,16 +14,33 @@ pub unconstrained fn sample_treasures_player2() -> (u8, u8, u8, u8, u8, u8) {
     (3, 3, 4, 4, 5, 5)
 }
 
+// Helper to create a game and return the assigned game_id
+pub unconstrained fn create_game_and_get_id(
+    env: &mut TestEnvironment,
+    contract_address: AztecAddress,
+    player1: AztecAddress,
+) -> Field {
+    // Read next_game_id to know what ID will be assigned
+    let game_id: Field = env.public_context_at(contract_address, |context| {
+        context.storage_read(TreasureHunt::storage_layout().next_game_id.slot)
+    });
+
+    // Create game (ID is auto-assigned)
+    env.call_public(player1, TreasureHunt::at(contract_address).create_game());
+
+    game_id
+}
+
 // Helper to setup a game with two players
 pub unconstrained fn setup_two_player_game(
     env: &mut TestEnvironment,
     contract_address: AztecAddress,
     player1: AztecAddress,
     player2: AztecAddress,
-    game_id: Field
-) {
-    env.call_public(player1, TreasureHunt::at(contract_address).create_game(game_id));
+) -> Field {
+    let game_id = create_game_and_get_id(env, contract_address, player1);
     env.call_public(player2, TreasureHunt::at(contract_address).join_game(game_id));
+    game_id
 }
 
 // Helper to place treasures for a player
@@ -54,12 +64,13 @@ pub unconstrained fn setup_complete_game(
     contract_address: AztecAddress,
     player1: AztecAddress,
     player2: AztecAddress,
-    game_id: Field
-) {
+) -> Field {
     // Create and join game
-    setup_two_player_game(env, contract_address, player1, player2, game_id);
+    let game_id = setup_two_player_game(env, contract_address, player1, player2);
 
     // Place treasures for both players
     place_player_treasures(env, contract_address, player1, game_id, sample_treasures_player1());
     place_player_treasures(env, contract_address, player2, game_id, sample_treasures_player2());
+
+    game_id
 }
