@@ -621,8 +621,8 @@
 .loading-spinner {
   width: 44px;
   height: 44px;
-  border: 3px solid rgba(60, 50, 40, 0.2);
-  border-left-color: rgba(60, 50, 40, 0.7);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-left-color: rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
@@ -656,7 +656,7 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* Error message - iOS 26 Liquid Glass */
+/* Error message - iOS 26 Liquid Glass with red tint */
 .error-toast {
   position: fixed;
   top: var(--space-xl);
@@ -664,22 +664,40 @@
   transform: translateX(-50%);
   background: linear-gradient(
     145deg,
-    rgba(231, 76, 60, 0.95) 0%,
-    rgba(192, 57, 43, 0.98) 100%
+    rgba(228, 80, 66, 0.85) 0%,
+    rgba(181, 55, 48, 0.9) 100%
   );
-  color: white;
+  color: rgba(255, 255, 255, 0.95);
   padding: var(--space-md) var(--space-xl);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(248, 9, 9, 0.3);
   box-shadow:
-    0 8px 32px rgba(231, 76, 60, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 8px 32px rgba(150, 45, 40, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 100;
-  font-weight: var(--font-weight-medium);
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  font-weight: var(--font-weight-semibold);
+  font-size: 15px;
   cursor: pointer;
+  max-width: 90vw;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Responsive */

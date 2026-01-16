@@ -8,7 +8,7 @@ function LoadingScreen() {
     <div className="lobby-container">
       <div className="lobby-card" style={{ textAlign: 'center' }}>
         <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
-        <p>Connecting to Aztec network...</p>
+        <p style={{ margin: 0, color: 'white', textAlign: 'center' }}>Connecting to Aztec network...</p>            
       </div>
     </div>
   );

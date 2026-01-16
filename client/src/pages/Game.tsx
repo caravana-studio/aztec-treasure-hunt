@@ -94,23 +94,25 @@ export function Game() {
   }
 
   return (
+    
     <div className="game-container">
+       {error && (
+        <div className="error-toast" onClick={() => setError(null)}>
+          {error}
+        </div>
+      )}
       {/* Loading overlay */}
       {isLoading && (
         <div className="loading-overlay">
           <div className="loading-content">
             <div className="loading-spinner" />
-            <p>{statusMessage || 'Processing...'}</p>
+            <p style={{ margin: 0, color: 'white', textAlign: 'center' }}>{statusMessage || 'Processing...'}</p>
           </div>
         </div>
       )}
 
       {/* Error toast */}
-      {error && (
-        <div className="error-toast" onClick={() => setError(null)}>
-          {error}
-        </div>
-      )}
+     
 
       {/* Status toast */}
       {statusMessage && !isLoading && (

@@ -57,6 +57,42 @@ const initialPowers: Record<PowerType, number> = {
   trap: 2,
 };
 
+// Helper to extract error message from various error types
+function extractErrorMessage(err: unknown): string {
+  console.log('Error object keys:', err ? Object.keys(err as object) : 'null');
+
+  if (err instanceof Error) {
+    // Check for nested cause or reason
+    const anyErr = err as Record<string, unknown>;
+    if (anyErr.cause) {
+      console.log('Error cause:', anyErr.cause);
+    }
+    if (anyErr.reason) {
+      console.log('Error reason:', anyErr.reason);
+    }
+    if (anyErr.data) {
+      console.log('Error data:', anyErr.data);
+    }
+
+    // Try to extract a meaningful message
+    if (typeof anyErr.reason === 'string' && anyErr.reason) {
+      return anyErr.reason;
+    }
+    if (typeof anyErr.cause === 'string' && anyErr.cause) {
+      return anyErr.cause;
+    }
+    if (err.message) {
+      return err.message;
+    }
+  }
+
+  if (typeof err === 'string') {
+    return err;
+  }
+
+  return JSON.stringify(err);
+}
+
 export function useGame() {
   const { wallet, myAddress, contractAddress } = useWallet();
 
@@ -199,8 +235,10 @@ export function useGame() {
         addLog(`Game #${nextGameId.toString()} created. Waiting for opponent...`);
         await refreshGameState(id);
         return id;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create game');
+      } catch (err: unknown) {
+        console.error('Failed to create game - Full error:', err);
+        const errorMessage = extractErrorMessage(err);
+        setError(errorMessage || 'Failed to create game');
         setLoading(false);
         return null;
       }
@@ -229,8 +267,10 @@ export function useGame() {
         addLog(`Joined game ${gameIdStr}. Place your treasures!`);
         await refreshGameState(id);
         return id;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to join game');
+      } catch (err: unknown) {
+        console.error('Failed to join game - Full error:', err);
+        const errorMessage = extractErrorMessage(err);
+        setError(errorMessage || 'Failed to join game');
         setLoading(false);
         return null;
       }
@@ -259,8 +299,10 @@ export function useGame() {
 
       addLog('Treasures placed!');
       await refreshGameState();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to place treasures');
+    } catch (err: unknown) {
+      console.error('Failed to place treasures - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      setError(errorMessage || 'Failed to place treasures');
       setLoading(false);
     }
   }, [wallet, myAddress, contractAddress, state.gameId, state.selectedTreasures, setLoading, setError, addLog, refreshGameState]);
@@ -277,8 +319,10 @@ export function useGame() {
 
         addLog(`Dug at position (${x}, ${y})`);
         await refreshGameState();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to dig');
+      } catch (err: unknown) {
+        console.error('Failed to dig - Full error:', err);
+        const errorMessage = extractErrorMessage(err);
+        setError(errorMessage || 'Failed to dig');
         setLoading(false);
       }
     },
@@ -296,8 +340,10 @@ export function useGame() {
 
       addLog('Responded to dig action');
       await refreshGameState();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to respond');
+    } catch (err: unknown) {
+      console.error('Failed to respond - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      setError(errorMessage || 'Failed to respond');
       setLoading(false);
     }
   }, [wallet, myAddress, contractAddress, state.gameId, setLoading, setError, addLog, refreshGameState]);
