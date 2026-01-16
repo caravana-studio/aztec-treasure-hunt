@@ -3,11 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Fr } from '@aztec/aztec.js/fields';
 import { useWallet } from '../context/WalletContext';
 import { useGame } from '../hooks/useGame';
-import { PlayerCard } from '../components/PlayerCard';
-import { PowersPanel } from '../components/PowersPanel';
-import { GameGrid } from '../components/GameGrid';
-import { GameLogs } from '../components/GameLogs';
-import { TurnIndicator } from '../components/TurnIndicator';
+import { PlayerCard, PowersPanel, GameGrid, GameLogs, TurnIndicator } from '../components/game';
 
 export function Game() {
   const { id } = useParams<{ id: string }>();

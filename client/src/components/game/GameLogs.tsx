@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GameLog } from '../hooks/useGame';
+import { GameLog } from '../../types/game';
 
 interface GameLogsProps {
   logs: GameLog[];

@@ -1,4 +1,4 @@
-import { PowerType } from '../hooks/useGame';
+import { PowerType } from '../../types/game';
 
 interface PowerItem {
   type: PowerType;

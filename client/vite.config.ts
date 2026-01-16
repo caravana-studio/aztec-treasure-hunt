@@ -13,7 +13,7 @@ const nodeBuiltinsShim = (): Plugin => ({
   name: 'node-builtins-shim',
   enforce: 'pre',
   resolveId(source) {
-    if (source === 'fs/promises' || source === 'fs' || source === 'net' || source === 'tty' || source === 'pino') {
+    if (source === 'fs/promises' || source === 'fs' || source === 'net' || source === 'tty') {
       return `\0virtual:${source}`;
     }
     return null;
@@ -50,67 +50,6 @@ const nodeBuiltinsShim = (): Plugin => ({
         export default { isatty };
       `;
     }
-    if (id === '\0virtual:pino') {
-      return `
-        const noop = () => {};
-        const createLogger = (opts) => ({
-          info: noop,
-          debug: noop,
-          warn: noop,
-          error: noop,
-          fatal: noop,
-          trace: noop,
-          silent: noop,
-          verbose: noop,
-          child: (bindings, options) => createLogger(),
-          level: 'info',
-          isLevelEnabled: () => false,
-          bindings: () => ({}),
-          flush: noop,
-          levels: { values: { trace: 10, debug: 20, verbose: 25, info: 30, warn: 40, error: 50, fatal: 60 }, labels: { 10: 'trace', 20: 'debug', 25: 'verbose', 30: 'info', 40: 'warn', 50: 'error', 60: 'fatal' } },
-        });
-        const pinoFn = createLogger;
-        pinoFn.levels = { values: { trace: 10, debug: 20, verbose: 25, info: 30, warn: 40, error: 50, fatal: 60 }, labels: { 10: 'trace', 20: 'debug', 25: 'verbose', 30: 'info', 40: 'warn', 50: 'error', 60: 'fatal' } };
-        export const pino = pinoFn;
-        export const symbols = {
-          needsMetadataGsym: Symbol('needsMetadata'),
-          setLevelSym: Symbol('setLevel'),
-          getLevelSym: Symbol('getLevel'),
-          chindingsSym: Symbol('chindings'),
-          parsedChindingsSym: Symbol('parsedChindings'),
-          asJsonSym: Symbol('asJson'),
-          writeSym: Symbol('write'),
-          redactFmtSym: Symbol('redactFmt'),
-          timeSym: Symbol('time'),
-          timeSliceIndexSym: Symbol('timeSliceIndex'),
-          streamSym: Symbol('stream'),
-          stringifySym: Symbol('stringify'),
-          stringifySafeSym: Symbol('stringifySafe'),
-          stringifiersSym: Symbol('stringifiers'),
-          endSym: Symbol('end'),
-          formatOptsSym: Symbol('formatOpts'),
-          messageKeySym: Symbol('messageKey'),
-          errorKeySym: Symbol('errorKey'),
-          nestedKeySym: Symbol('nestedKey'),
-          wildcardFirstSym: Symbol('wildcardFirst'),
-          formattersSym: Symbol('formatters'),
-          useOnlyCustomLevelsSym: Symbol('useOnlyCustomLevels'),
-          levelCompSym: Symbol('levelComp'),
-          mixinSym: Symbol('mixin'),
-          lsCacheSym: Symbol('lsCache'),
-          hooksSym: Symbol('hooks'),
-          nestedKeyStrSym: Symbol('nestedKeyStr'),
-          mixinMergeStrategySym: Symbol('mixinMergeStrategy'),
-          msgPrefixSym: Symbol('msgPrefix'),
-        };
-        export const levels = { values: { trace: 10, debug: 20, verbose: 25, info: 30, warn: 40, error: 50, fatal: 60 }, labels: { 10: 'trace', 20: 'debug', 25: 'verbose', 30: 'info', 40: 'warn', 50: 'error', 60: 'fatal' } };
-        export const destination = () => ({ write: noop });
-        export const transport = () => ({ write: noop });
-        export const multistream = () => ({ write: noop });
-        export const stdSerializers = { err: (e) => e, req: (r) => r, res: (r) => r };
-        export default createLogger;
-      `;
-    }
     return null;
   },
 });
@@ -145,7 +84,14 @@ export default defineConfig({
       stream: 'stream-browserify',
       util: 'util',
       path: 'path-browserify',
-      'sha3': resolve(__dirname, 'src/shims/sha3-shim.ts'),
+      'pino': 'pino/browser.js',
+      'hash.js': 'hash.js/lib/hash.js',
+      'sha3': 'sha3/index.js',
+      'lodash.chunk': 'lodash.chunk/index.js',
+      'lodash.times': 'lodash.times/index.js',
+      'lodash.isequal': 'lodash.isequal/index.js',
+      'lodash.pickby': 'lodash.pickby/index.js',
+      'json-stringify-deterministic': 'json-stringify-deterministic/lib/index.js',
     },
     dedupe: ['@aztec/foundation', '@aztec/circuits.js', '@noble/curves'],
   },

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Position, GRID_SIZE, CellState } from '../hooks/useGame';
+import { Position, GRID_SIZE, CellState } from '../../types/game';
 
 interface GameGridProps {
   myTreasures?: Position[];
