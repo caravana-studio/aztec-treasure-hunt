@@ -255,12 +255,24 @@ pub contract TreasureHunt {
 
         // Store dig result at the pending position
         let position = (game.pending_y as Field) * 8 + (game.pending_x as Field);
-        let result = if hit_trap {
-            DIG_HIT_TRAP
-        } else if hit_treasure {
-            DIG_FOUND_TREASURE
+        let result = if digger.eq(game.player1) {
+            // Player 1 dug
+            if hit_trap {
+                DIG_P1_TRAP
+            } else if hit_treasure {
+                DIG_P1_TREASURE
+            } else {
+                DIG_P1_EMPTY
+            }
         } else {
-            DIG_EMPTY
+            // Player 2 dug
+            if hit_trap {
+                DIG_P2_TRAP
+            } else if hit_treasure {
+                DIG_P2_TREASURE
+            } else {
+                DIG_P2_EMPTY
+            }
         };
         self.storage.dig_results.at(game_id).at(position).write(result);
 

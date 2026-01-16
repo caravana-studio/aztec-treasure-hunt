@@ -8,10 +8,8 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "copy-artifacts": "mkdir -p src/artifacts && cp ../contracts/src/artifacts/*.ts src/artifacts/ && cp -r ../contracts/target ./",
-    "deploy-contracts": "node --experimental-transform-types scripts/deploy.ts",
     "dev": "PROVER_ENABLED=false vite",
-    "build": "yarn copy-artifacts && tsc -b && vite build",
+    "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "prettier --check ./src"
   },
