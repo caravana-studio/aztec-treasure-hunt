@@ -63,7 +63,7 @@ function extractErrorMessage(err: unknown): string {
 
   if (err instanceof Error) {
     // Check for nested cause or reason
-    const anyErr = err as Record<string, unknown>;
+    const anyErr = err as unknown as Record<string, unknown>;
     if (anyErr.cause) {
       console.log('Error cause:', anyErr.cause);
     }
