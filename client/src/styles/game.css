@@ -315,22 +315,40 @@
   border-color: rgba(100, 150, 200, 0.3);
 }
 
-.grid-cell.dug-empty {
+/* === MY DIGS - Dark background to show I already dug here === */
+.grid-cell.dug-mine.dug-empty {
   background: linear-gradient(
     145deg,
-    rgba(160, 130, 100, 0.9) 0%,
-    rgba(140, 110, 80, 0.85) 100%
+    rgba(140, 115, 85, 0.9) 0%,
+    rgba(120, 95, 65, 0.85) 100%
   );
-  border-color: rgba(120, 90, 60, 0.3);
+  border-color: rgba(100, 80, 55, 0.4);
 }
 
-.grid-cell.dug-found {
+.grid-cell.dug-mine.dug-found {
+  background: linear-gradient(
+    145deg,
+    rgba(100, 160, 100, 0.9) 0%,
+    rgba(80, 140, 80, 0.85) 100%
+  );
+  border-color: rgba(60, 120, 60, 0.4);
+}
+
+/* === OPPONENT DIGS - Only red border, normal sand background === */
+.grid-cell.dug-opponent.dug-empty {
+  /* Keep normal sand background, just add red border */
+  border: 3px solid rgba(220, 80, 80, 0.85);
+  box-shadow: 0 0 8px rgba(220, 80, 80, 0.4);
+}
+
+.grid-cell.dug-opponent.dug-found {
   background: linear-gradient(
     145deg,
     rgba(120, 180, 120, 0.9) 0%,
     rgba(100, 160, 100, 0.85) 100%
   );
-  border-color: rgba(80, 140, 80, 0.3);
+  border: 3px solid rgba(220, 80, 80, 0.9);
+  box-shadow: 0 0 12px rgba(220, 80, 80, 0.5);
 }
 
 .grid-cell.selected {

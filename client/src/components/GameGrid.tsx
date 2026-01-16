@@ -3,7 +3,7 @@ import { Position, GRID_SIZE, CellState } from '../hooks/useGame';
 
 interface GameGridProps {
   myTreasures?: Position[];
-  dugCells?: (Position & { found: boolean })[];
+  dugCells?: (Position & { found: boolean; isMine: boolean })[];
   selectedCells?: Position[];
   clickable?: boolean;
   onCellClick?: (x: number, y: number) => void;
@@ -53,10 +53,13 @@ export function GameGrid({
           const isAnimating = animatingCell === key;
           const dugCell = dugCells.find((p) => p.x === x && p.y === y);
 
+          const isMine = dugCell?.isMine ?? false;
+          const digOwnerClass = dugCell ? (isMine ? 'dug-mine' : 'dug-opponent') : '';
+
           return (
             <div
               key={key}
-              className={`grid-cell ${state} ${clickable ? 'clickable' : 'disabled'} ${isAnimating ? 'digging' : ''} ${dugCell?.found ? 'found' : ''}`}
+              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isAnimating ? 'digging' : ''} ${dugCell?.found ? 'found' : ''}`}
               onClick={() => handleCellClick(x, y)}
             >
               {state === 'dug-found' && (

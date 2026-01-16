@@ -40,7 +40,7 @@ export interface GameState {
   pendingAction: bigint;
   selectedTreasures: Position[];
   myTreasurePositions: Position[];
-  dugCells: (Position & { found: boolean })[];
+  dugCells: (Position & { found: boolean; isMine: boolean })[];
   selectedAction: PowerType;
   isLoading: boolean;
   statusMessage: string;
@@ -191,20 +191,26 @@ export function useGame() {
         }
 
         // Fetch dig results (history of all digs)
-        let dugCells: (Position & { found: boolean })[] = [];
+        // Encoding: (digger * 4) + resultType, where digger: 1=player1, 2=player2, resultType: 1=empty, 2=treasure, 3=trap
+        // Player 1: 5=empty, 6=treasure, 7=trap
+        // Player 2: 9=empty, 10=treasure, 11=trap
+        let dugCells: (Position & { found: boolean; isMine: boolean })[] = [];
         if (status === STATUS_PLAYING || status === STATUS_AWAITING || status === STATUS_FINISHED) {
           try {
             const digResults = await contract.methods.get_all_dig_results(gameIdToUse).simulate({ from: myAddress });
-            // digResults is a flat array of 64 values: 0=not dug, 1=empty, 2=treasure, 3=trap
             for (let i = 0; i < 64; i++) {
               const result = Number(digResults[i]);
               if (result > 0) {
                 const x = i % 8;
                 const y = Math.floor(i / 8);
+                const digger = Math.floor(result / 4); // 1 = player1, 2 = player2
+                const resultType = result % 4; // 1 = empty, 2 = treasure, 3 = trap
+                const isMine = (isP1 && digger === 1) || (!isP1 && digger === 2);
                 dugCells.push({
                   x,
                   y,
-                  found: result === 2, // 2 = treasure found
+                  found: resultType === 2,
+                  isMine,
                 });
               }
             }
