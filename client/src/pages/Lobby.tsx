@@ -13,7 +13,7 @@ export function Lobby() {
   const handleCreateGame = async () => {
     const id = await createGame();
     if (id) {
-      navigate(`/game/${id.toBigInt().toString()}`);
+      navigate(`/game/${id.toString()}`);
     }
   };
 
@@ -43,12 +43,11 @@ export function Lobby() {
 
         {!myAddress ? (
           <div className="lobby-form">
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div className="lobby-row">
               <select
                 className="glass-input"
                 value={testAccountIndex}
                 onChange={(e) => setTestAccountIndex(Number(e.target.value))}
-                style={{ flex: 1 }}
               >
                 <option value={0}>Test Account 1</option>
                 <option value={1}>Test Account 2</option>
@@ -63,68 +62,33 @@ export function Lobby() {
               </button>
             </div>
 
-            <div
-              style={{
-                textAlign: 'center',
-                color: 'rgba(0,0,0,0.4)',
-                fontSize: '13px',
-                fontWeight: 500,
-                letterSpacing: '0.5px',
-              }}
-            >
-              or
-            </div>
+            <div className="lobby-divider">or</div>
 
             <button
-              className="glass-btn-secondary"
+              className="glass-btn-secondary lobby-btn-full"
               onClick={createAccount}
               disabled={isConnecting}
-              style={{ width: '100%' }}
             >
               {isConnecting ? 'Creating...' : 'Create New Account'}
             </button>
           </div>
         ) : (
           <div className="lobby-form">
-            <div
-              style={{
-                padding: '14px 18px',
-                background: 'linear-gradient(145deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.06) 100%)',
-                borderRadius: '16px',
-                fontSize: '13px',
-                fontFamily: 'ui-monospace, monospace',
-                textAlign: 'center',
-                marginBottom: '8px',
-                color: 'rgba(0,0,0,0.6)',
-                border: '1px solid rgba(0,0,0,0.05)',
-                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)',
-              }}
-            >
+            <div className="lobby-address">
               {myAddress.toString().slice(0, 10)}...{myAddress.toString().slice(-8)}
             </div>
 
             <button
-              className="glass-btn"
+              className="glass-btn lobby-btn-full"
               onClick={handleCreateGame}
               disabled={isLoading}
-              style={{ width: '100%' }}
             >
               {isLoading ? 'Creating...' : 'Create New Game'}
             </button>
 
-            <div
-              style={{
-                textAlign: 'center',
-                color: 'rgba(0,0,0,0.4)',
-                fontSize: '13px',
-                fontWeight: 500,
-                letterSpacing: '0.5px',
-              }}
-            >
-              or join existing
-            </div>
+            <div className="lobby-divider">or join existing</div>
 
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div className="lobby-row">
               <input
                 type="number"
                 className="glass-input"
@@ -132,7 +96,6 @@ export function Lobby() {
                 value={gameIdInput}
                 onChange={(e) => setGameIdInput(e.target.value)}
                 min="1"
-                style={{ flex: 1 }}
               />
               <button
                 className="glass-btn-secondary"
@@ -146,17 +109,7 @@ export function Lobby() {
         )}
 
         {isLoading && (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '12px',
-              marginTop: '20px',
-              color: 'rgba(0,0,0,0.5)',
-              fontWeight: 500,
-            }}
-          >
+          <div className="lobby-loading">
             <div className="loading-spinner" />
             Processing...
           </div>

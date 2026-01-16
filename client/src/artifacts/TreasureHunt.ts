@@ -141,6 +141,9 @@ powers: {
     /** get_game_status(game_id: field) */
     get_game_status: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** get_my_powers(game_id: field, player: struct) */
+    get_my_powers: ((game_id: FieldLike, player: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** get_next_game_id() */
     get_next_game_id: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 

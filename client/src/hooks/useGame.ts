@@ -50,11 +50,11 @@ export interface GameState {
 }
 
 const initialPowers: Record<PowerType, number> = {
-  dig: 2,
-  shovel: 1,
+  dig: 999, // dig is unlimited
   detector: 3,
-  compass: 0,
-  trap: 0,
+  compass: 2,
+  shovel: 1,
+  trap: 2,
 };
 
 export function useGame() {
@@ -134,6 +134,24 @@ export function useGame() {
           winner = w.toString() === myAddress.toString() ? 'You Win!' : 'You Lose!';
         }
 
+        // Fetch real power counts for the player
+        let powers = { ...initialPowers };
+        if (status !== STATUS_CREATED) {
+          try {
+            const myPowers = await contract.methods.get_my_powers(gameIdToUse, myAddress).simulate({ from: myAddress });
+            // Returns (detector_count, compass_count, shovel_count, trap_count)
+            powers = {
+              dig: 999, // dig is unlimited
+              detector: Number(myPowers[0]),
+              compass: Number(myPowers[1]),
+              shovel: Number(myPowers[2]),
+              trap: Number(myPowers[3]),
+            };
+          } catch (err) {
+            console.error('Failed to fetch powers:', err);
+          }
+        }
+
         setState((prev) => ({
           ...prev,
           isPlayer1: isP1,
@@ -143,6 +161,7 @@ export function useGame() {
           pendingAction: pending,
           gamePhase,
           winner,
+          powers,
           isLoading: false,
           statusMessage: '',
         }));

@@ -30,6 +30,7 @@ pub contract TreasureHunt {
         macros::{functions::{external, initializer, only_self}, storage::storage},
         messages::message_delivery::MessageDelivery,
         note::note_getter_options::NoteGetterOptions,
+        note::note_viewer_options::NoteViewerOptions,
     };
     use dep::aztec::protocol_types::address::AztecAddress;
     use dep::aztec::state_vars::{Map, Owned, PrivateSet, PublicMutable};
@@ -619,5 +620,34 @@ pub contract TreasureHunt {
     unconstrained fn get_pending_action(game_id: Field) -> pub (u8, u8, u8) {
         let game = self.storage.games.at(game_id).read();
         (game.pending_action, game.pending_x, game.pending_y)
+    }
+
+    /// Get power counts for a player
+    /// Returns (detector_count, compass_count, shovel_count, trap_count)
+    #[external("utility")]
+    unconstrained fn get_my_powers(game_id: Field, player: AztecAddress) -> pub (u8, u8, u8, u8) {
+        let power_notes = self.storage.powers.at(game_id).at(player).view_notes(NoteViewerOptions::new());
+
+        let mut detector_count: u8 = 0;
+        let mut compass_count: u8 = 0;
+        let mut shovel_count: u8 = 0;
+        let mut trap_count: u8 = 0;
+
+        for i in 0..8 {
+            if i < power_notes.len() {
+                let power = power_notes.get(i);
+                if power.power_type == POWER_DETECTOR {
+                    detector_count += 1;
+                } else if power.power_type == POWER_COMPASS {
+                    compass_count += 1;
+                } else if power.power_type == POWER_SHOVEL {
+                    shovel_count += 1;
+                } else if power.power_type == POWER_TRAP {
+                    trap_count += 1;
+                }
+            }
+        }
+
+        (detector_count, compass_count, shovel_count, trap_count)
     }
 }
