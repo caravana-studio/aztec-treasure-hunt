@@ -23,12 +23,14 @@ export function Game() {
     myTreasurePositions,
     dugCells,
     diggingCell,
+    activeAction,
     selectedAction,
     isLoading,
     statusMessage,
     error,
     logs,
     powers,
+    scannedArea,
     setGameId,
     refreshGameState,
     placeTreasures,
@@ -191,6 +193,9 @@ export function Game() {
               onCellClick={handleGridClick}
               showTreasures
               diggingCell={diggingCell}
+              activeAction={activeAction}
+              scannedArea={scannedArea}
+              selectedAction={selectedAction}
             />
           )}
 

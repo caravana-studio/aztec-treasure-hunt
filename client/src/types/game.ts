@@ -16,12 +16,23 @@ export interface DugCell extends Position {
   isMine: boolean;
 }
 
+export interface ScannedArea {
+  center: Position;
+  cells: Position[];
+  result: number;
+}
+
 export interface Powers {
   dig: number;
   detector: number;
   compass: number;
   shovel: number;
   trap: number;
+}
+
+export interface ActiveAction {
+  type: PowerType;
+  position: Position;
 }
 
 export interface GameState {
@@ -40,6 +51,7 @@ export interface GameState {
   myTreasurePositions: Position[];
   dugCells: DugCell[];
   diggingCell: Position | null;
+  activeAction: ActiveAction | null;
   selectedAction: PowerType;
   isLoading: boolean;
   statusMessage: string;
@@ -48,6 +60,7 @@ export interface GameState {
   powers: Powers;
   lastDetectorCount: number;
   lastDetectorPosition: Position | null;
+  scannedArea: ScannedArea | null;
 }
 
 // Game status constants

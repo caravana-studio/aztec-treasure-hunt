@@ -7,6 +7,9 @@ import {
   GamePhase,
   PowerType,
   DugCell,
+  ScannedArea,
+  Position,
+  ActiveAction,
   INITIAL_POWERS,
   ACTION_NONE,
   ACTION_DIG,
@@ -17,6 +20,21 @@ import {
   STATUS_AWAITING,
   STATUS_FINISHED,
 } from '../../types/game';
+
+// Helper to calculate 3x3 area cells around a center point
+function getScannedCells(centerX: number, centerY: number): Position[] {
+  const cells: Position[] = [];
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const x = centerX + dx;
+      const y = centerY + dy;
+      if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+        cells.push({ x, y });
+      }
+    }
+  }
+  return cells;
+}
 
 // Helper to extract error message from various error types
 function extractErrorMessage(err: unknown): string {
@@ -78,6 +96,7 @@ const initialState: GameState = {
   myTreasurePositions: [],
   dugCells: [],
   diggingCell: null,
+  activeAction: null,
   selectedAction: 'dig',
   isLoading: false,
   statusMessage: '',
@@ -86,6 +105,7 @@ const initialState: GameState = {
   powers: { ...INITIAL_POWERS },
   lastDetectorCount: 0,
   lastDetectorPosition: null,
+  scannedArea: null,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -226,9 +246,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
-      // Clear diggingCell when the dig action is complete (no longer awaiting)
-      const { diggingCell: currentDiggingCell, dugCells: previousDugCells, addLog } = get();
+      // Clear diggingCell and activeAction when the action is complete (no longer awaiting)
+      const { diggingCell: currentDiggingCell, activeAction: currentActiveAction, dugCells: previousDugCells, addLog } = get();
       const shouldClearDiggingCell = currentDiggingCell && (
+        gamePhase !== 'awaiting' || pendingActionType === ACTION_NONE
+      );
+      const shouldClearActiveAction = currentActiveAction && (
         gamePhase !== 'awaiting' || pendingActionType === ACTION_NONE
       );
 
@@ -252,10 +275,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // 1. We were previously in awaiting state with detector pending
       // 2. Now we're back to playing and the detector count might have changed
       let newDetectorPosition = prevDetectorPos;
+      let newScannedArea: ScannedArea | null = get().scannedArea;
+
       if (prevDetectorPos && gamePhase === 'playing' && previousPhase === 'awaiting') {
         // Log the detector result for the player who used it
         const treasureWord = detectorCount === 1 ? 'treasure' : 'treasures';
         addLog(`Scan complete: ${detectorCount} ${treasureWord} found in 3x3 area around (${prevDetectorPos.x}, ${prevDetectorPos.y})`);
+
+        // Create scanned area for visual feedback
+        newScannedArea = {
+          center: prevDetectorPos,
+          cells: getScannedCells(prevDetectorPos.x, prevDetectorPos.y),
+          result: detectorCount,
+        };
+
         newDetectorPosition = null; // Clear after logging
       }
 
@@ -276,7 +309,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         statusMessage: '',
         lastDetectorCount: detectorCount,
         lastDetectorPosition: newDetectorPosition,
+        scannedArea: newScannedArea,
         ...(shouldClearDiggingCell && { diggingCell: null }),
+        ...(shouldClearActiveAction && { activeAction: null }),
       });
 
       // Auto-respond to pending actions if needed
@@ -412,19 +447,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, statusMessage: 'Digging...', diggingCell: { x, y } });
+    set({
+      isLoading: true,
+      statusMessage: 'Digging...',
+      diggingCell: { x, y },
+      activeAction: { type: 'dig', position: { x, y } },
+    });
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       await contract.methods.dig(gameId, x, y).send({ from: myAddress }).wait();
 
       addLog(`You dig at (${x}, ${y})...`);
-      // Don't clear diggingCell here - keep animation until opponent responds
+      // Don't clear activeAction here - keep animation until opponent responds
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to dig - Full error:', err);
       const errorMessage = extractErrorMessage(err);
-      set({ error: errorMessage || 'Failed to dig', isLoading: false, diggingCell: null });
+      set({ error: errorMessage || 'Failed to dig', isLoading: false, diggingCell: null, activeAction: null });
     }
   },
 
@@ -462,7 +502,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, statusMessage: 'Scanning area...', lastDetectorPosition: { x, y } });
+    set({
+      isLoading: true,
+      statusMessage: 'Scanning area...',
+      lastDetectorPosition: { x, y },
+      activeAction: { type: 'detector', position: { x, y } },
+    });
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
@@ -473,7 +518,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (err: unknown) {
       console.error('Failed to use detector - Full error:', err);
       const errorMessage = extractErrorMessage(err);
-      set({ error: errorMessage || 'Failed to use detector', isLoading: false, lastDetectorPosition: null });
+      set({ error: errorMessage || 'Failed to use detector', isLoading: false, lastDetectorPosition: null, activeAction: null });
     }
   },
 

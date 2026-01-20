@@ -562,6 +562,96 @@
   animation: pop 0.5s ease forwards;
 }
 
+/* Scanned area visual feedback */
+.grid-cell.scanned {
+  border: 2px solid rgba(52, 152, 219, 0.8) !important;
+  box-shadow:
+    inset 0 0 12px rgba(52, 152, 219, 0.3),
+    0 0 8px rgba(52, 152, 219, 0.4);
+}
+
+.grid-cell.detector-preview {
+  border: 2px dashed rgba(52, 152, 219, 0.6) !important;
+  background: rgba(52, 152, 219, 0.15) !important;
+}
+
+.scan-result-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.95), rgba(41, 128, 185, 0.95));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  z-index: 10;
+}
+
+/* Action preview on hover */
+.action-preview {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  object-fit: contain;
+  opacity: 0.5;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Active action in progress */
+.grid-cell.action-in-progress {
+  animation: action-pulse 1s ease-in-out infinite;
+  background: linear-gradient(
+    145deg,
+    rgba(200, 200, 200, 0.6) 0%,
+    rgba(180, 180, 180, 0.65) 100%
+  ) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 20px rgba(150, 150, 150, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+@keyframes action-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 10px rgba(150, 150, 150, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 25px rgba(200, 200, 200, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+}
+
+.active-action-indicator {
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  animation: bounce-action 0.5s ease-in-out infinite;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  z-index: 5;
+}
+
+@keyframes bounce-action {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-6px) rotate(10deg); }
+}
+
 /* Logs panel - iOS 26 Liquid Glass */
 .logs-panel {
   grid-column: 1 / -1;

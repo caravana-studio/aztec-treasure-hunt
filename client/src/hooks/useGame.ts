@@ -36,12 +36,14 @@ export function useGame() {
     myTreasurePositions: store.myTreasurePositions,
     dugCells: store.dugCells,
     diggingCell: store.diggingCell,
+    activeAction: store.activeAction,
     selectedAction: store.selectedAction,
     isLoading: store.isLoading,
     statusMessage: store.statusMessage,
     error: store.error,
     logs: store.logs,
     powers: store.powers,
+    scannedArea: store.scannedArea,
 
     // Actions
     createGame: store.createGame,
