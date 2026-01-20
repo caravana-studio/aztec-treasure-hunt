@@ -30,7 +30,7 @@ const powerTooltips: Record<PowerType, string> = {
   trap: 'Trap: Place a trap that makes opponent skip a turn',
 };
 
-// Objects: golden shovel, compass, radar, trap (dig is common action, not shown here)
+// Special objects with limited uses
 const powerOrder: PowerType[] = ['shovel', 'compass', 'detector', 'trap'];
 
 export function PowersPanel({
@@ -48,6 +48,17 @@ export function PowersPanel({
 
   return (
     <div className={`objects-panel ${isOpponent ? 'grayed-out' : ''}`}>
+      {/* Dig action - always available */}
+      <button
+        className={`dig-btn ${selectedAction === 'dig' ? 'active' : ''}`}
+        onClick={() => onSelectAction('dig')}
+        disabled={disabled || isOpponent}
+        title={powerTooltips['dig']}
+      >
+        <img src={powerIcons['dig']} alt="dig" />
+        <span>Dig</span>
+      </button>
+
       <div className="objects-header">Objects</div>
       <div className="objects-grid">
         {items.map((item) => (
