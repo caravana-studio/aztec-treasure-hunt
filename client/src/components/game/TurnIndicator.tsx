@@ -1,12 +1,16 @@
 interface TurnIndicatorProps {
   isMyTurn: boolean;
   gamePhase: string;
+  gameId?: string;
 }
 
-export function TurnIndicator({ isMyTurn, gamePhase }: TurnIndicatorProps) {
+export function TurnIndicator({ isMyTurn, gamePhase, gameId }: TurnIndicatorProps) {
   let text = '';
 
   switch (gamePhase) {
+    case 'lobby':
+      text = `Game ID: ${gameId} · Waiting for opponent...`;
+      break;
     case 'setup':
       text = 'Place Your Treasures';
       break;

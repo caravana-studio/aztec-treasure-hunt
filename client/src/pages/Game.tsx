@@ -121,7 +121,7 @@ export function Game() {
 
       <div className="game-layout">
         {/* Turn indicator */}
-        <TurnIndicator isMyTurn={isMyTurn} gamePhase={gamePhase} />
+        <TurnIndicator isMyTurn={isMyTurn} gamePhase={gamePhase} gameId={id} />
 
         {/* Left panel - YOUR info */}
         <div className="player-panel left">
@@ -140,6 +140,10 @@ export function Game() {
 
         {/* Center - Grid */}
         <div className="grid-container">
+          {gamePhase === 'lobby' && (
+            <GameGrid clickable={false} />
+          )}
+
           {gamePhase === 'setup' && (
             <>
               <GameGrid
