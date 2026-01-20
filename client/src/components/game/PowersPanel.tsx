@@ -22,6 +22,14 @@ const powerIcons: Record<PowerType, string> = {
   trap: '/images/trap.png',
 };
 
+const powerTooltips: Record<PowerType, string> = {
+  dig: 'Dig at a cell to find treasure',
+  shovel: 'Golden Shovel: Move one of your treasures to a new location',
+  detector: 'Radar: Scan a 3x3 area to count hidden treasures',
+  compass: 'Compass: Get the distance to the nearest treasure',
+  trap: 'Trap: Place a trap that makes opponent skip a turn',
+};
+
 // Objects: golden shovel, compass, radar, trap (dig is common action, not shown here)
 const powerOrder: PowerType[] = ['shovel', 'compass', 'detector', 'trap'];
 
@@ -48,7 +56,7 @@ export function PowersPanel({
             className={`power-btn ${selectedAction === item.type ? 'active' : ''}`}
             onClick={() => onSelectAction(item.type)}
             disabled={disabled || isOpponent || item.count === 0}
-            title={item.type}
+            title={powerTooltips[item.type]}
           >
             <img src={item.icon} alt={item.type} />
             <span className="badge">{item.count}</span>

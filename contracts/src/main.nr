@@ -373,9 +373,8 @@ pub contract TreasureHunt {
         assert(game.status == STATUS_AWAITING);
         assert(game.pending_action == ACTION_DETECTOR);
 
-        // Result is now public (count visible)
-        // Switch turn
-        let updated = game.switch_turn();
+        // Store detector result and switch turn
+        let updated = game.switch_turn_with_detector_result(count);
         self.storage.games.at(game_id).write(updated);
     }
 

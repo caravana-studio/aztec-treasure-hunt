@@ -145,8 +145,7 @@ aztec start --local-network
 
 # Terminal 2 - Contratos
 cd contracts
-yarn install
-yarn compile && yarn codegen &&yarn deploy
+yarn install && yarn compile && yarn codegen && yarn deploy
 
 # Terminal 3 - Cliente
 cd client

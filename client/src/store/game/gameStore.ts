@@ -10,6 +10,7 @@ import {
   INITIAL_POWERS,
   ACTION_NONE,
   ACTION_DIG,
+  ACTION_DETECTOR,
   STATUS_CREATED,
   STATUS_SETUP,
   STATUS_PLAYING,
@@ -48,6 +49,8 @@ interface GameActions {
   placeTreasures: () => Promise<void>;
   dig: (x: number, y: number) => Promise<void>;
   respondDig: () => Promise<void>;
+  useDetector: (x: number, y: number) => Promise<void>;
+  respondDetector: () => Promise<void>;
 
   // UI state
   toggleTreasure: (x: number, y: number) => void;
@@ -81,6 +84,8 @@ const initialState: GameState = {
   error: null,
   logs: [],
   powers: { ...INITIAL_POWERS },
+  lastDetectorCount: 0,
+  lastDetectorPosition: null,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -154,11 +159,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const p1Score = Number(game.player1_found);
       const p2Score = Number(game.player2_found);
       const mySetupDone = isP1 ? game.player1_setup_done : game.player2_setup_done;
+      const detectorCount = Number(game.last_detector_count);
 
       let gamePhase: GamePhase = 'lobby';
       let winner: string | null = null;
 
-      const { gamePhase: previousPhase, addLog: logPhaseChange } = get();
+      const { gamePhase: previousPhase, addLog: logPhaseChange, lastDetectorCount: prevDetectorCount, lastDetectorPosition: prevDetectorPos } = get();
 
       if (status === STATUS_CREATED) {
         gamePhase = 'lobby';
@@ -241,6 +247,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
+      // Detect new detector results and log them
+      // A new detector result is indicated when:
+      // 1. We were previously in awaiting state with detector pending
+      // 2. Now we're back to playing and the detector count might have changed
+      let newDetectorPosition = prevDetectorPos;
+      if (prevDetectorPos && gamePhase === 'playing' && previousPhase === 'awaiting') {
+        // Log the detector result for the player who used it
+        const treasureWord = detectorCount === 1 ? 'treasure' : 'treasures';
+        addLog(`Scan complete: ${detectorCount} ${treasureWord} found in 3x3 area around (${prevDetectorPos.x}, ${prevDetectorPos.y})`);
+        newDetectorPosition = null; // Clear after logging
+      }
+
       set({
         isPlayer1: isP1,
         isMyTurn: myTurn,
@@ -256,18 +274,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
         dugCells,
         isLoading: false,
         statusMessage: '',
+        lastDetectorCount: detectorCount,
+        lastDetectorPosition: newDetectorPosition,
         ...(shouldClearDiggingCell && { diggingCell: null }),
       });
 
       // Auto-respond to pending actions if needed
       // When game is awaiting and it's NOT my turn, I need to respond
-      if (gamePhase === 'awaiting' && !myTurn && pendingActionType === ACTION_DIG) {
-        console.log('Auto-responding to dig action...');
-        // Use setTimeout to avoid blocking and ensure state is updated first
-        setTimeout(() => {
-          const { respondDig } = get();
-          respondDig();
-        }, 100);
+      if (gamePhase === 'awaiting' && !myTurn) {
+        if (pendingActionType === ACTION_DIG) {
+          console.log('Auto-responding to dig action...');
+          setTimeout(() => {
+            const { respondDig } = get();
+            respondDig();
+          }, 100);
+        } else if (pendingActionType === ACTION_DETECTOR) {
+          console.log('Auto-responding to detector action...');
+          setTimeout(() => {
+            const { respondDetector } = get();
+            respondDetector();
+          }, 100);
+        }
       }
 
       // Auto-poll when waiting for opponent's response
@@ -422,6 +449,55 @@ export const useGameStore = create<GameStore>((set, get) => ({
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to respond - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      set({ error: errorMessage || 'Failed to respond', isLoading: false });
+    }
+  },
+
+  useDetector: async (x: number, y: number) => {
+    const { gameId, addLog, refreshGameState } = get();
+    const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
+
+    if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    set({ isLoading: true, statusMessage: 'Scanning area...', lastDetectorPosition: { x, y } });
+
+    try {
+      const contract = TreasureHuntContract.at(contractAddress, wallet);
+      await contract.methods.use_detector(gameId, x, y).send({ from: myAddress }).wait();
+
+      addLog(`You scan area around (${x}, ${y})...`);
+      await refreshGameState();
+    } catch (err: unknown) {
+      console.error('Failed to use detector - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      set({ error: errorMessage || 'Failed to use detector', isLoading: false, lastDetectorPosition: null });
+    }
+  },
+
+  respondDetector: async () => {
+    const { gameId, pendingX, pendingY, addLog, refreshGameState } = get();
+    const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
+
+    if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    set({ isLoading: true, statusMessage: 'Processing scan...' });
+
+    try {
+      const contract = TreasureHuntContract.at(contractAddress, wallet);
+
+      console.log('Responding to detector at:', pendingX, pendingY);
+
+      await contract.methods.respond_detector(gameId, pendingX, pendingY).send({ from: myAddress }).wait();
+
+      addLog(`Opponent scans area around (${pendingX}, ${pendingY})`);
+      await refreshGameState();
+    } catch (err: unknown) {
+      console.error('Failed to respond to detector - Full error:', err);
       const errorMessage = extractErrorMessage(err);
       set({ error: errorMessage || 'Failed to respond', isLoading: false });
     }

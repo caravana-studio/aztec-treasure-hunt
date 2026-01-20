@@ -49,6 +49,8 @@ export function useGame() {
     placeTreasures: store.placeTreasures,
     dig: store.dig,
     respondDig: store.respondDig,
+    useDetector: store.useDetector,
+    respondDetector: store.respondDetector,
     toggleTreasure: store.toggleTreasure,
     setSelectedAction: store.setSelectedAction,
     refreshGameState: store.refreshGameState,

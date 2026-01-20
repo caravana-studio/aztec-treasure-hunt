@@ -33,6 +33,7 @@ export function Game() {
     refreshGameState,
     placeTreasures,
     dig,
+    useDetector,
     toggleTreasure,
     setSelectedAction,
     resetGame,
@@ -77,8 +78,12 @@ export function Game() {
   const handleGridClick = (x: number, y: number) => {
     if (gamePhase === 'setup') {
       toggleTreasure(x, y);
-    } else if (gamePhase === 'playing' && isMyTurn && selectedAction === 'dig') {
-      dig(x, y);
+    } else if (gamePhase === 'playing' && isMyTurn) {
+      if (selectedAction === 'dig') {
+        dig(x, y);
+      } else if (selectedAction === 'detector' && powers.detector > 0) {
+        useDetector(x, y);
+      }
     }
   };
 

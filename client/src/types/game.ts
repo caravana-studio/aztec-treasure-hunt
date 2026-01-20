@@ -46,6 +46,8 @@ export interface GameState {
   error: string | null;
   logs: GameLog[];
   powers: Powers;
+  lastDetectorCount: number;
+  lastDetectorPosition: Position | null;
 }
 
 // Game status constants

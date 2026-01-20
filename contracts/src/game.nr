@@ -32,6 +32,7 @@ pub struct Game {
     pub status: u8,
     pub winner: AztecAddress,
     pub skip_turn: AztecAddress,    // Player who must skip next turn (due to trap)
+    pub last_detector_count: u8,    // Result of last detector scan (treasures in 3x3 area)
 }
 
 impl Game {
@@ -50,6 +51,7 @@ impl Game {
             status: STATUS_CREATED,
             winner: AztecAddress::zero(),
             skip_turn: AztecAddress::zero(),
+            last_detector_count: 0,
         }
     }
 
@@ -72,6 +74,7 @@ impl Game {
             status: STATUS_SETUP,
             winner: self.winner,
             skip_turn: self.skip_turn,
+            last_detector_count: self.last_detector_count,
         }
     }
 
@@ -102,6 +105,7 @@ impl Game {
             status: new_status,
             winner: self.winner,
             skip_turn: self.skip_turn,
+            last_detector_count: self.last_detector_count,
         }
     }
 
@@ -120,6 +124,7 @@ impl Game {
             status: STATUS_AWAITING,
             winner: self.winner,
             skip_turn: self.skip_turn,
+            last_detector_count: self.last_detector_count,
         }
     }
 
@@ -152,6 +157,32 @@ impl Game {
             status: STATUS_PLAYING,
             winner: self.winner,
             skip_turn: self.skip_turn,
+            last_detector_count: self.last_detector_count,
+        }
+    }
+
+    pub fn switch_turn_with_detector_result(self, count: u8) -> Self {
+        let next_player = if self.current_turn.eq(self.player1) {
+            self.player2
+        } else {
+            self.player1
+        };
+
+        Self {
+            player1: self.player1,
+            player2: self.player2,
+            player1_setup_done: self.player1_setup_done,
+            player2_setup_done: self.player2_setup_done,
+            player1_found: self.player1_found,
+            player2_found: self.player2_found,
+            current_turn: next_player,
+            pending_action: ACTION_NONE,
+            pending_x: 0,
+            pending_y: 0,
+            status: STATUS_PLAYING,
+            winner: self.winner,
+            skip_turn: self.skip_turn,
+            last_detector_count: count,
         }
     }
 
@@ -192,6 +223,7 @@ impl Game {
             status: new_status,
             winner: new_winner,
             skip_turn: self.skip_turn,
+            last_detector_count: self.last_detector_count,
         }
     }
 
@@ -216,6 +248,7 @@ impl Game {
             status: STATUS_PLAYING,
             winner: self.winner,
             skip_turn: player_to_skip,
+            last_detector_count: self.last_detector_count,
         }
     }
 
@@ -234,6 +267,7 @@ impl Game {
             status: self.status,
             winner: self.winner,
             skip_turn: AztecAddress::zero(),
+            last_detector_count: self.last_detector_count,
         }
     }
 }
