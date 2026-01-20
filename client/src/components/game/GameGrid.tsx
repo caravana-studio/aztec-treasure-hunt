@@ -62,6 +62,9 @@ export function GameGrid({
               className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isAnimating ? 'digging' : ''} ${dugCell?.found ? 'found' : ''}`}
               onClick={() => handleCellClick(x, y)}
             >
+              {state === 'selected' && (
+                <img src="/images/treasure.png" alt="Selected treasure" className="cell-content" style={{ opacity: 0.8 }} />
+              )}
               {state === 'dug-found' && (
                 <img src="/images/treasure.png" alt="Treasure" className="cell-content" />
               )}

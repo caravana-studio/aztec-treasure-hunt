@@ -31,6 +31,7 @@ export function useGame() {
     opponentScore: store.opponentScore,
     winner: store.winner,
     pendingAction: store.pendingAction,
+    mySetupDone: store.mySetupDone,
     selectedTreasures: store.selectedTreasures,
     myTreasurePositions: store.myTreasurePositions,
     dugCells: store.dugCells,

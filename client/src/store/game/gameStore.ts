@@ -6,11 +6,10 @@ import {
   GameState,
   GamePhase,
   PowerType,
-  Position,
   DugCell,
-  GameLog,
   INITIAL_POWERS,
   ACTION_NONE,
+  ACTION_DIG,
   STATUS_CREATED,
   STATUS_SETUP,
   STATUS_PLAYING,
@@ -69,6 +68,9 @@ const initialState: GameState = {
   opponentScore: 0,
   winner: null,
   pendingAction: ACTION_NONE,
+  pendingX: 0,
+  pendingY: 0,
+  mySetupDone: false,
   selectedTreasures: [],
   myTreasurePositions: [],
   dugCells: [],
@@ -125,7 +127,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   refreshGameState: async (gameIdOverride?: Fr) => {
-    const { gameId: stateGameId, addLog } = get();
+    const { gameId: stateGameId } = get();
     const gameIdToUse = gameIdOverride || stateGameId;
 
     const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
@@ -139,16 +141,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       const contract = TreasureHuntContract.at(contractAddress, wallet);
 
-      const status = await contract.methods.get_game_status(gameIdToUse).simulate({ from: myAddress });
-      const player1 = await contract.methods.get_player1(gameIdToUse).simulate({ from: myAddress });
-      const p1Score = await contract.methods.get_player1_treasures_found(gameIdToUse).simulate({ from: myAddress });
-      const p2Score = await contract.methods.get_player2_treasures_found(gameIdToUse).simulate({ from: myAddress });
-      const currentTurn = await contract.methods.get_current_turn(gameIdToUse).simulate({ from: myAddress });
-      const pendingResult = await contract.methods.get_pending_action(gameIdToUse).simulate({ from: myAddress });
-      const pendingActionType = BigInt(pendingResult[0]);
+      // Use get_game to fetch all public game state in a single call
+      const game = await contract.methods.get_game(gameIdToUse).simulate({ from: myAddress });
 
-      const isP1 = player1.toString() === myAddress.toString();
-      const myTurn = currentTurn.toString() === myAddress.toString();
+      const status = BigInt(game.status);
+      const isP1 = game.player1.toString() === myAddress.toString();
+      const myTurn = game.current_turn.toString() === myAddress.toString();
+      const pendingActionType = BigInt(game.pending_action);
+      const pendingX = Number(game.pending_x);
+      const pendingY = Number(game.pending_y);
+      const p1Score = Number(game.player1_found);
+      const p2Score = Number(game.player2_found);
+      const mySetupDone = isP1 ? game.player1_setup_done : game.player2_setup_done;
 
       let gamePhase: GamePhase = 'lobby';
       let winner: string | null = null;
@@ -163,11 +167,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         gamePhase = 'awaiting';
       } else if (status === STATUS_FINISHED) {
         gamePhase = 'finished';
-        const w = await contract.methods.get_winner(gameIdToUse).simulate({ from: myAddress });
-        winner = w.toString() === myAddress.toString() ? 'You Win!' : 'You Lose!';
+        winner = game.winner.toString() === myAddress.toString() ? 'You Win!' : 'You Lose!';
       }
 
-      // Fetch real power counts for the player
+      // Fetch real power counts for the player (private data, still needs separate call)
       let powers = { ...INITIAL_POWERS };
       if (status !== STATUS_CREATED) {
         try {
@@ -184,7 +187,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
-      // Fetch dig results
+      // Fetch dig results (still needs separate call)
       let dugCells: DugCell[] = [];
       if (status === STATUS_PLAYING || status === STATUS_AWAITING || status === STATUS_FINISHED) {
         try {
@@ -208,9 +211,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({
         isPlayer1: isP1,
         isMyTurn: myTurn,
-        myScore: Number(isP1 ? p1Score : p2Score),
-        opponentScore: Number(isP1 ? p2Score : p1Score),
+        myScore: isP1 ? p1Score : p2Score,
+        opponentScore: isP1 ? p2Score : p1Score,
         pendingAction: pendingActionType,
+        pendingX,
+        pendingY,
+        mySetupDone,
         gamePhase,
         winner,
         powers,
@@ -218,6 +224,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
         isLoading: false,
         statusMessage: '',
       });
+
+      // Auto-respond to pending actions if needed
+      // When game is awaiting and it's NOT my turn, I need to respond
+      if (gamePhase === 'awaiting' && !myTurn && pendingActionType === ACTION_DIG) {
+        console.log('Auto-responding to dig action...');
+        // Use setTimeout to avoid blocking and ensure state is updated first
+        setTimeout(() => {
+          const { respondDig } = get();
+          respondDig();
+        }, 100);
+      }
+
+      // Auto-poll when waiting for opponent's response
+      // When game is awaiting and it IS my turn, the opponent needs to respond
+      if (gamePhase === 'awaiting' && myTurn && pendingActionType !== ACTION_NONE) {
+        console.log('Waiting for opponent response, will auto-refresh in 3s...');
+        setTimeout(() => {
+          const { refreshGameState, isLoading } = get();
+          // Only refresh if not already loading
+          if (!isLoading) {
+            refreshGameState();
+          }
+        }, 3000);
+      }
     } catch (err) {
       console.error('Failed to refresh game state:', err);
       set({ isLoading: false });
@@ -337,7 +367,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   respondDig: async () => {
-    const { gameId, addLog, refreshGameState } = get();
+    const { gameId, pendingX, pendingY, addLog, refreshGameState } = get();
     const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
 
     if (!wallet || !myAddress || !contractAddress || !gameId) {
@@ -348,9 +378,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
-      const pendingResult = await contract.methods.get_pending_action(gameId).simulate({ from: myAddress });
-      const pendingX = Number(pendingResult[1]);
-      const pendingY = Number(pendingResult[2]);
 
       console.log('Responding to dig at:', pendingX, pendingY);
 

@@ -18,6 +18,7 @@ export function Game() {
     myScore,
     opponentScore,
     winner,
+    mySetupDone,
     selectedTreasures,
     myTreasurePositions,
     dugCells,
@@ -101,27 +102,17 @@ export function Game() {
           {error}
         </div>
       )}
-      {/* Loading overlay */}
-      {isLoading && (
-        <div className="loading-overlay">
-          <div className="loading-content">
-            <div className="loading-spinner" />
-            <p style={{ margin: 0, color: 'white', textAlign: 'center' }}>{statusMessage || 'Processing...'}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Error toast */}
-     
-
-      {/* Status toast */}
-      {statusMessage && !isLoading && (
-        <div className="status-toast">{statusMessage}</div>
-      )}
 
       <div className="game-layout">
         {/* Turn indicator */}
-        <TurnIndicator isMyTurn={isMyTurn} gamePhase={gamePhase} gameId={id} />
+        <TurnIndicator
+          isMyTurn={isMyTurn}
+          gamePhase={gamePhase}
+          gameId={id}
+          isLoading={isLoading}
+          statusMessage={statusMessage}
+          mySetupDone={mySetupDone}
+        />
 
         {/* Left panel - YOUR info */}
         <div className="player-panel left">
@@ -144,7 +135,7 @@ export function Game() {
             <GameGrid clickable={false} />
           )}
 
-          {gamePhase === 'setup' && (
+          {gamePhase === 'setup' && !mySetupDone && (
             <>
               <GameGrid
                 selectedCells={selectedTreasures}
@@ -163,6 +154,21 @@ export function Game() {
             </>
           )}
 
+          {gamePhase === 'setup' && mySetupDone && (
+            <>
+              <GameGrid
+                myTreasures={myTreasurePositions}
+                showTreasures={myTreasurePositions.length > 0}
+                clickable={false}
+              />
+              {/* <div className="grid-actions">
+                <p style={{ color: 'white', textAlign: 'center', margin: 0 }}>
+                  ✓ Treasures placed! Waiting for opponent...
+                </p>
+              </div> */}
+            </>
+          )}
+
           {(gamePhase === 'playing' || gamePhase === 'awaiting') && (
             <GameGrid
               myTreasures={myTreasurePositions}
@@ -173,13 +179,13 @@ export function Game() {
             />
           )}
 
-          {gamePhase === 'awaiting' && !isMyTurn && (
+          {/* {gamePhase === 'awaiting' && !isMyTurn && (
             <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
               <button className="glass-btn" onClick={handleRespond} disabled={isLoading}>
                 Respond to Action
               </button>
             </div>
-          )}
+          )} */}
 
           {gamePhase === 'finished' && (
             <div style={{ textAlign: 'center' }}>

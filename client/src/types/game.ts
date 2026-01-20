@@ -33,6 +33,9 @@ export interface GameState {
   opponentScore: number;
   winner: string | null;
   pendingAction: bigint;
+  pendingX: number;
+  pendingY: number;
+  mySetupDone: boolean;
   selectedTreasures: Position[];
   myTreasurePositions: Position[];
   dugCells: DugCell[];

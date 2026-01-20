@@ -61,6 +61,24 @@
   letter-spacing: 2px;
 }
 
+/* Loading state for TurnIndicator */
+.turn-indicator-box.loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.loading-dot {
+  color: #f39c12;
+  animation: pulse-dot 1s ease-in-out infinite;
+  font-size: 16px;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 /* Lobby indicator in TurnIndicator */
 .turn-indicator-box.lobby-indicator {
   display: flex;
