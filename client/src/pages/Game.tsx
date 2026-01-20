@@ -130,15 +130,17 @@ export function Game() {
                 clickable
                 onCellClick={handleGridClick}
               />
-              <div className="grid-actions">
-                <button
-                  className="glass-btn"
-                  onClick={placeTreasures}
-                  disabled={selectedTreasures.length !== 3 || isLoading}
-                >
-                  Confirm Treasures Position
-                </button>
-              </div>
+              {!isLoading && (
+                <div className="grid-actions">
+                  <button
+                    className="glass-btn"
+                    onClick={placeTreasures}
+                    disabled={selectedTreasures.length !== 3}
+                  >
+                    Confirm Treasures Position
+                  </button>
+                </div>
+              )}
             </>
           )}
 
