@@ -67,7 +67,7 @@ export function GameGrid({
                 <img src="/images/treasure.png" alt="Your treasure" className="cell-content" style={{ opacity: 0.7 }} />
               )}
               {isDigging && (
-                <div className="digging-indicator">⛏️</div>
+                <img src="/images/dig.png" alt="Digging" className="digging-indicator" />
               )}
             </div>
           );

@@ -158,17 +158,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
       let gamePhase: GamePhase = 'lobby';
       let winner: string | null = null;
 
+      const { gamePhase: previousPhase, addLog: logPhaseChange } = get();
+
       if (status === STATUS_CREATED) {
         gamePhase = 'lobby';
       } else if (status === STATUS_SETUP) {
         gamePhase = 'setup';
+        if (previousPhase === 'lobby') {
+          logPhaseChange('👋 Opponent joined! Both players place your treasures');
+        }
       } else if (status === STATUS_PLAYING) {
         gamePhase = 'playing';
+        if (previousPhase === 'setup') {
+          logPhaseChange('⚔️ Game started! Take turns to find opponent\'s treasures');
+        }
       } else if (status === STATUS_AWAITING) {
         gamePhase = 'awaiting';
       } else if (status === STATUS_FINISHED) {
         gamePhase = 'finished';
         winner = game.winner.toString() === myAddress.toString() ? 'You Win!' : 'You Lose!';
+        if (previousPhase !== 'finished') {
+          logPhaseChange(winner === 'You Win!' ? '🏆 Victory! You found all treasures!' : '😢 Defeat! Opponent found all treasures');
+        }
       }
 
       // Fetch real power counts for the player (private data, still needs separate call)
@@ -210,10 +221,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       // Clear diggingCell when the dig action is complete (no longer awaiting)
-      const { diggingCell: currentDiggingCell } = get();
+      const { diggingCell: currentDiggingCell, dugCells: previousDugCells, addLog } = get();
       const shouldClearDiggingCell = currentDiggingCell && (
         gamePhase !== 'awaiting' || pendingActionType === ACTION_NONE
       );
+
+      // Detect new dig results and log them
+      for (const cell of dugCells) {
+        const wasAlreadyDug = previousDugCells.some(
+          (prev) => prev.x === cell.x && prev.y === cell.y
+        );
+        if (!wasAlreadyDug) {
+          const who = cell.isMine ? 'You' : 'Opponent';
+          if (cell.found) {
+            addLog(`${who} found a treasure at (${cell.x}, ${cell.y})!`);
+          } else {
+            addLog(`${who} found nothing at (${cell.x}, ${cell.y})`);
+          }
+        }
+      }
 
       set({
         isPlayer1: isP1,
@@ -281,7 +307,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ gameId: id, isPlayer1: true });
 
-      addLog(`Game #${nextGameId.toString()} created. Waiting for opponent...`);
+      addLog(`Game #${nextGameId.toString()} created! Share this ID with your opponent`);
       await refreshGameState(id);
 
       return typeof nextGameId === 'bigint' ? Number(nextGameId) : nextGameId;
@@ -310,7 +336,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ gameId: id, isPlayer1: false });
 
-      addLog(`Joined game ${gameIdStr}. Place your treasures!`);
+      addLog(`Joined game #${gameIdStr}! Place your 3 treasures on the grid`);
       await refreshGameState(id);
 
       return id;
@@ -342,7 +368,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set((state) => ({ myTreasurePositions: [...state.selectedTreasures] }));
 
-      addLog('Treasures placed!');
+      addLog('Your treasures are now hidden!');
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to place treasures - Full error:', err);
@@ -365,7 +391,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       await contract.methods.dig(gameId, x, y).send({ from: myAddress }).wait();
 
-      addLog(`Dug at position (${x}, ${y})`);
+      addLog(`You dig at (${x}, ${y})...`);
       // Don't clear diggingCell here - keep animation until opponent responds
       await refreshGameState();
     } catch (err: unknown) {
@@ -392,7 +418,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       await contract.methods.check_dig_result(gameId, pendingX, pendingY).send({ from: myAddress }).wait();
 
-      addLog(`Responded to dig at (${pendingX}, ${pendingY})`);
+      addLog(`Opponent digs at (${pendingX}, ${pendingY})...`);
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to respond - Full error:', err);

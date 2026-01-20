@@ -519,26 +519,37 @@
   animation: digging-pulse 1s ease-in-out infinite;
   background: linear-gradient(
     145deg,
-    rgba(243, 156, 18, 0.8) 0%,
-    rgba(230, 126, 34, 0.85) 100%
+    rgba(200, 200, 200, 0.6) 0%,
+    rgba(180, 180, 180, 0.65) 100%
   ) !important;
-  box-shadow: 0 0 20px rgba(243, 156, 18, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 20px rgba(150, 150, 150, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
 @keyframes digging-pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 10px rgba(243, 156, 18, 0.4);
+    box-shadow:
+      0 0 10px rgba(150, 150, 150, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(243, 156, 18, 0.8);
+    box-shadow:
+      0 0 25px rgba(200, 200, 200, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 }
 
 .digging-indicator {
   position: absolute;
-  font-size: 28px;
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
   animation: bounce-dig 0.5s ease-in-out infinite;
 }
 
