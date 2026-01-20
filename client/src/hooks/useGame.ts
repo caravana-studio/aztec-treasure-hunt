@@ -35,6 +35,7 @@ export function useGame() {
     selectedTreasures: store.selectedTreasures,
     myTreasurePositions: store.myTreasurePositions,
     dugCells: store.dugCells,
+    diggingCell: store.diggingCell,
     selectedAction: store.selectedAction,
     isLoading: store.isLoading,
     statusMessage: store.statusMessage,

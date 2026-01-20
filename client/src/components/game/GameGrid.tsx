@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Position, GRID_SIZE, CellState } from '../../types/game';
 
 interface GameGridProps {
@@ -8,6 +7,7 @@ interface GameGridProps {
   clickable?: boolean;
   onCellClick?: (x: number, y: number) => void;
   showTreasures?: boolean;
+  diggingCell?: Position | null;
 }
 
 export function GameGrid({
@@ -17,8 +17,8 @@ export function GameGrid({
   clickable = false,
   onCellClick,
   showTreasures = false,
+  diggingCell = null,
 }: GameGridProps) {
-  const [animatingCell, setAnimatingCell] = useState<string | null>(null);
 
   const getCellState = (x: number, y: number): CellState => {
     if (selectedCells.some((p) => p.x === x && p.y === y)) {
@@ -36,11 +36,6 @@ export function GameGrid({
 
   const handleCellClick = (x: number, y: number) => {
     if (!clickable || !onCellClick) return;
-
-    const key = `${x}-${y}`;
-    setAnimatingCell(key);
-    setTimeout(() => setAnimatingCell(null), 400);
-
     onCellClick(x, y);
   };
 
@@ -50,7 +45,7 @@ export function GameGrid({
         Array.from({ length: GRID_SIZE }, (_, x) => {
           const state = getCellState(x, y);
           const key = `${x}-${y}`;
-          const isAnimating = animatingCell === key;
+          const isDigging = diggingCell?.x === x && diggingCell?.y === y;
           const dugCell = dugCells.find((p) => p.x === x && p.y === y);
 
           const isMine = dugCell?.isMine ?? false;
@@ -59,7 +54,7 @@ export function GameGrid({
           return (
             <div
               key={key}
-              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isAnimating ? 'digging' : ''} ${dugCell?.found ? 'found' : ''}`}
+              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isDigging ? 'digging-pulse' : ''} ${dugCell?.found ? 'found' : ''}`}
               onClick={() => handleCellClick(x, y)}
             >
               {state === 'selected' && (
@@ -70,6 +65,9 @@ export function GameGrid({
               )}
               {state === 'your-treasure' && showTreasures && (
                 <img src="/images/treasure.png" alt="Your treasure" className="cell-content" style={{ opacity: 0.7 }} />
+              )}
+              {isDigging && (
+                <div className="digging-indicator">⛏️</div>
               )}
             </div>
           );

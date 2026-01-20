@@ -39,6 +39,7 @@ export interface GameState {
   selectedTreasures: Position[];
   myTreasurePositions: Position[];
   dugCells: DugCell[];
+  diggingCell: Position | null;
   selectedAction: PowerType;
   isLoading: boolean;
   statusMessage: string;

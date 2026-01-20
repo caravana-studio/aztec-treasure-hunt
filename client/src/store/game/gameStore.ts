@@ -74,6 +74,7 @@ const initialState: GameState = {
   selectedTreasures: [],
   myTreasurePositions: [],
   dugCells: [],
+  diggingCell: null,
   selectedAction: 'dig',
   isLoading: false,
   statusMessage: '',
@@ -208,6 +209,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
+      // Clear diggingCell when the dig action is complete (no longer awaiting)
+      const { diggingCell: currentDiggingCell } = get();
+      const shouldClearDiggingCell = currentDiggingCell && (
+        gamePhase !== 'awaiting' || pendingActionType === ACTION_NONE
+      );
+
       set({
         isPlayer1: isP1,
         isMyTurn: myTurn,
@@ -223,6 +230,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         dugCells,
         isLoading: false,
         statusMessage: '',
+        ...(shouldClearDiggingCell && { diggingCell: null }),
       });
 
       // Auto-respond to pending actions if needed
@@ -351,18 +359,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, statusMessage: 'Digging...' });
+    set({ isLoading: true, statusMessage: 'Digging...', diggingCell: { x, y } });
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       await contract.methods.dig(gameId, x, y).send({ from: myAddress }).wait();
 
       addLog(`Dug at position (${x}, ${y})`);
+      // Don't clear diggingCell here - keep animation until opponent responds
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to dig - Full error:', err);
       const errorMessage = extractErrorMessage(err);
-      set({ error: errorMessage || 'Failed to dig', isLoading: false });
+      set({ error: errorMessage || 'Failed to dig', isLoading: false, diggingCell: null });
     }
   },
 

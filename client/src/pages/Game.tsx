@@ -22,6 +22,7 @@ export function Game() {
     selectedTreasures,
     myTreasurePositions,
     dugCells,
+    diggingCell,
     selectedAction,
     isLoading,
     statusMessage,
@@ -32,12 +33,10 @@ export function Game() {
     refreshGameState,
     placeTreasures,
     dig,
-    respondDig,
     toggleTreasure,
     setSelectedAction,
     resetGame,
     setError,
-    pendingAction,
   } = useGame();
 
   // Initialize game state from URL param
@@ -61,17 +60,6 @@ export function Game() {
       toggleTreasure(x, y);
     } else if (gamePhase === 'playing' && isMyTurn && selectedAction === 'dig') {
       dig(x, y);
-    }
-  };
-
-  // Handle action response
-  const handleRespond = () => {
-    console.log('handleRespond called, pendingAction:', pendingAction);
-    if (pendingAction === 1n) {
-      console.log('Calling respondDig...');
-      respondDig();
-    } else {
-      console.log('pendingAction is not DIG (1n), it is:', pendingAction);
     }
   };
 
@@ -176,6 +164,7 @@ export function Game() {
               clickable={isMyTurn && gamePhase === 'playing'}
               onCellClick={handleGridClick}
               showTreasures
+              diggingCell={diggingCell}
             />
           )}
 
