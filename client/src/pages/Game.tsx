@@ -54,6 +54,25 @@ export function Game() {
     }
   }, [gameId, myAddress]);
 
+  // Auto-polling when waiting for opponent
+  useEffect(() => {
+    if (!gameId || !myAddress || isLoading) return;
+
+    // Determine if we should poll
+    const shouldPoll =
+      gamePhase === 'lobby' || // Waiting for player2 to join
+      (gamePhase === 'setup' && mySetupDone) || // Waiting for opponent to place treasures
+      (gamePhase === 'playing' && !isMyTurn); // Waiting for opponent's turn
+
+    if (!shouldPoll) return;
+
+    const interval = setInterval(() => {
+      refreshGameState();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [gameId, myAddress, gamePhase, mySetupDone, isMyTurn, isLoading, refreshGameState]);
+
   // Handle grid click based on game phase
   const handleGridClick = (x: number, y: number) => {
     if (gamePhase === 'setup') {
@@ -226,24 +245,6 @@ export function Game() {
         )}
       </div>
 
-      {/* Refresh button */}
-      <button
-        onClick={() => refreshGameState()}
-        disabled={isLoading}
-        style={{
-          position: 'fixed',
-          bottom: '80px',
-          right: '20px',
-          padding: '8px 16px',
-          background: 'rgba(255,255,255,0.9)',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          fontSize: '14px',
-        }}
-      >
-        Refresh
-      </button>
     </div>
   );
 }
