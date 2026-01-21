@@ -31,6 +31,8 @@ pub contract TreasureHunt {
         messages::message_delivery::MessageDelivery,
         note::note_getter_options::NoteGetterOptions,
         note::note_viewer_options::NoteViewerOptions,
+        note::note_interface::NoteProperties,
+        utils::comparison::Comparator,
     };
     use dep::aztec::protocol_types::address::AztecAddress;
     use dep::aztec::state_vars::{Map, Owned, PrivateSet, PublicMutable};
@@ -38,14 +40,12 @@ pub contract TreasureHunt {
     use crate::treasure_note::TreasureNote;
     use crate::trap_note::TrapNote;
     use crate::power_note::{PowerNote, POWER_DETECTOR, POWER_COMPASS, POWER_SHOVEL, POWER_TRAP};
-    use crate::game::{Game, STATUS_SETUP, STATUS_PLAYING, STATUS_AWAITING, ACTION_DIG, ACTION_DETECTOR, ACTION_COMPASS};
+    use crate::game::{Game, STATUS_PLAYING, STATUS_AWAITING, ACTION_DIG, ACTION_DETECTOR, ACTION_COMPASS};
 
     global MAP_SIZE: u8 = 8;
-    global TREASURES_TO_WIN: u8 = 2;
 
     // Dig result values - encodes both result and who dug
     // Format: (digger * 4) + result, where digger: 1=player1, 2=player2, result: 1=empty, 2=treasure, 3=trap
-    global DIG_NOT_DUG: u8 = 0;
     // Player 1 results: 5, 6, 7 (1*4 + 1, 1*4 + 2, 1*4 + 3)
     global DIG_P1_EMPTY: u8 = 5;
     global DIG_P1_TREASURE: u8 = 6;
@@ -294,21 +294,14 @@ pub contract TreasureHunt {
     fn use_detector(game_id: Field, center_x: u8, center_y: u8) {
         let player = self.context.msg_sender().unwrap();
 
-        // Find and consume a detector power
-        let power_notes = self.storage.powers.at(game_id).at(player).get_notes(NoteGetterOptions::new());
-        let mut found_detector = false;
+        // Find and consume a detector power using pop_notes (nullifies the note)
+        let options = NoteGetterOptions::new()
+            .select(PowerNote::properties().power_type, Comparator.EQ, POWER_DETECTOR as Field)
+            .set_limit(1);
+        let power_notes = self.storage.powers.at(game_id).at(player).pop_notes(options);
 
-        for i in 0..8 {
-            if i < power_notes.len() {
-                let power = power_notes.get(i);
-                if (power.note.power_type == POWER_DETECTOR) & (!found_detector) {
-                    found_detector = true;
-                    // Note is consumed by not re-inserting
-                }
-            }
-        }
-
-        assert(found_detector);
+        // Ensure we had a detector to use
+        assert(power_notes.len() == 1);
 
         self.enqueue(TreasureHunt::at(self.context.this_address()).set_detector_pending(
             player,
@@ -385,20 +378,14 @@ pub contract TreasureHunt {
     fn use_compass(game_id: Field, from_x: u8, from_y: u8) {
         let player = self.context.msg_sender().unwrap();
 
-        // Find and consume a compass power
-        let power_notes = self.storage.powers.at(game_id).at(player).get_notes(NoteGetterOptions::new());
-        let mut found_compass = false;
+        // Find and consume a compass power using pop_notes (nullifies the note)
+        let options = NoteGetterOptions::new()
+            .select(PowerNote::properties().power_type, Comparator.EQ, POWER_COMPASS as Field)
+            .set_limit(1);
+        let power_notes = self.storage.powers.at(game_id).at(player).pop_notes(options);
 
-        for i in 0..8 {
-            if i < power_notes.len() {
-                let power = power_notes.get(i);
-                if (power.note.power_type == POWER_COMPASS) & (!found_compass) {
-                    found_compass = true;
-                }
-            }
-        }
-
-        assert(found_compass);
+        // Ensure we had a compass to use
+        assert(power_notes.len() == 1);
 
         self.enqueue(TreasureHunt::at(self.context.this_address()).set_compass_pending(
             player,
@@ -481,39 +468,29 @@ pub contract TreasureHunt {
 
         assert(new_x < MAP_SIZE & new_y < MAP_SIZE);
 
-        // Find and consume shovel power
-        let power_notes = self.storage.powers.at(game_id).at(player).get_notes(NoteGetterOptions::new());
-        let mut found_shovel = false;
+        // Find and consume shovel power using pop_notes (nullifies the note)
+        let power_options = NoteGetterOptions::new()
+            .select(PowerNote::properties().power_type, Comparator.EQ, POWER_SHOVEL as Field)
+            .set_limit(1);
+        let power_notes = self.storage.powers.at(game_id).at(player).pop_notes(power_options);
 
-        for i in 0..8 {
-            if i < power_notes.len() {
-                let power = power_notes.get(i);
-                if (power.note.power_type == POWER_SHOVEL) & (!found_shovel) {
-                    found_shovel = true;
-                }
-            }
-        }
+        // Ensure we had a shovel to use
+        assert(power_notes.len() == 1);
 
-        assert(found_shovel);
+        // Find and consume the treasure at old position using pop_notes (nullifies the note)
+        let treasure_options = NoteGetterOptions::new()
+            .select(TreasureNote::properties().x, Comparator.EQ, old_x as Field)
+            .select(TreasureNote::properties().y, Comparator.EQ, old_y as Field)
+            .set_limit(1);
+        let treasure_notes = self.storage.treasures.at(game_id).at(player).pop_notes(treasure_options);
 
-        // Find the treasure at old position and "move" it
-        let treasure_notes = self.storage.treasures.at(game_id).at(player).get_notes(NoteGetterOptions::new());
-        let mut found_treasure = false;
+        // Ensure we found the treasure at the old position
+        assert(treasure_notes.len() == 1);
 
-        for i in 0..3 {
-            if i < treasure_notes.len() {
-                let treasure = treasure_notes.get(i);
-                if (treasure.note.x == old_x) & (treasure.note.y == old_y) & (!found_treasure) {
-                    found_treasure = true;
-                    // Create new treasure at new position
-                    self.storage.treasures.at(game_id).at(player)
-                        .insert(TreasureNote::new(new_x, new_y, player))
-                        .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
-                }
-            }
-        }
-
-        assert(found_treasure);
+        // Create new treasure at new position
+        self.storage.treasures.at(game_id).at(player)
+            .insert(TreasureNote::new(new_x, new_y, player))
+            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
 
         self.enqueue(TreasureHunt::at(self.context.this_address()).confirm_shovel_used(player, game_id));
     }
@@ -543,20 +520,14 @@ pub contract TreasureHunt {
 
         assert(trap_x < MAP_SIZE & trap_y < MAP_SIZE);
 
-        // Find and consume trap power
-        let power_notes = self.storage.powers.at(game_id).at(player).get_notes(NoteGetterOptions::new());
-        let mut found_trap_power = false;
+        // Find and consume trap power using pop_notes (nullifies the note)
+        let options = NoteGetterOptions::new()
+            .select(PowerNote::properties().power_type, Comparator.EQ, POWER_TRAP as Field)
+            .set_limit(1);
+        let power_notes = self.storage.powers.at(game_id).at(player).pop_notes(options);
 
-        for i in 0..8 {
-            if i < power_notes.len() {
-                let power = power_notes.get(i);
-                if (power.note.power_type == POWER_TRAP) & (!found_trap_power) {
-                    found_trap_power = true;
-                }
-            }
-        }
-
-        assert(found_trap_power);
+        // Ensure we had a trap to use
+        assert(power_notes.len() == 1);
 
         // Create trap note
         self.storage.traps.at(game_id).at(player)
