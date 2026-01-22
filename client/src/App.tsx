@@ -2,15 +2,19 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useWallet } from './context/WalletContext';
 import { Lobby } from './pages/Lobby';
 import { Game } from './pages/Game';
+import { AnimatedClouds } from './components/ui/AnimatedClouds';
 
 function LoadingScreen() {
   return (
-    <div className="lobby-container">
-      <div className="lobby-card" style={{ textAlign: 'center' }}>
-        <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
-        <p style={{ margin: 0, color: 'white', textAlign: 'center' }}>Connecting to Aztec network...</p>            
+    <>
+      <AnimatedClouds />
+      <div className="lobby-container">
+        <div className="lobby-card" style={{ textAlign: 'center' }}>
+          <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
+          <p style={{ margin: 0, color: 'white', textAlign: 'center' }}>Connecting to Aztec network...</p>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -23,24 +27,30 @@ function App() {
 
   if (error) {
     return (
-      <div className="lobby-container">
-        <div className="lobby-card" style={{ textAlign: 'center' }}>
-          <h2 style={{ color: '#e74c3c', marginBottom: '16px' }}>Connection Error</h2>
-          <p style={{ marginBottom: '16px' }}>{error}</p>
-          <button className="glass-btn" onClick={() => window.location.reload()}>
-            Retry
-          </button>
+      <>
+        <AnimatedClouds />
+        <div className="lobby-container">
+          <div className="lobby-card" style={{ textAlign: 'center' }}>
+            <h2 style={{ color: '#e74c3c', marginBottom: '16px' }}>Connection Error</h2>
+            <p style={{ marginBottom: '16px' }}>{error}</p>
+            <button className="glass-btn" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/lobby" replace />} />
-      <Route path="/lobby" element={<Lobby />} />
-      <Route path="/game/:id" element={<Game />} />
-    </Routes>
+    <>
+      <AnimatedClouds />
+      <Routes>
+        <Route path="/" element={<Navigate to="/lobby" replace />} />
+        <Route path="/lobby" element={<Lobby />} />
+        <Route path="/game/:id" element={<Game />} />
+      </Routes>
+    </>
   );
 }
 

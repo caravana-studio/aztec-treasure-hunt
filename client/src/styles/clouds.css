@@ -1,0 +1,38 @@
+/* Animated Clouds */
+
+.clouds-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  height: auto;
+  filter: blur(1px);
+  animation: cloud-drift linear infinite;
+  will-change: transform;
+}
+
+@keyframes cloud-drift {
+  0% {
+    transform: translateX(-150px);
+  }
+  100% {
+    transform: translateX(calc(100vw + 150px));
+  }
+}
+
+/* Parallax effect - clouds at different depths move at different speeds */
+.cloud:nth-child(odd) {
+  filter: blur(0.5px);
+}
+
+.cloud:nth-child(even) {
+  filter: blur(1.5px);
+}

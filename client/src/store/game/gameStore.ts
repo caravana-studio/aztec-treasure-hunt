@@ -345,10 +345,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       // Track extra turn changes and log them
-      const { hasExtraTurn: previousHasExtraTurn } = get();
+      const { hasExtraTurn: previousHasExtraTurn, logs: currentLogs } = get();
 
       // Detect when I just got an extra turn (opponent hit my trap)
-      if (iHaveExtraTurn && !previousHasExtraTurn) {
+      // Check if we already logged this to avoid duplicates from polling
+      const alreadyLoggedExtraTurn = currentLogs.some(
+        (log) => log.message === 'Opponent hit your trap! You get an extra turn!'
+      );
+      if (iHaveExtraTurn && !previousHasExtraTurn && !alreadyLoggedExtraTurn) {
         addLog('Opponent hit your trap! You get an extra turn!');
       } else if (!iHaveExtraTurn && previousHasExtraTurn && gamePhase === 'playing') {
         // Extra turn was just consumed

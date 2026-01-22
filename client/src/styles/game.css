@@ -184,50 +184,69 @@
     0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.player-score-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
+/* Treasure progress bar */
+.treasure-progress {
+  margin-top: 10px;
+  padding: 8px 10px;
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(245, 245, 245, 0.9) 100%
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(245, 235, 220, 0.6) 100%
   );
   border-radius: var(--radius-sm);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.player-score-badge img {
-  width: 26px;
-  height: 26px;
-}
-
-.score-count {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
-  color: white;
-  font-size: 12px;
-  font-weight: var(--font-weight-bold);
-  border-radius: 10px;
+.treasure-progress-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(45, 125, 210, 0.4);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.treasure-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.treasure-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(70, 50, 30, 0.9);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.treasure-progress-bar {
+  display: flex;
+  gap: 6px;
+}
+
+.treasure-progress-step {
+  flex: 1;
+  height: 10px;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.treasure-progress-step.filled {
+  background: linear-gradient(
+    145deg,
+    #27ae60 0%,
+    #219a52 100%
+  );
+  border-color: rgba(39, 174, 96, 0.3);
+  box-shadow:
+    0 2px 8px rgba(39, 174, 96, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 /* Objects panel styles moved to glass.css */

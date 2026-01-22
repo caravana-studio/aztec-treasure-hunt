@@ -354,6 +354,7 @@
 }
 
 /* Dig action button - distinct primary style */
+/* Dig action button - default state (similar to unselected power items) */
 .dig-action-btn {
   display: flex;
   align-items: center;
@@ -361,11 +362,44 @@
   gap: 10px;
   width: 100%;
   padding: 12px 16px;
-  border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 15px;
   font-weight: 700;
+  color: rgba(70, 50, 30, 0.9);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(245, 235, 220, 0.6) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.2s ease;
+}
+
+.dig-action-btn img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.dig-action-btn:hover:not(:disabled):not(.selected) {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(250, 240, 225, 0.8) 100%
+  );
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Dig action button - selected state (golden) */
+.dig-action-btn.selected {
   color: rgba(70, 50, 20, 0.95);
   background: linear-gradient(
     145deg,
@@ -373,38 +407,20 @@
     rgba(220, 170, 40, 0.95) 100%
   );
   border: 1px solid rgba(255, 220, 100, 0.5);
-  box-shadow:
-    0 2px 8px rgba(220, 170, 40, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transition: all 0.2s ease;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.dig-action-btn img {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-}
-
-.dig-action-btn:hover:not(:disabled) {
-  background: linear-gradient(
-    145deg,
-    rgba(255, 215, 80, 1) 0%,
-    rgba(235, 185, 50, 1) 100%
-  );
-  transform: translateY(-1px);
-  box-shadow:
-    0 4px 12px rgba(220, 170, 40, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.dig-action-btn.selected {
   animation: pulse-gold 1.5s ease-in-out infinite;
   box-shadow:
     0 0 0 3px rgba(245, 200, 60, 0.5),
     0 4px 12px rgba(220, 170, 40, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.dig-action-btn.selected:hover:not(:disabled) {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 215, 80, 1) 0%,
+    rgba(235, 185, 50, 1) 100%
+  );
 }
 
 .dig-action-btn:disabled {
@@ -477,14 +493,15 @@
 .power-item-btn.selected {
   background: linear-gradient(
     145deg,
-    rgba(245, 200, 60, 0.4) 0%,
-    rgba(220, 170, 40, 0.3) 100%
+    rgba(245, 200, 60, 0.95) 0%,
+    rgba(220, 170, 40, 0.95) 100%
   );
-  animation: pulse-selection 1.5s ease-in-out infinite;
+  border: 1px solid rgba(255, 220, 100, 0.5);
+  animation: pulse-gold 1.5s ease-in-out infinite;
   box-shadow:
     0 0 0 3px rgba(245, 200, 60, 0.5),
-    0 4px 10px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 4px 12px rgba(220, 170, 40, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .power-item-btn:disabled {
@@ -561,9 +578,11 @@
    ============================================ */
 
 .logs-panel-glass {
-  grid-column: 1 / -1;
+  grid-column: 2;
   grid-row: 3;
+  justify-self: center;
   width: 100%;
+  max-width: min(70vw, 560px);
   background: linear-gradient(
     145deg,
     rgba(210, 180, 140, 0.95) 0%,
@@ -781,5 +800,10 @@
   .objects-items-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
+  }
+
+  .logs-panel-glass {
+    grid-column: 1 / -1;
+    max-width: 100%;
   }
 }
