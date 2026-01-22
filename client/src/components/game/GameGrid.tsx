@@ -13,6 +13,7 @@ interface GameGridProps {
   scannedArea?: ScannedArea | null;
   compassResult?: CompassResult | null;
   selectedAction?: PowerType;
+  shovelSourcePosition?: Position | null;
 }
 
 const actionIcons: Partial<Record<PowerType, string>> = {
@@ -35,6 +36,7 @@ export function GameGrid({
   scannedArea = null,
   compassResult = null,
   selectedAction = 'dig',
+  shovelSourcePosition = null,
 }: GameGridProps) {
   const [hoveredCell, setHoveredCell] = useState<Position | null>(null);
 
@@ -89,6 +91,28 @@ export function GameGrid({
     return activeAction?.position.x === x && activeAction?.position.y === y;
   };
 
+  // Shovel mode helpers
+  const isShovelSource = (x: number, y: number): boolean => {
+    return shovelSourcePosition?.x === x && shovelSourcePosition?.y === y;
+  };
+
+  const isShovelSelectable = (x: number, y: number): boolean => {
+    if (!clickable || selectedAction !== 'shovel') return false;
+    // If no source selected, treasures are selectable
+    if (!shovelSourcePosition) {
+      return myTreasures.some((t) => t.x === x && t.y === y);
+    }
+    return false;
+  };
+
+  const isShovelTarget = (x: number, y: number): boolean => {
+    if (!clickable || selectedAction !== 'shovel' || !shovelSourcePosition) return false;
+    // Valid target: not dug, not a treasure, not the source itself
+    const isDug = dugCells.some((d) => d.x === x && d.y === y);
+    const isTreasure = myTreasures.some((t) => t.x === x && t.y === y);
+    return !isDug && !isTreasure;
+  };
+
   return (
     <div className="game-grid">
       {Array.from({ length: GRID_SIZE }, (_, y) =>
@@ -110,6 +134,12 @@ export function GameGrid({
           const activeActionClass = hasActiveAction ? 'action-in-progress' : '';
           const compassCell = isCompassCell(x, y);
           const compassClass = compassCell ? 'compass-result' : '';
+          const shovelSource = isShovelSource(x, y);
+          const shovelSelectable = isShovelSelectable(x, y);
+          const shovelTarget = isShovelTarget(x, y);
+          const shovelSourceClass = shovelSource ? 'shovel-source' : '';
+          const shovelSelectableClass = shovelSelectable ? 'shovel-selectable' : '';
+          const shovelTargetClass = shovelTarget ? 'shovel-target' : '';
 
           // Show action preview on hover (only for clickable cells that aren't already dug or have active action)
           const showActionPreview = clickable && cellHovered && !dugCell && !hasActiveAction;
@@ -117,7 +147,7 @@ export function GameGrid({
           return (
             <div
               key={key}
-              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isDigging ? 'digging-pulse' : ''} ${dugCell?.found ? 'found' : ''} ${scannedClass} ${detectorPreviewClass} ${activeActionClass} ${compassClass}`}
+              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isDigging ? 'digging-pulse' : ''} ${dugCell?.found ? 'found' : ''} ${scannedClass} ${detectorPreviewClass} ${activeActionClass} ${compassClass} ${shovelSourceClass} ${shovelSelectableClass} ${shovelTargetClass}`}
               onClick={() => handleCellClick(x, y)}
               onMouseEnter={() => clickable && setHoveredCell({ x, y })}
               onMouseLeave={() => setHoveredCell(null)}

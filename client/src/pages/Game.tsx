@@ -38,6 +38,9 @@ export function Game() {
     dig,
     useDetector,
     useCompass,
+    useShovel,
+    setShovelSource,
+    shovelSourcePosition,
     toggleTreasure,
     setSelectedAction,
     resetGame,
@@ -89,6 +92,25 @@ export function Game() {
         useDetector(x, y);
       } else if (selectedAction === 'compass' && powers.compass > 0) {
         useCompass(x, y);
+      } else if (selectedAction === 'shovel' && powers.shovel > 0) {
+        const isMyTreasure = myTreasurePositions.some((t) => t.x === x && t.y === y);
+        const isDug = dugCells.some((d) => d.x === x && d.y === y);
+
+        if (!shovelSourcePosition) {
+          // First click: select a treasure to move
+          if (isMyTreasure) {
+            setShovelSource({ x, y });
+          }
+        } else {
+          // Second click: select destination
+          if (shovelSourcePosition.x === x && shovelSourcePosition.y === y) {
+            // Clicked same cell, cancel selection
+            setShovelSource(null);
+          } else if (!isDug && !isMyTreasure) {
+            // Valid destination: not dug, not another treasure
+            useShovel(shovelSourcePosition.x, shovelSourcePosition.y, x, y);
+          }
+        }
       }
     }
   };
@@ -201,6 +223,7 @@ export function Game() {
               scannedArea={scannedArea}
               compassResult={compassResult}
               selectedAction={selectedAction}
+              shovelSourcePosition={shovelSourcePosition}
             />
           )}
 

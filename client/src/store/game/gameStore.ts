@@ -73,6 +73,8 @@ interface GameActions {
   respondDetector: () => Promise<void>;
   useCompass: (x: number, y: number) => Promise<void>;
   respondCompass: () => Promise<void>;
+  useShovel: (oldX: number, oldY: number, newX: number, newY: number) => Promise<void>;
+  setShovelSource: (position: Position | null) => void;
 
   // UI state
   toggleTreasure: (x: number, y: number) => void;
@@ -113,6 +115,7 @@ const initialState: GameState = {
   lastCompassDistance: null,
   lastCompassPosition: null,
   compassResult: null,
+  shovelSourcePosition: null,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -136,7 +139,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   setSelectedAction: (action: PowerType) => {
-    set({ selectedAction: action });
+    set({ selectedAction: action, shovelSourcePosition: null });
+  },
+
+  setShovelSource: (position: Position | null) => {
+    set({ shovelSourcePosition: position });
   },
 
   toggleTreasure: (x: number, y: number) => {
@@ -636,6 +643,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.error('Failed to respond to compass - Full error:', err);
       const errorMessage = extractErrorMessage(err);
       set({ error: errorMessage || 'Failed to respond', isLoading: false });
+    }
+  },
+
+  useShovel: async (oldX: number, oldY: number, newX: number, newY: number) => {
+    const { gameId, addLog, refreshGameState, myTreasurePositions } = get();
+    const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
+
+    if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    set({
+      isLoading: true,
+      statusMessage: 'Moving treasure...',
+      activeAction: { type: 'shovel', position: { x: newX, y: newY } },
+      shovelSourcePosition: null,
+    });
+
+    try {
+      const contract = TreasureHuntContract.at(contractAddress, wallet);
+      await contract.methods.use_shovel(gameId, oldX, oldY, newX, newY).send({ from: myAddress }).wait();
+
+      // Update local treasure positions
+      const newTreasurePositions = myTreasurePositions.map((pos) =>
+        pos.x === oldX && pos.y === oldY ? { x: newX, y: newY } : pos
+      );
+
+      addLog(`You moved treasure from (${oldX}, ${oldY}) to (${newX}, ${newY})`);
+      set({ myTreasurePositions: newTreasurePositions, activeAction: null });
+      await refreshGameState();
+    } catch (err: unknown) {
+      console.error('Failed to use shovel - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      set({ error: errorMessage || 'Failed to use shovel', isLoading: false, activeAction: null });
     }
   },
 }));

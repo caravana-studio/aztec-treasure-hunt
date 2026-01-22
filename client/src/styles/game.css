@@ -623,6 +623,53 @@
   z-index: 10;
 }
 
+/* Golden Shovel selection states */
+.grid-cell.shovel-selectable {
+  animation: shovel-pulse 1.5s ease-in-out infinite;
+  border: 2px dashed rgba(255, 215, 0, 0.7) !important;
+}
+
+.grid-cell.shovel-source {
+  border: 3px solid rgba(255, 215, 0, 0.95) !important;
+  box-shadow:
+    0 0 15px rgba(255, 215, 0, 0.6),
+    inset 0 0 10px rgba(255, 215, 0, 0.2);
+  animation: shovel-source-glow 1s ease-in-out infinite;
+}
+
+.grid-cell.shovel-target {
+  border: 2px dashed rgba(100, 200, 100, 0.6) !important;
+  background: rgba(100, 200, 100, 0.1) !important;
+}
+
+.grid-cell.shovel-target:hover {
+  border: 2px solid rgba(100, 200, 100, 0.9) !important;
+  background: rgba(100, 200, 100, 0.25) !important;
+  box-shadow: 0 0 10px rgba(100, 200, 100, 0.4);
+}
+
+@keyframes shovel-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  }
+}
+
+@keyframes shovel-source-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(255, 215, 0, 0.5),
+      inset 0 0 8px rgba(255, 215, 0, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(255, 215, 0, 0.8),
+      inset 0 0 12px rgba(255, 215, 0, 0.3);
+  }
+}
+
 /* Action preview on hover */
 .action-preview {
   position: absolute;

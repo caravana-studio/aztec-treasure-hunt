@@ -69,6 +69,8 @@ export interface GameState {
   lastCompassDistance: number | null;
   lastCompassPosition: Position | null;
   compassResult: CompassResult | null;
+  // Shovel state for two-step selection
+  shovelSourcePosition: Position | null;
 }
 
 // Game status constants
