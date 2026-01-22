@@ -41,6 +41,8 @@ export function Game() {
     useShovel,
     setShovelSource,
     shovelSourcePosition,
+    useTrap,
+    myTrapPositions,
     toggleTreasure,
     setSelectedAction,
     resetGame,
@@ -110,6 +112,12 @@ export function Game() {
             // Valid destination: not dug, not another treasure
             useShovel(shovelSourcePosition.x, shovelSourcePosition.y, x, y);
           }
+        }
+      } else if (selectedAction === 'trap' && powers.trap > 0) {
+        const isDug = dugCells.some((d) => d.x === x && d.y === y);
+        // Can place trap on any cell that hasn't been dug
+        if (!isDug) {
+          useTrap(x, y);
         }
       }
     }
@@ -214,6 +222,7 @@ export function Game() {
           {(gamePhase === 'playing' || gamePhase === 'awaiting') && (
             <GameGrid
               myTreasures={myTreasurePositions}
+              myTraps={myTrapPositions}
               dugCells={dugCells}
               clickable={isMyTurn && gamePhase === 'playing'}
               onCellClick={handleGridClick}

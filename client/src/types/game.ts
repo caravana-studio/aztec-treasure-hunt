@@ -13,6 +13,7 @@ export interface GameLog {
 
 export interface DugCell extends Position {
   found: boolean;
+  hitTrap: boolean;
   isMine: boolean;
 }
 
@@ -71,6 +72,11 @@ export interface GameState {
   compassResult: CompassResult | null;
   // Shovel state for two-step selection
   shovelSourcePosition: Position | null;
+  // Trap positions placed by this player
+  myTrapPositions: Position[];
+  // Skip turn tracking
+  mustSkipTurn: boolean;
+  lastSkippedPlayer: 'me' | 'opponent' | null;
 }
 
 // Game status constants

@@ -491,6 +491,16 @@
   box-shadow: 0 0 12px rgba(220, 80, 80, 0.5);
 }
 
+/* Trap triggered - purple/dark style */
+.grid-cell.dug-trap {
+  background: linear-gradient(
+    145deg,
+    rgba(128, 90, 140, 0.9) 0%,
+    rgba(100, 70, 110, 0.85) 100%
+  ) !important;
+  border-color: rgba(150, 100, 160, 0.5) !important;
+}
+
 .grid-cell.selected {
   background: linear-gradient(
     145deg,
@@ -668,6 +678,16 @@
       0 0 20px rgba(255, 215, 0, 0.8),
       inset 0 0 12px rgba(255, 215, 0, 0.3);
   }
+}
+
+/* Trap indicator - only visible to the player who placed it */
+.grid-cell.has-trap {
+  position: relative;
+}
+
+/* Trap placed but not triggered - semi-transparent */
+.cell-content.trap-placed {
+  opacity: 0.5;
 }
 
 /* Action preview on hover */

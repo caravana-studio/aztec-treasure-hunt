@@ -48,6 +48,7 @@ export function useGame() {
     lastCompassPosition: store.lastCompassPosition,
     compassResult: store.compassResult,
     shovelSourcePosition: store.shovelSourcePosition,
+    myTrapPositions: store.myTrapPositions,
 
     // Actions
     createGame: store.createGame,
@@ -61,6 +62,7 @@ export function useGame() {
     respondCompass: store.respondCompass,
     useShovel: store.useShovel,
     setShovelSource: store.setShovelSource,
+    useTrap: store.useTrap,
     toggleTreasure: store.toggleTreasure,
     setSelectedAction: store.setSelectedAction,
     refreshGameState: store.refreshGameState,

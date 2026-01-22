@@ -3,6 +3,7 @@ import { Position, GRID_SIZE, CellState, ScannedArea, CompassResult, PowerType, 
 
 interface GameGridProps {
   myTreasures?: Position[];
+  myTraps?: Position[];
   dugCells?: (Position & { found: boolean; isMine: boolean })[];
   selectedCells?: Position[];
   clickable?: boolean;
@@ -26,6 +27,7 @@ const actionIcons: Partial<Record<PowerType, string>> = {
 
 export function GameGrid({
   myTreasures = [],
+  myTraps = [],
   dugCells = [],
   selectedCells = [],
   clickable = false,
@@ -113,6 +115,11 @@ export function GameGrid({
     return !isDug && !isTreasure;
   };
 
+  // Check if cell has a trap placed by the player
+  const hasMyTrap = (x: number, y: number): boolean => {
+    return myTraps.some((t) => t.x === x && t.y === y);
+  };
+
   return (
     <div className="game-grid">
       {Array.from({ length: GRID_SIZE }, (_, y) =>
@@ -129,6 +136,7 @@ export function GameGrid({
 
           const isMine = dugCell?.isMine ?? false;
           const digOwnerClass = dugCell ? (isMine ? 'dug-mine' : 'dug-opponent') : '';
+          const trapTriggeredClass = dugCell?.hitTrap ? 'dug-trap' : '';
           const scannedClass = inScannedArea ? 'scanned' : '';
           const detectorPreviewClass = inDetectorPreview ? 'detector-preview' : '';
           const activeActionClass = hasActiveAction ? 'action-in-progress' : '';
@@ -140,6 +148,8 @@ export function GameGrid({
           const shovelSourceClass = shovelSource ? 'shovel-source' : '';
           const shovelSelectableClass = shovelSelectable ? 'shovel-selectable' : '';
           const shovelTargetClass = shovelTarget ? 'shovel-target' : '';
+          const cellHasTrap = hasMyTrap(x, y);
+          const trapClass = cellHasTrap ? 'has-trap' : '';
 
           // Show action preview on hover (only for clickable cells that aren't already dug or have active action)
           const showActionPreview = clickable && cellHovered && !dugCell && !hasActiveAction;
@@ -147,7 +157,7 @@ export function GameGrid({
           return (
             <div
               key={key}
-              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isDigging ? 'digging-pulse' : ''} ${dugCell?.found ? 'found' : ''} ${scannedClass} ${detectorPreviewClass} ${activeActionClass} ${compassClass} ${shovelSourceClass} ${shovelSelectableClass} ${shovelTargetClass}`}
+              className={`grid-cell ${state} ${digOwnerClass} ${trapTriggeredClass} ${clickable ? 'clickable' : 'disabled'} ${isDigging ? 'digging-pulse' : ''} ${dugCell?.found ? 'found' : ''} ${scannedClass} ${detectorPreviewClass} ${activeActionClass} ${compassClass} ${shovelSourceClass} ${shovelSelectableClass} ${shovelTargetClass} ${trapClass}`}
               onClick={() => handleCellClick(x, y)}
               onMouseEnter={() => clickable && setHoveredCell({ x, y })}
               onMouseLeave={() => setHoveredCell(null)}
@@ -160,6 +170,14 @@ export function GameGrid({
               )}
               {state === 'your-treasure' && showTreasures && (
                 <img src="/images/treasure.png" alt="Your treasure" className="cell-content" style={{ opacity: 0.7 }} />
+              )}
+              {/* Show trap indicator for cells where player placed traps (not yet triggered) */}
+              {cellHasTrap && !dugCell && (
+                <img src="/images/trap.png" alt="Your trap" className="cell-content trap-placed" />
+              )}
+              {/* Show trap icon when opponent hit a trap */}
+              {dugCell?.hitTrap && (
+                <img src="/images/trap.png" alt="Trap triggered" className="cell-content" />
               )}
               {/* Active action indicator - shows the action icon while executing */}
               {hasActiveAction && activeAction && actionIcons[activeAction.type] && (

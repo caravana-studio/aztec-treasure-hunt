@@ -75,6 +75,7 @@ interface GameActions {
   respondCompass: () => Promise<void>;
   useShovel: (oldX: number, oldY: number, newX: number, newY: number) => Promise<void>;
   setShovelSource: (position: Position | null) => void;
+  useTrap: (x: number, y: number) => Promise<void>;
 
   // UI state
   toggleTreasure: (x: number, y: number) => void;
@@ -116,6 +117,9 @@ const initialState: GameState = {
   lastCompassPosition: null,
   compassResult: null,
   shovelSourcePosition: null,
+  myTrapPositions: [],
+  mustSkipTurn: false,
+  lastSkippedPlayer: null,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -193,6 +197,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const p1Score = Number(game.player1_found);
       const p2Score = Number(game.player2_found);
       const mySetupDone = isP1 ? game.player1_setup_done : game.player2_setup_done;
+
+      // Check skip_turn status
+      const skipTurnAddress = game.skip_turn.toString();
+      const zeroAddress = '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const hasSkipTurn = skipTurnAddress !== zeroAddress;
+      const iMustSkip = hasSkipTurn && skipTurnAddress === myAddress.toString();
       const detectorCount = Number(game.last_detector_count);
       const compassDistance = Number(game.last_compass_distance);
 
@@ -253,7 +263,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
               const digger = Math.floor(result / 4);
               const resultType = result % 4;
               const isMine = (isP1 && digger === 1) || (!isP1 && digger === 2);
-              dugCells.push({ x, y, found: resultType === 2, isMine });
+              // resultType: 1=empty, 2=treasure, 3=trap
+              dugCells.push({ x, y, found: resultType === 2, hitTrap: resultType === 3, isMine });
             }
           }
         } catch (err) {
@@ -279,6 +290,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
           const who = cell.isMine ? 'You' : 'Opponent';
           if (cell.found) {
             addLog(`${who} found a treasure at (${cell.x}, ${cell.y})!`);
+          } else if (cell.hitTrap) {
+            if (cell.isMine) {
+              addLog(`You hit a trap at (${cell.x}, ${cell.y})! You lose your next turn.`);
+            } else {
+              addLog(`Opponent hit your trap at (${cell.x}, ${cell.y})! They lose their next turn.`);
+            }
           } else {
             addLog(`${who} found nothing at (${cell.x}, ${cell.y})`);
           }
@@ -327,6 +344,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
 
+      // Track skip turn changes and log them
+      const { mustSkipTurn: previousMustSkip, lastSkippedPlayer: prevSkipped } = get();
+      let newLastSkippedPlayer: 'me' | 'opponent' | null = prevSkipped;
+
+      // Detect when opponent just had their turn skipped (they had skip_turn set, now it's cleared and it was their turn)
+      if (hasSkipTurn) {
+        // Someone is marked to skip their next turn
+        if (iMustSkip && !previousMustSkip) {
+          // I just got marked to skip (I hit a trap)
+          newLastSkippedPlayer = 'me';
+        } else if (!iMustSkip && hasSkipTurn) {
+          // Opponent is marked to skip
+          newLastSkippedPlayer = 'opponent';
+        }
+      } else if (previousMustSkip && !iMustSkip) {
+        // My skip was just cleared - log it
+        addLog('Your turn was skipped due to trap!');
+      } else if (prevSkipped === 'opponent' && !hasSkipTurn && gamePhase === 'playing') {
+        // Opponent's skip was just cleared
+        addLog('Opponent\'s turn was skipped due to trap!');
+        newLastSkippedPlayer = null;
+      }
+
       set({
         isPlayer1: isP1,
         isMyTurn: myTurn,
@@ -348,6 +388,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastCompassDistance: newCompassDistance,
         lastCompassPosition: newCompassPosition,
         compassResult: newCompassResult,
+        mustSkipTurn: iMustSkip,
+        lastSkippedPlayer: newLastSkippedPlayer,
         ...(shouldClearDiggingCell && { diggingCell: null }),
         ...(shouldClearActiveAction && { activeAction: null }),
       });
@@ -677,6 +719,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.error('Failed to use shovel - Full error:', err);
       const errorMessage = extractErrorMessage(err);
       set({ error: errorMessage || 'Failed to use shovel', isLoading: false, activeAction: null });
+    }
+  },
+
+  useTrap: async (x: number, y: number) => {
+    const { gameId, addLog, refreshGameState, myTrapPositions } = get();
+    const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
+
+    if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    set({
+      isLoading: true,
+      statusMessage: 'Placing trap...',
+      activeAction: { type: 'trap', position: { x, y } },
+    });
+
+    try {
+      const contract = TreasureHuntContract.at(contractAddress, wallet);
+      await contract.methods.use_trap(gameId, x, y).send({ from: myAddress }).wait();
+
+      // Add trap position to local state for visual feedback
+      const newTrapPositions = [...myTrapPositions, { x, y }];
+
+      addLog(`You placed a trap at (${x}, ${y})`);
+      set({ activeAction: null, selectedAction: 'dig', myTrapPositions: newTrapPositions });
+      await refreshGameState();
+    } catch (err: unknown) {
+      console.error('Failed to use trap - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      set({ error: errorMessage || 'Failed to place trap', isLoading: false, activeAction: null });
     }
   },
 }));
