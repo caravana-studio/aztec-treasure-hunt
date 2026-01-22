@@ -704,77 +704,7 @@
   50% { transform: translateY(-6px) rotate(10deg); }
 }
 
-/* Logs panel - iOS 26 Liquid Glass */
-.logs-panel {
-  grid-column: 1 / -1;
-  grid-row: 3;
-  background: linear-gradient(
-    180deg,
-    rgba(55, 50, 42, 0.92) 0%,
-    rgba(45, 42, 36, 0.95) 100%
-  );
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 -4px 24px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.logs-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  color: rgba(255, 255, 255, 0.95);
-  cursor: pointer;
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.logs-header:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.logs-header svg {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logs-header.expanded svg {
-  transform: rotate(180deg);
-}
-
-.logs-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logs-content.expanded {
-  max-height: 200px;
-}
-
-.logs-list {
-  padding: var(--space-md) var(--space-lg);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
-}
-
-.log-entry {
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.log-entry:last-child {
-  border-bottom: none;
-}
+/* Logs panel styles moved to glass.css */
 
 .lobby-container {
   min-height: 100vh;

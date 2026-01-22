@@ -556,6 +556,186 @@
   }
 }
 
+/* ============================================
+   Game Logs Panel - iOS 26 Liquid Glass Style
+   ============================================ */
+
+.logs-panel-glass {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  width: 100%;
+  background: linear-gradient(
+    145deg,
+    rgba(210, 180, 140, 0.95) 0%,
+    rgba(195, 165, 125, 0.9) 50%,
+    rgba(180, 150, 110, 0.95) 100%
+  );
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.logs-header-glass {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: linear-gradient(
+    180deg,
+    rgba(160, 130, 90, 0.5) 0%,
+    rgba(140, 110, 70, 0.4) 100%
+  );
+  color: rgba(70, 50, 30, 0.95);
+  cursor: pointer;
+  font-weight: var(--font-weight-bold);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.2s ease;
+}
+
+.logs-header-glass:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(160, 130, 90, 0.6) 0%,
+    rgba(140, 110, 70, 0.5) 100%
+  );
+}
+
+.logs-header-glass svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(70, 50, 30, 0.8);
+}
+
+.logs-header-glass.expanded svg {
+  transform: rotate(180deg);
+}
+
+.logs-content-glass {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logs-content-glass.expanded {
+  max-height: 200px;
+}
+
+.logs-list-glass {
+  padding: var(--space-md) var(--space-lg);
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-entry-glass {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(50, 40, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.log-entry-glass.log-empty {
+  justify-content: center;
+  color: rgba(80, 60, 40, 0.6);
+  font-style: italic;
+}
+
+.log-time {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(100, 80, 50, 0.7);
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+}
+
+.log-message {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* Log highlighting colors - matching cell colors */
+.log-success {
+  color: #27ae60;
+  font-weight: 700;
+}
+
+.log-danger {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+.log-warning {
+  color: #f39c12;
+  font-weight: 700;
+}
+
+.log-neutral {
+  color: rgba(100, 80, 50, 0.7);
+}
+
+.log-info {
+  color: #3498db;
+  font-weight: 600;
+}
+
+.log-position {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-weight: 600;
+  color: rgba(70, 50, 30, 0.9);
+  background: rgba(0, 0, 0, 0.08);
+  padding: 1px 4px;
+  border-radius: 5px;
+}
+
+.log-you {
+  color: #2980b9;
+  font-weight: 700;
+}
+
+.log-opponent {
+  color: #8e44ad;
+  font-weight: 700;
+}
+
+/* Scrollbar styling for logs */
+.logs-list-glass::-webkit-scrollbar {
+  width: 6px;
+}
+
+.logs-list-glass::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.logs-list-glass::-webkit-scrollbar-thumb {
+  background: rgba(120, 90, 50, 0.3);
+  border-radius: 3px;
+}
+
+.logs-list-glass::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 90, 50, 0.5);
+}
+
 /* Responsive adjustments for objects panel */
 @media (max-width: 1100px) {
   .objects-panel-glass {
