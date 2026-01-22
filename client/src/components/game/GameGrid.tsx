@@ -150,9 +150,15 @@ export function GameGrid({
           const shovelTargetClass = shovelTarget ? 'shovel-target' : '';
           const cellHasTrap = hasMyTrap(x, y);
           const trapClass = cellHasTrap ? 'has-trap' : '';
+          // Check if this is my own treasure (even if dug)
+          const isMyTreasure = showTreasures && myTreasures.some((t) => t.x === x && t.y === y);
 
-          // Show action preview on hover (only for clickable cells that aren't already dug or have active action)
-          const showActionPreview = clickable && cellHovered && !dugCell && !hasActiveAction;
+          // Show action preview on hover (only during gameplay, not during treasure selection setup)
+          const isTreasureSelection = selectedCells.length > 0 || myTreasures.length === 0;
+          const showActionPreview = clickable && cellHovered && !dugCell && !hasActiveAction && !isTreasureSelection;
+          // Show treasure preview on hover during setup (when selecting treasure positions)
+          const isAlreadySelected = selectedCells.some((p) => p.x === x && p.y === y);
+          const showTreasurePreview = clickable && cellHovered && isTreasureSelection && !isAlreadySelected;
 
           return (
             <div
@@ -165,10 +171,10 @@ export function GameGrid({
               {state === 'selected' && (
                 <img src="/images/treasure.png" alt="Selected treasure" className="cell-content" style={{ opacity: 0.8 }} />
               )}
-              {state === 'dug-found' && (
+              {state === 'dug-found' && !isMyTreasure && (
                 <img src="/images/treasure.png" alt="Treasure" className="cell-content" />
               )}
-              {state === 'your-treasure' && showTreasures && (
+              {(state === 'your-treasure' || (isMyTreasure && dugCell)) && (
                 <img src="/images/treasure.png" alt="Your treasure" className="cell-content" style={{ opacity: 0.7 }} />
               )}
               {/* Show trap indicator for cells where player placed traps (not yet triggered) */}
@@ -194,6 +200,14 @@ export function GameGrid({
               {/* Compass result badge */}
               {compassCell && compassResult && (
                 <div className="compass-result-badge">{compassResult.distance}</div>
+              )}
+              {/* Treasure preview on hover during setup */}
+              {showTreasurePreview && (
+                <img
+                  src="/images/treasure.png"
+                  alt="Place treasure here"
+                  className="action-preview"
+                />
               )}
               {/* Action preview on hover */}
               {showActionPreview && actionIcons[selectedAction] && (
