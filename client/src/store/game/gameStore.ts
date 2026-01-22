@@ -8,6 +8,7 @@ import {
   PowerType,
   DugCell,
   ScannedArea,
+  CompassResult,
   Position,
   ActiveAction,
   INITIAL_POWERS,
@@ -111,6 +112,7 @@ const initialState: GameState = {
   scannedArea: null,
   lastCompassDistance: null,
   lastCompassPosition: null,
+  compassResult: null,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -301,6 +303,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Detect new compass results and log them
       let newCompassPosition = prevCompassPos;
       let newCompassDistance: number | null = get().lastCompassDistance;
+      let newCompassResult: CompassResult | null = get().compassResult;
 
       if (prevCompassPos && gamePhase === 'playing' && previousPhase === 'awaiting') {
         // Log the compass result for the player who used it
@@ -309,6 +312,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
         newCompassDistance = compassDistance;
         newCompassPosition = null; // Clear after logging
+
+        // Create compass result for visual feedback
+        newCompassResult = {
+          position: prevCompassPos,
+          distance: compassDistance,
+        };
       }
 
       set({
@@ -331,6 +340,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         scannedArea: newScannedArea,
         lastCompassDistance: newCompassDistance,
         lastCompassPosition: newCompassPosition,
+        compassResult: newCompassResult,
         ...(shouldClearDiggingCell && { diggingCell: null }),
         ...(shouldClearActiveAction && { activeAction: null }),
       });

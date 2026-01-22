@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Position, GRID_SIZE, CellState, ScannedArea, PowerType, ActiveAction } from '../../types/game';
+import { Position, GRID_SIZE, CellState, ScannedArea, CompassResult, PowerType, ActiveAction } from '../../types/game';
 
 interface GameGridProps {
   myTreasures?: Position[];
@@ -11,6 +11,7 @@ interface GameGridProps {
   diggingCell?: Position | null;
   activeAction?: ActiveAction | null;
   scannedArea?: ScannedArea | null;
+  compassResult?: CompassResult | null;
   selectedAction?: PowerType;
 }
 
@@ -32,6 +33,7 @@ export function GameGrid({
   diggingCell = null,
   activeAction = null,
   scannedArea = null,
+  compassResult = null,
   selectedAction = 'dig',
 }: GameGridProps) {
   const [hoveredCell, setHoveredCell] = useState<Position | null>(null);
@@ -63,6 +65,11 @@ export function GameGrid({
   const isScannedCenter = (x: number, y: number): boolean => {
     if (!scannedArea) return false;
     return scannedArea.center.x === x && scannedArea.center.y === y;
+  };
+
+  const isCompassCell = (x: number, y: number): boolean => {
+    if (!compassResult) return false;
+    return compassResult.position.x === x && compassResult.position.y === y;
   };
 
   const isHovered = (x: number, y: number): boolean => {
@@ -101,6 +108,8 @@ export function GameGrid({
           const scannedClass = inScannedArea ? 'scanned' : '';
           const detectorPreviewClass = inDetectorPreview ? 'detector-preview' : '';
           const activeActionClass = hasActiveAction ? 'action-in-progress' : '';
+          const compassCell = isCompassCell(x, y);
+          const compassClass = compassCell ? 'compass-result' : '';
 
           // Show action preview on hover (only for clickable cells that aren't already dug or have active action)
           const showActionPreview = clickable && cellHovered && !dugCell && !hasActiveAction;
@@ -108,7 +117,7 @@ export function GameGrid({
           return (
             <div
               key={key}
-              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isDigging ? 'digging-pulse' : ''} ${dugCell?.found ? 'found' : ''} ${scannedClass} ${detectorPreviewClass} ${activeActionClass}`}
+              className={`grid-cell ${state} ${digOwnerClass} ${clickable ? 'clickable' : 'disabled'} ${isDigging ? 'digging-pulse' : ''} ${dugCell?.found ? 'found' : ''} ${scannedClass} ${detectorPreviewClass} ${activeActionClass} ${compassClass}`}
               onClick={() => handleCellClick(x, y)}
               onMouseEnter={() => clickable && setHoveredCell({ x, y })}
               onMouseLeave={() => setHoveredCell(null)}
@@ -133,6 +142,10 @@ export function GameGrid({
               {/* Scanned area result badge on center cell */}
               {scannedCenter && scannedArea && (
                 <div className="scan-result-badge">{scannedArea.result}</div>
+              )}
+              {/* Compass result badge */}
+              {compassCell && compassResult && (
+                <div className="compass-result-badge">{compassResult.distance}</div>
               )}
               {/* Action preview on hover */}
               {showActionPreview && actionIcons[selectedAction] && (

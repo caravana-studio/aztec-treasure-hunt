@@ -46,6 +46,7 @@ export function useGame() {
     scannedArea: store.scannedArea,
     lastCompassDistance: store.lastCompassDistance,
     lastCompassPosition: store.lastCompassPosition,
+    compassResult: store.compassResult,
 
     // Actions
     createGame: store.createGame,

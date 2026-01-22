@@ -22,6 +22,11 @@ export interface ScannedArea {
   result: number;
 }
 
+export interface CompassResult {
+  position: Position;
+  distance: number;
+}
+
 export interface Powers {
   dig: number;
   detector: number;
@@ -63,6 +68,7 @@ export interface GameState {
   scannedArea: ScannedArea | null;
   lastCompassDistance: number | null;
   lastCompassPosition: Position | null;
+  compassResult: CompassResult | null;
 }
 
 // Game status constants

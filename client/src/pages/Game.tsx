@@ -31,7 +31,7 @@ export function Game() {
     logs,
     powers,
     scannedArea,
-    lastCompassDistance,
+    compassResult,
     setGameId,
     refreshGameState,
     placeTreasures,
@@ -199,6 +199,7 @@ export function Game() {
               diggingCell={diggingCell}
               activeAction={activeAction}
               scannedArea={scannedArea}
+              compassResult={compassResult}
               selectedAction={selectedAction}
             />
           )}
