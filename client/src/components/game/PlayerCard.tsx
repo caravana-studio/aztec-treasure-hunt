@@ -9,7 +9,7 @@ const MAX_TREASURES = 2;
 
 export function PlayerCard({ avatarSrc, score, isActive, isOpponent = false }: PlayerCardProps) {
   return (
-    <div className={`player-card ${!isActive && isOpponent ? 'grayed-out' : ''}`}>
+    <div className={`player-card ${isActive ? 'active-turn' : ''} ${!isActive && isOpponent ? 'grayed-out' : ''}`}>
       <img src={avatarSrc} alt="Player avatar" className="player-avatar" />
 
       {/* Treasure progress bar */}

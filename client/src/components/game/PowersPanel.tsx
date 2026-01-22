@@ -123,7 +123,7 @@ export function PowersPanel({
                 onMouseLeave={handleMouseLeave}
               >
                 <img src={item.icon} alt={item.type} />
-                <span className="power-badge">{item.count}</span>
+                {!isOpponent && <span className="power-badge">{item.count}</span>}
               </button>
             ))}
           </div>
