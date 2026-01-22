@@ -489,7 +489,7 @@ pub contract TreasureHunt {
         let compass_user = game.get_opponent(responder);
         assert(game.current_turn.eq(compass_user));
 
-        let updated = game.switch_turn();
+        let updated = game.switch_turn_with_compass_result(distance);
         self.storage.games.at(game_id).write(updated);
     }
 

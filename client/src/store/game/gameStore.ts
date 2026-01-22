@@ -14,6 +14,7 @@ import {
   ACTION_NONE,
   ACTION_DIG,
   ACTION_DETECTOR,
+  ACTION_COMPASS,
   STATUS_CREATED,
   STATUS_SETUP,
   STATUS_PLAYING,
@@ -69,6 +70,8 @@ interface GameActions {
   respondDig: () => Promise<void>;
   useDetector: (x: number, y: number) => Promise<void>;
   respondDetector: () => Promise<void>;
+  useCompass: (x: number, y: number) => Promise<void>;
+  respondCompass: () => Promise<void>;
 
   // UI state
   toggleTreasure: (x: number, y: number) => void;
@@ -106,6 +109,8 @@ const initialState: GameState = {
   lastDetectorCount: 0,
   lastDetectorPosition: null,
   scannedArea: null,
+  lastCompassDistance: null,
+  lastCompassPosition: null,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -180,11 +185,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const p2Score = Number(game.player2_found);
       const mySetupDone = isP1 ? game.player1_setup_done : game.player2_setup_done;
       const detectorCount = Number(game.last_detector_count);
+      const compassDistance = Number(game.last_compass_distance);
 
       let gamePhase: GamePhase = 'lobby';
       let winner: string | null = null;
 
-      const { gamePhase: previousPhase, addLog: logPhaseChange, lastDetectorCount: prevDetectorCount, lastDetectorPosition: prevDetectorPos } = get();
+      const { gamePhase: previousPhase, addLog: logPhaseChange, lastDetectorPosition: prevDetectorPos, lastCompassPosition: prevCompassPos } = get();
 
       if (status === STATUS_CREATED) {
         gamePhase = 'lobby';
@@ -292,6 +298,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
         newDetectorPosition = null; // Clear after logging
       }
 
+      // Detect new compass results and log them
+      let newCompassPosition = prevCompassPos;
+      let newCompassDistance: number | null = get().lastCompassDistance;
+
+      if (prevCompassPos && gamePhase === 'playing' && previousPhase === 'awaiting') {
+        // Log the compass result for the player who used it
+        const cellWord = compassDistance === 1 ? 'cell' : 'cells';
+        addLog(`Compass result: Nearest treasure is ${compassDistance} ${cellWord} away from (${prevCompassPos.x}, ${prevCompassPos.y})`);
+
+        newCompassDistance = compassDistance;
+        newCompassPosition = null; // Clear after logging
+      }
+
       set({
         isPlayer1: isP1,
         isMyTurn: myTurn,
@@ -310,6 +329,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastDetectorCount: detectorCount,
         lastDetectorPosition: newDetectorPosition,
         scannedArea: newScannedArea,
+        lastCompassDistance: newCompassDistance,
+        lastCompassPosition: newCompassPosition,
         ...(shouldClearDiggingCell && { diggingCell: null }),
         ...(shouldClearActiveAction && { activeAction: null }),
       });
@@ -328,6 +349,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
           setTimeout(() => {
             const { respondDetector } = get();
             respondDetector();
+          }, 100);
+        } else if (pendingActionType === ACTION_COMPASS) {
+          console.log('Auto-responding to compass action...');
+          setTimeout(() => {
+            const { respondCompass } = get();
+            respondCompass();
           }, 100);
         }
       }
@@ -543,6 +570,60 @@ export const useGameStore = create<GameStore>((set, get) => ({
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to respond to detector - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      set({ error: errorMessage || 'Failed to respond', isLoading: false });
+    }
+  },
+
+  useCompass: async (x: number, y: number) => {
+    const { gameId, addLog, refreshGameState } = get();
+    const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
+
+    if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    set({
+      isLoading: true,
+      statusMessage: 'Using compass...',
+      lastCompassPosition: { x, y },
+      activeAction: { type: 'compass', position: { x, y } },
+    });
+
+    try {
+      const contract = TreasureHuntContract.at(contractAddress, wallet);
+      await contract.methods.use_compass(gameId, x, y).send({ from: myAddress }).wait();
+
+      addLog(`You use compass from (${x}, ${y})...`);
+      await refreshGameState();
+    } catch (err: unknown) {
+      console.error('Failed to use compass - Full error:', err);
+      const errorMessage = extractErrorMessage(err);
+      set({ error: errorMessage || 'Failed to use compass', isLoading: false, lastCompassPosition: null, activeAction: null });
+    }
+  },
+
+  respondCompass: async () => {
+    const { gameId, pendingX, pendingY, addLog, refreshGameState } = get();
+    const { wallet, address: myAddress, contractAddress } = useWalletStore.getState();
+
+    if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    set({ isLoading: true, statusMessage: 'Processing compass...' });
+
+    try {
+      const contract = TreasureHuntContract.at(contractAddress, wallet);
+
+      console.log('Responding to compass at:', pendingX, pendingY);
+
+      await contract.methods.respond_compass(gameId, pendingX, pendingY).send({ from: myAddress }).wait();
+
+      addLog(`Opponent uses compass from (${pendingX}, ${pendingY})`);
+      await refreshGameState();
+    } catch (err: unknown) {
+      console.error('Failed to respond to compass - Full error:', err);
       const errorMessage = extractErrorMessage(err);
       set({ error: errorMessage || 'Failed to respond', isLoading: false });
     }

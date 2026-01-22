@@ -61,6 +61,8 @@ export interface GameState {
   lastDetectorCount: number;
   lastDetectorPosition: Position | null;
   scannedArea: ScannedArea | null;
+  lastCompassDistance: number | null;
+  lastCompassPosition: Position | null;
 }
 
 // Game status constants

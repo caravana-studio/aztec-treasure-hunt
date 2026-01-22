@@ -44,6 +44,8 @@ export function useGame() {
     logs: store.logs,
     powers: store.powers,
     scannedArea: store.scannedArea,
+    lastCompassDistance: store.lastCompassDistance,
+    lastCompassPosition: store.lastCompassPosition,
 
     // Actions
     createGame: store.createGame,
@@ -53,6 +55,8 @@ export function useGame() {
     respondDig: store.respondDig,
     useDetector: store.useDetector,
     respondDetector: store.respondDetector,
+    useCompass: store.useCompass,
+    respondCompass: store.respondCompass,
     toggleTreasure: store.toggleTreasure,
     setSelectedAction: store.setSelectedAction,
     refreshGameState: store.refreshGameState,

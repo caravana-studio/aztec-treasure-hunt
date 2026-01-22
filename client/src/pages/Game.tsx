@@ -31,11 +31,13 @@ export function Game() {
     logs,
     powers,
     scannedArea,
+    lastCompassDistance,
     setGameId,
     refreshGameState,
     placeTreasures,
     dig,
     useDetector,
+    useCompass,
     toggleTreasure,
     setSelectedAction,
     resetGame,
@@ -85,6 +87,8 @@ export function Game() {
         dig(x, y);
       } else if (selectedAction === 'detector' && powers.detector > 0) {
         useDetector(x, y);
+      } else if (selectedAction === 'compass' && powers.compass > 0) {
+        useCompass(x, y);
       }
     }
   };

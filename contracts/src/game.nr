@@ -33,6 +33,7 @@ pub struct Game {
     pub winner: AztecAddress,
     pub skip_turn: AztecAddress,    // Player who must skip next turn (due to trap)
     pub last_detector_count: u8,    // Result of last detector scan (treasures in 3x3 area)
+    pub last_compass_distance: u8,  // Result of last compass use (Manhattan distance to nearest treasure)
 }
 
 impl Game {
@@ -52,6 +53,7 @@ impl Game {
             winner: AztecAddress::zero(),
             skip_turn: AztecAddress::zero(),
             last_detector_count: 0,
+            last_compass_distance: 0,
         }
     }
 
@@ -75,6 +77,7 @@ impl Game {
             winner: self.winner,
             skip_turn: self.skip_turn,
             last_detector_count: self.last_detector_count,
+            last_compass_distance: self.last_compass_distance,
         }
     }
 
@@ -106,6 +109,7 @@ impl Game {
             winner: self.winner,
             skip_turn: self.skip_turn,
             last_detector_count: self.last_detector_count,
+            last_compass_distance: self.last_compass_distance,
         }
     }
 
@@ -125,6 +129,7 @@ impl Game {
             winner: self.winner,
             skip_turn: self.skip_turn,
             last_detector_count: self.last_detector_count,
+            last_compass_distance: self.last_compass_distance,
         }
     }
 
@@ -158,6 +163,7 @@ impl Game {
             winner: self.winner,
             skip_turn: self.skip_turn,
             last_detector_count: self.last_detector_count,
+            last_compass_distance: self.last_compass_distance,
         }
     }
 
@@ -183,6 +189,33 @@ impl Game {
             winner: self.winner,
             skip_turn: self.skip_turn,
             last_detector_count: count,
+            last_compass_distance: self.last_compass_distance,
+        }
+    }
+
+    pub fn switch_turn_with_compass_result(self, distance: u8) -> Self {
+        let next_player = if self.current_turn.eq(self.player1) {
+            self.player2
+        } else {
+            self.player1
+        };
+
+        Self {
+            player1: self.player1,
+            player2: self.player2,
+            player1_setup_done: self.player1_setup_done,
+            player2_setup_done: self.player2_setup_done,
+            player1_found: self.player1_found,
+            player2_found: self.player2_found,
+            current_turn: next_player,
+            pending_action: ACTION_NONE,
+            pending_x: 0,
+            pending_y: 0,
+            status: STATUS_PLAYING,
+            winner: self.winner,
+            skip_turn: self.skip_turn,
+            last_detector_count: self.last_detector_count,
+            last_compass_distance: distance,
         }
     }
 
@@ -224,6 +257,7 @@ impl Game {
             winner: new_winner,
             skip_turn: self.skip_turn,
             last_detector_count: self.last_detector_count,
+            last_compass_distance: self.last_compass_distance,
         }
     }
 
@@ -249,6 +283,7 @@ impl Game {
             winner: self.winner,
             skip_turn: player_to_skip,
             last_detector_count: self.last_detector_count,
+            last_compass_distance: self.last_compass_distance,
         }
     }
 
@@ -268,6 +303,7 @@ impl Game {
             winner: self.winner,
             skip_turn: AztecAddress::zero(),
             last_detector_count: self.last_detector_count,
+            last_compass_distance: self.last_compass_distance,
         }
     }
 }
