@@ -4,6 +4,7 @@ import { Fr } from '@aztec/aztec.js/fields';
 import { useWallet } from '../context/WalletContext';
 import { useGame } from '../hooks/useGame';
 import { PlayerCard, PowersPanel, GameGrid, GameLogs, TurnIndicator } from '../components/game';
+import { AnimatedClouds } from '../components/ui/AnimatedClouds';
 
 export function Game() {
   const { id } = useParams<{ id: string }>();
@@ -146,7 +147,9 @@ export function Game() {
   return (
     
     <div className="game-container">
-       {error && (
+      <AnimatedClouds />
+
+      {error && (
         <div className="error-toast" onClick={() => setError(null)}>
           {error}
         </div>

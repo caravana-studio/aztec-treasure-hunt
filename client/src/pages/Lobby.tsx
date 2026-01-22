@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
 import { useGame } from '../hooks/useGame';
+import { AnimatedClouds } from '../components/ui/AnimatedClouds';
 
 export function Lobby() {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ export function Lobby() {
 
   return (
     <div className="lobby-container">
+      <AnimatedClouds />
       <img src="/images/logo.png" alt="Treasure Hunt" className="lobby-logo" />
       <div className="lobby-card">
         <p className="lobby-subtitle">Strategic treasure hunting with truly private game state on Aztec Network</p>

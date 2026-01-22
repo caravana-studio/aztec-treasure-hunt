@@ -13,6 +13,7 @@
 
 .cloud {
   position: absolute;
+  left: 0;
   height: auto;
   filter: blur(1px);
   animation: cloud-drift linear infinite;
@@ -21,10 +22,10 @@
 
 @keyframes cloud-drift {
   0% {
-    transform: translateX(-150px);
+    transform: translateX(-200px);
   }
   100% {
-    transform: translateX(calc(100vw + 150px));
+    transform: translateX(100vw);
   }
 }
 

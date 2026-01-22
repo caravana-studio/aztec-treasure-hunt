@@ -6,6 +6,7 @@ import { WalletProvider } from './context/WalletContext';
 import './styles/index.css';
 import './styles/glass.css';
 import './styles/game.css';
+import './styles/clouds.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

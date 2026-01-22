@@ -5,11 +5,43 @@
   position: relative;
   width: 100%;
   height: 100vh;
+  overflow: hidden;
+}
+
+/* Animated background with subtle zoom */
+.game-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-image: url('/images/background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  overflow: hidden;
+  animation: bg-zoom 20s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes bg-zoom {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Ensure clouds show above background */
+.game-container .clouds-container {
+  z-index: 1;
+}
+
+/* Game layout above clouds */
+.game-container .game-layout {
+  position: relative;
+  z-index: 2;
 }
 
 /* Game layout */
@@ -740,14 +772,37 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-image: url('/images/background.png');
   justify-content: center;
   padding: var(--space-xl);
   position: relative;
   overflow: hidden;
+}
+
+/* Animated background with subtle zoom for lobby */
+.lobby-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/images/background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  animation: bg-zoom 20s ease-in-out infinite;
+  z-index: 0;
+}
+
+/* Ensure clouds show above background in lobby */
+.lobby-container .clouds-container {
+  z-index: 1;
+}
+
+/* Lobby content above clouds */
+.lobby-container > *:not(.clouds-container) {
+  position: relative;
+  z-index: 2;
 }
 
 .lobby-container::before {
@@ -763,6 +818,7 @@
     transparent 40%
   );
   pointer-events: none;
+  z-index: 1;
 }
 
 .lobby-card {
