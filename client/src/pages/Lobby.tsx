@@ -31,88 +31,90 @@ export function Lobby() {
   };
 
   return (
-    <div className="lobby-container">
-      <AnimatedClouds />
-      <img src="/images/logo.png" alt="Treasure Hunt" className="lobby-logo" />
-      <div className="lobby-card">
-        <p className="lobby-subtitle">Strategic treasure hunting with truly private game state on Aztec Network</p>
+    <>
+      <div className="lobby-container">
+        <AnimatedClouds />
+        <img src="/images/logo.png" alt="Treasure Hunt" className="lobby-logo" />
+        <div className="lobby-card">
+          <p className="lobby-subtitle">Strategic treasure hunting with truly private game state on Aztec Network</p>
 
-        {error && (
-          <div className="error-toast" onClick={() => setError(null)}>
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="error-toast" onClick={() => setError(null)}>
+              {error}
+            </div>
+          )}
 
-        {!myAddress ? (
-          <div className="lobby-form">
-            <div className="lobby-row">
-              <select
-                className="glass-input"
-                value={testAccountIndex}
-                onChange={(e) => setTestAccountIndex(Number(e.target.value))}
-              >
-                <option value={0}>Test Account 1</option>
-                <option value={1}>Test Account 2</option>
-                <option value={2}>Test Account 3</option>
-              </select>
+          {!myAddress ? (
+            <div className="lobby-form">
+              <div className="lobby-row">
+                <select
+                  className="glass-input"
+                  value={testAccountIndex}
+                  onChange={(e) => setTestAccountIndex(Number(e.target.value))}
+                >
+                  <option value={0}>Test Account 1</option>
+                  <option value={1}>Test Account 2</option>
+                  <option value={2}>Test Account 3</option>
+                </select>
+                <button
+                  className="glass-btn"
+                  onClick={handleConnectTestAccount}
+                  disabled={isConnecting}
+                >
+                  Connect
+                </button>
+              </div>
+
+              <div className="lobby-divider">or</div>
+
               <button
-                className="glass-btn"
-                onClick={handleConnectTestAccount}
+                className="glass-btn-secondary lobby-btn-full"
+                onClick={createAccount}
                 disabled={isConnecting}
               >
-                Connect
+                {isConnecting ? 'Creating...' : 'Create New Account'}
               </button>
             </div>
+          ) : (
+            <div className="lobby-form">
+              <div className="lobby-address">
+                {myAddress.toString().slice(0, 10)}...{myAddress.toString().slice(-8)}
+              </div>
 
-            <div className="lobby-divider">or</div>
-
-            <button
-              className="glass-btn-secondary lobby-btn-full"
-              onClick={createAccount}
-              disabled={isConnecting}
-            >
-              {isConnecting ? 'Creating...' : 'Create New Account'}
-            </button>
-          </div>
-        ) : (
-          <div className="lobby-form">
-            <div className="lobby-address">
-              {myAddress.toString().slice(0, 10)}...{myAddress.toString().slice(-8)}
-            </div>
-
-            <button
-              className="glass-btn lobby-btn-full"
-              onClick={handleCreateGame}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating...' : 'Create New Game'}
-            </button>
-
-            <div className="lobby-divider">or join existing</div>
-
-            <div className="lobby-row">
-              <input
-                type="number"
-                className="glass-input"
-                placeholder="Game ID"
-                value={gameIdInput}
-                onChange={(e) => setGameIdInput(e.target.value)}
-                min="1"
-              />
               <button
-                className="glass-btn-secondary"
-                onClick={handleJoinGame}
-                disabled={isLoading || !gameIdInput}
+                className="glass-btn lobby-btn-full"
+                onClick={handleCreateGame}
+                disabled={isLoading}
               >
-                {isLoading ? 'Joining...' : 'Join'}
+                {isLoading ? 'Creating...' : 'Create New Game'}
               </button>
-            </div>
-          </div>
-        )}
 
+              <div className="lobby-divider">or join existing</div>
+
+              <div className="lobby-row">
+                <input
+                  type="number"
+                  className="glass-input"
+                  placeholder="Game ID"
+                  value={gameIdInput}
+                  onChange={(e) => setGameIdInput(e.target.value)}
+                  min="1"
+                />
+                <button
+                  className="glass-btn-secondary"
+                  onClick={handleJoinGame}
+                  disabled={isLoading || !gameIdInput}
+                >
+                  {isLoading ? 'Joining...' : 'Join'}
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
 
-      {/* Loading overlay */}
+      {/* Loading overlay - outside lobby-container to avoid transform issues */}
       {isLoading && (
         <div className="loading-overlay">
           <div className="loading-content">
@@ -121,6 +123,6 @@ export function Lobby() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
