@@ -14,7 +14,7 @@
     "clear-store": "rm -rf ./store",
     "codegen": "aztec codegen target --outdir src/artifacts",
     "compile": "aztec compile",
-    "deploy": "NODE_NO_WARNINGS=1 PROVER_ENABLED=false node --loader ts-node/esm scripts/deploy_contract.ts",
+    "deploy": "rm -rf ./target ../client/target && NODE_NO_WARNINGS=1 PROVER_ENABLED=false node --loader ts-node/esm scripts/deploy_contract.ts",
     "deploy::devnet": "NODE_NO_WARNINGS=1 AZTEC_ENV=devnet node --loader ts-node/esm scripts/deploy_contract.ts",
     "deploy-account": "NODE_NO_WARNINGS=1 node --loader ts-node/esm scripts/deploy_account.ts",
     "deploy-account::devnet": "NODE_NO_WARNINGS=1 AZTEC_ENV=devnet node --loader ts-node/esm scripts/deploy_account.ts",
