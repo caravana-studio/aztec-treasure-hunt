@@ -47,32 +47,38 @@ export function PowersPanel({
   }));
 
   return (
-    <div className={`objects-panel ${isOpponent ? 'grayed-out' : ''}`}>
-      {/* Dig action - always available */}
-      <button
-        className={`dig-btn ${selectedAction === 'dig' ? 'active' : ''}`}
-        onClick={() => onSelectAction('dig')}
-        disabled={disabled || isOpponent}
-        title={powerTooltips['dig']}
-      >
-        <img src={powerIcons['dig']} alt="dig" />
-        <span>Dig</span>
-      </button>
+    <div className={`objects-panel-glass ${isOpponent ? 'grayed-out' : ''}`}>
+      <div className="objects-panel-header">Objects</div>
+      <div className="objects-panel-content">
+        {/* Dig action - primary, always available */}
+        <button
+          className={`dig-action-btn ${selectedAction === 'dig' ? 'selected' : ''}`}
+          onClick={() => onSelectAction('dig')}
+          disabled={disabled || isOpponent}
+          title={powerTooltips['dig']}
+        >
+          <img src={powerIcons['dig']} alt="dig" />
+          <span>Dig</span>
+        </button>
 
-      <div className="objects-header">Objects</div>
-      <div className="objects-grid">
-        {items.map((item) => (
-          <button
-            key={item.type}
-            className={`power-btn ${selectedAction === item.type ? 'active' : ''}`}
-            onClick={() => onSelectAction(item.type)}
-            disabled={disabled || isOpponent || item.count === 0}
-            title={powerTooltips[item.type]}
-          >
-            <img src={item.icon} alt={item.type} />
-            <span className="badge">{item.count}</span>
-          </button>
-        ))}
+        {/* Divider */}
+        <div className="objects-divider" />
+
+        {/* Power items grid */}
+        <div className="objects-items-grid">
+          {items.map((item) => (
+            <button
+              key={item.type}
+              className={`power-item-btn ${selectedAction === item.type ? 'selected' : ''}`}
+              onClick={() => onSelectAction(item.type)}
+              disabled={disabled || isOpponent || item.count === 0}
+              title={powerTooltips[item.type]}
+            >
+              <img src={item.icon} alt={item.type} />
+              <span className="power-badge">{item.count}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

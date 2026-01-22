@@ -155,6 +155,8 @@
 /* Player card - iOS 26 Liquid Glass */
 .player-card {
   position: relative;
+  width: 100%;
+  max-width: 300px;
   padding: 10px;
   background: linear-gradient(
     145deg,
@@ -228,52 +230,7 @@
   box-shadow: 0 2px 6px rgba(45, 125, 210, 0.4);
 }
 
-/* Objects panel - iOS 26 Liquid Glass */
-.objects-panel {
-  width: 100%;
-  max-width: 300px;
-}
-
-.objects-header {
-  background: linear-gradient(
-    180deg,
-    rgba(70, 65, 55, 0.9) 0%,
-    rgba(55, 50, 42, 0.95) 100%
-  );
-  color: rgba(255, 255, 255, 0.95);
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  font-weight: var(--font-weight-bold);
-  font-size: 13px;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.objects-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 10px;
-  background: linear-gradient(
-    180deg,
-    rgba(55, 50, 42, 0.9) 0%,
-    rgba(45, 42, 36, 0.95) 100%
-  );
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: none;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
-}
+/* Objects panel styles moved to glass.css */
 
 /* Grid container */
 .grid-container {
@@ -1118,11 +1075,8 @@
     grid-template-columns: 220px 1fr 220px;
   }
 
-  .player-card {
-    width: 180px;
-  }
-
-  .objects-panel {
+  .player-card,
+  .objects-panel-glass {
     max-width: 200px;
   }
 }
@@ -1132,11 +1086,8 @@
     grid-template-columns: 200px 1fr 200px;
   }
 
-  .player-card {
-    width: 160px;
-  }
-
-  .objects-panel {
+  .player-card,
+  .objects-panel-glass {
     max-width: 180px;
   }
 }
@@ -1148,15 +1099,12 @@
     padding: var(--space-sm);
   }
 
-  .player-card {
-    width: 150px;
-  }
-
-  .objects-panel {
+  .player-card,
+  .objects-panel-glass {
     max-width: 170px;
   }
 
-  .objects-grid {
+  .objects-items-grid {
     gap: 6px;
     padding: 8px;
   }
@@ -1194,15 +1142,12 @@
     align-items: center;
   }
 
-  .player-card {
-    width: 120px;
-  }
-
-  .objects-panel {
+  .player-card,
+  .objects-panel-glass {
     max-width: 200px;
   }
 
-  .objects-grid {
+  .objects-items-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     padding: 10px;
