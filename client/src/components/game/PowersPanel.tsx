@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { PowerType } from '../../types/game';
+import '../../styles/tooltip.css';
 
 interface PowerItem {
   type: PowerType;
@@ -22,12 +24,27 @@ const powerIcons: Record<PowerType, string> = {
   trap: '/images/trap.png',
 };
 
-const powerTooltips: Record<PowerType, string> = {
-  dig: 'Dig at a cell to find treasure',
-  shovel: 'Golden Shovel: Move one of your treasures to a new location',
-  detector: 'Radar: Scan a 3x3 area to count hidden treasures',
-  compass: 'Compass: Get the distance to the nearest treasure',
-  trap: 'Trap: Place a trap that makes opponent skip a turn',
+const powerInfo: Record<PowerType, { title: string; description: string }> = {
+  dig: {
+    title: 'Dig',
+    description: 'Excavate a cell to search for hidden treasure. Your main action each turn.',
+  },
+  shovel: {
+    title: 'Golden Shovel',
+    description: 'Secretly move one of your treasures to a new location.',
+  },
+  detector: {
+    title: 'Detector',
+    description: 'Scan a 3x3 area to count how many treasures are hidden within.',
+  },
+  compass: {
+    title: 'Compass',
+    description: 'Reveals the Manhattan distance to the nearest unfound treasure.',
+  },
+  trap: {
+    title: 'Trap',
+    description: 'Place a hidden trap that makes your opponent lose their next turn.',
+  },
 };
 
 // Special objects with limited uses
@@ -40,46 +57,78 @@ export function PowersPanel({
   disabled = false,
   isOpponent = false,
 }: PowersPanelProps) {
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipData, setTooltipData] = useState<{ title: string; description: string } | null>(null);
+
   const items: PowerItem[] = powerOrder.map((type) => ({
     type,
     icon: powerIcons[type],
     count: powers[type],
   }));
 
+  const handleMouseMove = (e: React.MouseEvent, powerType: PowerType) => {
+    setTooltipPos({ x: e.clientX, y: e.clientY - 10 });
+    setTooltipData(powerInfo[powerType]);
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipPos(null);
+    setTooltipData(null);
+  };
+
   return (
-    <div className={`objects-panel-glass ${isOpponent ? 'grayed-out' : ''}`}>
-      <div className="objects-panel-header">Objects</div>
-      <div className="objects-panel-content">
-        {/* Dig action - primary, always available */}
-        <button
-          className={`dig-action-btn ${selectedAction === 'dig' ? 'selected' : ''}`}
-          onClick={() => onSelectAction('dig')}
-          disabled={disabled || isOpponent}
-          title={powerTooltips['dig']}
+    <>
+      {/* Custom tooltip */}
+      {tooltipPos && tooltipData && (
+        <div
+          className="custom-tooltip"
+          style={{ left: tooltipPos.x, top: tooltipPos.y }}
         >
-          <img src={powerIcons['dig']} alt="dig" />
-          <span>Dig</span>
-        </button>
+          <div className="tooltip-content">
+            <div className="tooltip-title">{tooltipData.title}</div>
+            <div className="tooltip-divider" />
+            <div className="tooltip-description">{tooltipData.description}</div>
+          </div>
+          <div className="tooltip-arrow" />
+        </div>
+      )}
 
-        {/* Divider */}
-        <div className="objects-divider" />
+      <div className={`objects-panel-glass ${isOpponent ? 'grayed-out' : ''}`}>
+        <div className="objects-panel-header">Objects</div>
+        <div className="objects-panel-content">
+          {/* Dig action - primary, always available */}
+          <button
+            className={`dig-action-btn ${selectedAction === 'dig' ? 'selected' : ''}`}
+            onClick={() => onSelectAction('dig')}
+            disabled={disabled || isOpponent}
+            onMouseMove={(e) => handleMouseMove(e, 'dig')}
+            onMouseLeave={handleMouseLeave}
+          >
+            <img src={powerIcons['dig']} alt="dig" />
+            <span>Dig</span>
+          </button>
 
-        {/* Power items grid */}
-        <div className="objects-items-grid">
-          {items.map((item) => (
-            <button
-              key={item.type}
-              className={`power-item-btn ${selectedAction === item.type ? 'selected' : ''}`}
-              onClick={() => onSelectAction(item.type)}
-              disabled={disabled || isOpponent || item.count === 0}
-              title={powerTooltips[item.type]}
-            >
-              <img src={item.icon} alt={item.type} />
-              <span className="power-badge">{item.count}</span>
-            </button>
-          ))}
+          {/* Divider */}
+          <div className="objects-divider" />
+
+          {/* Power items grid */}
+          <div className="objects-items-grid">
+            {items.map((item) => (
+              <button
+                key={item.type}
+                className={`power-item-btn ${selectedAction === item.type ? 'selected' : ''}`}
+                onClick={() => onSelectAction(item.type)}
+                disabled={disabled || isOpponent || item.count === 0}
+                onMouseMove={(e) => handleMouseMove(e, item.type)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <img src={item.icon} alt={item.type} />
+                <span className="power-badge">{item.count}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
