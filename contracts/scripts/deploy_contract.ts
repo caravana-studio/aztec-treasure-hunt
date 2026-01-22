@@ -150,7 +150,9 @@ async function main() {
 
 main().catch((error) => {
     const logger = createLogger('aztec:treasure-hunt');
-    logger.error(`❌ Deployment failed: ${error.message}`);
-    logger.error(`📋 Error details: ${error.stack}`);
+    logger.error(`❌ Deployment failed: ${error.message || error}`);
+    if (error.stack) {
+        logger.error(`📋 Error details: ${error.stack}`);
+    }
     process.exit(1);
 });
