@@ -179,35 +179,6 @@ pub contract TreasureHunt {
         }
     }
 
-    /// Opponent responds to dig action
-    #[external("private")]
-    fn respond_dig(game_id: Field) {
-        let player = self.context.msg_sender().unwrap();
-
-        // Read game state to get pending coordinates
-        // We'll pass them through the enqueue call
-        self.enqueue(TreasureHunt::at(self.context.this_address()).process_dig_response(
-            player,
-            game_id,
-        ));
-    }
-
-    #[external("public")]
-    #[only_self]
-    fn process_dig_response(responder: AztecAddress, game_id: Field) {
-        let game = self.storage.games.at(game_id).read();
-        assert(game.status == STATUS_AWAITING);
-        assert(game.pending_action == ACTION_DIG);
-
-        let opponent = game.get_opponent(responder);
-        assert(game.current_turn.eq(opponent));
-
-        // The actual check happens in check_dig_result which is called privately
-        // For now just mark that response was received
-        let updated = game.switch_turn();
-        self.storage.games.at(game_id).write(updated);
-    }
-
     /// Check if dig hit a trap or treasure (called by responder privately)
     #[external("private")]
     fn check_dig_result(game_id: Field, dig_x: u8, dig_y: u8) {
@@ -242,6 +213,8 @@ pub contract TreasureHunt {
         self.enqueue(TreasureHunt::at(self.context.this_address()).record_dig_result(
             player,
             game_id,
+            dig_x,
+            dig_y,
             hit_trap,
             hit_treasure,
         ));
@@ -249,9 +222,31 @@ pub contract TreasureHunt {
 
     #[external("public")]
     #[only_self]
-    fn record_dig_result(responder: AztecAddress, game_id: Field, hit_trap: bool, hit_treasure: bool) {
+    fn record_dig_result(
+        responder: AztecAddress,
+        game_id: Field,
+        dig_x: u8,
+        dig_y: u8,
+        hit_trap: bool,
+        hit_treasure: bool,
+    ) {
         let game = self.storage.games.at(game_id).read();
+
+        // Validate game state
+        assert(game.status == STATUS_AWAITING);
+        assert(game.pending_action == ACTION_DIG);
+
+        // Validate coordinates match pending action
+        assert(dig_x == game.pending_x);
+        assert(dig_y == game.pending_y);
+
+        // Validate responder is a valid player and is the opponent of current turn
+        let is_player1 = responder.eq(game.player1);
+        let is_player2 = responder.eq(game.player2);
+        assert(is_player1 | is_player2);
+
         let digger = game.get_opponent(responder);
+        assert(game.current_turn.eq(digger));
 
         // Store dig result at the pending position
         let position = (game.pending_y as Field) * 8 + (game.pending_x as Field);
@@ -355,16 +350,38 @@ pub contract TreasureHunt {
         self.enqueue(TreasureHunt::at(self.context.this_address()).record_detector_result(
             player,
             game_id,
+            center_x,
+            center_y,
             count,
         ));
     }
 
     #[external("public")]
     #[only_self]
-    fn record_detector_result(responder: AztecAddress, game_id: Field, count: u8) {
+    fn record_detector_result(
+        responder: AztecAddress,
+        game_id: Field,
+        center_x: u8,
+        center_y: u8,
+        count: u8,
+    ) {
         let game = self.storage.games.at(game_id).read();
+
+        // Validate game state
         assert(game.status == STATUS_AWAITING);
         assert(game.pending_action == ACTION_DETECTOR);
+
+        // Validate coordinates match pending action
+        assert(center_x == game.pending_x);
+        assert(center_y == game.pending_y);
+
+        // Validate responder is a valid player and is the opponent of current turn
+        let is_player1 = responder.eq(game.player1);
+        let is_player2 = responder.eq(game.player2);
+        assert(is_player1 | is_player2);
+
+        let detector_user = game.get_opponent(responder);
+        assert(game.current_turn.eq(detector_user));
 
         // Store detector result and switch turn
         let updated = game.switch_turn_with_detector_result(count);
@@ -439,16 +456,38 @@ pub contract TreasureHunt {
         self.enqueue(TreasureHunt::at(self.context.this_address()).record_compass_result(
             player,
             game_id,
+            from_x,
+            from_y,
             min_distance,
         ));
     }
 
     #[external("public")]
     #[only_self]
-    fn record_compass_result(responder: AztecAddress, game_id: Field, distance: u8) {
+    fn record_compass_result(
+        responder: AztecAddress,
+        game_id: Field,
+        from_x: u8,
+        from_y: u8,
+        distance: u8,
+    ) {
         let game = self.storage.games.at(game_id).read();
+
+        // Validate game state
         assert(game.status == STATUS_AWAITING);
         assert(game.pending_action == ACTION_COMPASS);
+
+        // Validate coordinates match pending action
+        assert(from_x == game.pending_x);
+        assert(from_y == game.pending_y);
+
+        // Validate responder is a valid player and is the opponent of current turn
+        let is_player1 = responder.eq(game.player1);
+        let is_player2 = responder.eq(game.player2);
+        assert(is_player1 | is_player2);
+
+        let compass_user = game.get_opponent(responder);
+        assert(game.current_turn.eq(compass_user));
 
         let updated = game.switch_turn();
         self.storage.games.at(game_id).write(updated);

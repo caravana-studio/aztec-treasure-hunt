@@ -195,9 +195,6 @@ dig_results: {
     /** respond_detector(game_id: field, center_x: integer, center_y: integer) */
     respond_detector: ((game_id: FieldLike, center_x: (bigint | number), center_y: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** respond_dig(game_id: field) */
-    respond_dig: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
     /** sync_private_state() */
     sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
