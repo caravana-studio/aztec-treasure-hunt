@@ -74,9 +74,8 @@ export interface GameState {
   shovelSourcePosition: Position | null;
   // Trap positions placed by this player
   myTrapPositions: Position[];
-  // Skip turn tracking
-  mustSkipTurn: boolean;
-  lastSkippedPlayer: 'me' | 'opponent' | null;
+  // Extra turn tracking (when opponent hit your trap)
+  hasExtraTurn: boolean;
 }
 
 // Game status constants

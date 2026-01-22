@@ -49,6 +49,7 @@ export function useGame() {
     compassResult: store.compassResult,
     shovelSourcePosition: store.shovelSourcePosition,
     myTrapPositions: store.myTrapPositions,
+    hasExtraTurn: store.hasExtraTurn,
 
     // Actions
     createGame: store.createGame,

@@ -31,7 +31,7 @@ pub struct Game {
     pub pending_y: u8,              // Y coordinate for pending action
     pub status: u8,
     pub winner: AztecAddress,
-    pub skip_turn: AztecAddress,    // Player who must skip next turn (due to trap)
+    pub extra_turn: AztecAddress,   // Player who gets an extra turn (trap owner when opponent hit trap)
     pub last_detector_count: u8,    // Result of last detector scan (treasures in 3x3 area)
     pub last_compass_distance: u8,  // Result of last compass use (Manhattan distance to nearest treasure)
 }
@@ -51,7 +51,7 @@ impl Game {
             pending_y: 0,
             status: STATUS_CREATED,
             winner: AztecAddress::zero(),
-            skip_turn: AztecAddress::zero(),
+            extra_turn: AztecAddress::zero(),
             last_detector_count: 0,
             last_compass_distance: 0,
         }
@@ -75,7 +75,7 @@ impl Game {
             pending_y: self.pending_y,
             status: STATUS_SETUP,
             winner: self.winner,
-            skip_turn: self.skip_turn,
+            extra_turn: self.extra_turn,
             last_detector_count: self.last_detector_count,
             last_compass_distance: self.last_compass_distance,
         }
@@ -107,7 +107,7 @@ impl Game {
             pending_y: 0,
             status: new_status,
             winner: self.winner,
-            skip_turn: self.skip_turn,
+            extra_turn: self.extra_turn,
             last_detector_count: self.last_detector_count,
             last_compass_distance: self.last_compass_distance,
         }
@@ -127,7 +127,7 @@ impl Game {
             pending_y: y,
             status: STATUS_AWAITING,
             winner: self.winner,
-            skip_turn: self.skip_turn,
+            extra_turn: self.extra_turn,
             last_detector_count: self.last_detector_count,
             last_compass_distance: self.last_compass_distance,
         }
@@ -161,17 +161,25 @@ impl Game {
             pending_y: 0,
             status: STATUS_PLAYING,
             winner: self.winner,
-            skip_turn: self.skip_turn,
+            extra_turn: self.extra_turn,
             last_detector_count: self.last_detector_count,
             last_compass_distance: self.last_compass_distance,
         }
     }
 
     pub fn switch_turn_with_detector_result(self, count: u8) -> Self {
-        let next_player = if self.current_turn.eq(self.player1) {
-            self.player2
+        // Check if current player has extra turn
+        let (next_player, new_extra_turn) = if self.extra_turn.eq(self.current_turn) {
+            // Keep same turn, clear extra_turn
+            (self.current_turn, AztecAddress::zero())
         } else {
-            self.player1
+            // Normal turn switch
+            let next = if self.current_turn.eq(self.player1) {
+                self.player2
+            } else {
+                self.player1
+            };
+            (next, self.extra_turn)
         };
 
         Self {
@@ -187,17 +195,25 @@ impl Game {
             pending_y: 0,
             status: STATUS_PLAYING,
             winner: self.winner,
-            skip_turn: self.skip_turn,
+            extra_turn: new_extra_turn,
             last_detector_count: count,
             last_compass_distance: self.last_compass_distance,
         }
     }
 
     pub fn switch_turn_with_compass_result(self, distance: u8) -> Self {
-        let next_player = if self.current_turn.eq(self.player1) {
-            self.player2
+        // Check if current player has extra turn
+        let (next_player, new_extra_turn) = if self.extra_turn.eq(self.current_turn) {
+            // Keep same turn, clear extra_turn
+            (self.current_turn, AztecAddress::zero())
         } else {
-            self.player1
+            // Normal turn switch
+            let next = if self.current_turn.eq(self.player1) {
+                self.player2
+            } else {
+                self.player1
+            };
+            (next, self.extra_turn)
         };
 
         Self {
@@ -213,7 +229,7 @@ impl Game {
             pending_y: 0,
             status: STATUS_PLAYING,
             winner: self.winner,
-            skip_turn: self.skip_turn,
+            extra_turn: new_extra_turn,
             last_detector_count: self.last_detector_count,
             last_compass_distance: distance,
         }
@@ -234,12 +250,20 @@ impl Game {
             (STATUS_PLAYING, AztecAddress::zero())
         };
 
-        let next_turn = if new_status == STATUS_FINISHED {
-            AztecAddress::zero()
-        } else if self.current_turn.eq(self.player1) {
-            self.player2
+        // Handle turn switching with extra turn logic
+        let (next_turn, new_extra_turn) = if new_status == STATUS_FINISHED {
+            (AztecAddress::zero(), AztecAddress::zero())
+        } else if self.extra_turn.eq(self.current_turn) {
+            // Current player has extra turn - stay on their turn, clear extra
+            (self.current_turn, AztecAddress::zero())
         } else {
-            self.player1
+            // Normal switch
+            let next = if self.current_turn.eq(self.player1) {
+                self.player2
+            } else {
+                self.player1
+            };
+            (next, self.extra_turn)
         };
 
         Self {
@@ -255,13 +279,17 @@ impl Game {
             pending_y: 0,
             status: new_status,
             winner: new_winner,
-            skip_turn: self.skip_turn,
+            extra_turn: new_extra_turn,
             last_detector_count: self.last_detector_count,
             last_compass_distance: self.last_compass_distance,
         }
     }
 
-    pub fn set_skip_turn(self, player_to_skip: AztecAddress) -> Self {
+    /// Give extra turn to a player (used when opponent hits their trap)
+    /// The trap owner gets to go again without the turn switching
+    pub fn set_extra_turn(self, player_with_extra: AztecAddress) -> Self {
+        // Switch turn to the opponent (who hit the trap), but mark that
+        // the trap owner will get an extra turn after
         let next_turn = if self.current_turn.eq(self.player1) {
             self.player2
         } else {
@@ -281,29 +309,38 @@ impl Game {
             pending_y: 0,
             status: STATUS_PLAYING,
             winner: self.winner,
-            skip_turn: player_to_skip,
+            extra_turn: player_with_extra,
             last_detector_count: self.last_detector_count,
             last_compass_distance: self.last_compass_distance,
         }
     }
 
-    pub fn clear_skip_turn(self) -> Self {
-        Self {
-            player1: self.player1,
-            player2: self.player2,
-            player1_setup_done: self.player1_setup_done,
-            player2_setup_done: self.player2_setup_done,
-            player1_found: self.player1_found,
-            player2_found: self.player2_found,
-            current_turn: self.current_turn,
-            pending_action: self.pending_action,
-            pending_x: self.pending_x,
-            pending_y: self.pending_y,
-            status: self.status,
-            winner: self.winner,
-            skip_turn: AztecAddress::zero(),
-            last_detector_count: self.last_detector_count,
-            last_compass_distance: self.last_compass_distance,
+    /// Check if current player has an extra turn and handle it
+    /// Returns: (should_switch_turn, new_game_state)
+    pub fn maybe_use_extra_turn(self) -> Self {
+        // If current player has an extra turn, consume it instead of switching
+        if self.extra_turn.eq(self.current_turn) {
+            // Clear extra_turn but keep the same current_turn
+            Self {
+                player1: self.player1,
+                player2: self.player2,
+                player1_setup_done: self.player1_setup_done,
+                player2_setup_done: self.player2_setup_done,
+                player1_found: self.player1_found,
+                player2_found: self.player2_found,
+                current_turn: self.current_turn, // Keep same turn
+                pending_action: ACTION_NONE,
+                pending_x: 0,
+                pending_y: 0,
+                status: STATUS_PLAYING,
+                winner: self.winner,
+                extra_turn: AztecAddress::zero(), // Clear extra turn
+                last_detector_count: self.last_detector_count,
+                last_compass_distance: self.last_compass_distance,
+            }
+        } else {
+            // Normal turn switch
+            self.switch_turn()
         }
     }
 }

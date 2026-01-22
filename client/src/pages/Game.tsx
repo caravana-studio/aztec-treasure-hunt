@@ -43,6 +43,7 @@ export function Game() {
     shovelSourcePosition,
     useTrap,
     myTrapPositions,
+    hasExtraTurn,
     toggleTreasure,
     setSelectedAction,
     resetGame,
@@ -160,6 +161,7 @@ export function Game() {
           isLoading={isLoading}
           statusMessage={statusMessage}
           mySetupDone={mySetupDone}
+          hasExtraTurn={hasExtraTurn}
         />
 
         {/* Left panel - YOUR info */}

@@ -169,14 +169,8 @@ pub contract TreasureHunt {
         assert(game.status == STATUS_PLAYING);
         assert(game.current_turn.eq(player));
 
-        // Handle skip turn from trap
-        if game.skip_turn.eq(player) {
-            let cleared = game.clear_skip_turn().switch_turn();
-            self.storage.games.at(game_id).write(cleared);
-        } else {
-            let updated = game.set_pending_action(ACTION_DIG, x, y);
-            self.storage.games.at(game_id).write(updated);
-        }
+        let updated = game.set_pending_action(ACTION_DIG, x, y);
+        self.storage.games.at(game_id).write(updated);
     }
 
     /// Check if dig hit a trap or treasure (called by responder privately)
@@ -272,11 +266,12 @@ pub contract TreasureHunt {
         self.storage.dig_results.at(game_id).at(position).write(result);
 
         let updated = if hit_trap {
-            game.set_skip_turn(digger)
+            // Trap owner (responder) gets an extra turn
+            game.set_extra_turn(responder)
         } else if hit_treasure {
             game.record_treasure_found(digger)
         } else {
-            game.switch_turn()
+            game.maybe_use_extra_turn()
         };
 
         self.storage.games.at(game_id).write(updated);
@@ -313,14 +308,8 @@ pub contract TreasureHunt {
         assert(game.status == STATUS_PLAYING);
         assert(game.current_turn.eq(player));
 
-        // Handle skip turn
-        if game.skip_turn.eq(player) {
-            let cleared = game.clear_skip_turn().switch_turn();
-            self.storage.games.at(game_id).write(cleared);
-        } else {
-            let updated = game.set_pending_action(ACTION_DETECTOR, x, y);
-            self.storage.games.at(game_id).write(updated);
-        }
+        let updated = game.set_pending_action(ACTION_DETECTOR, x, y);
+        self.storage.games.at(game_id).write(updated);
     }
 
     /// Opponent responds with treasure count in 3x3 area
@@ -419,13 +408,8 @@ pub contract TreasureHunt {
         assert(game.status == STATUS_PLAYING);
         assert(game.current_turn.eq(player));
 
-        if game.skip_turn.eq(player) {
-            let cleared = game.clear_skip_turn().switch_turn();
-            self.storage.games.at(game_id).write(cleared);
-        } else {
-            let updated = game.set_pending_action(ACTION_COMPASS, x, y);
-            self.storage.games.at(game_id).write(updated);
-        }
+        let updated = game.set_pending_action(ACTION_COMPASS, x, y);
+        self.storage.games.at(game_id).write(updated);
     }
 
     /// Opponent responds with minimum distance
@@ -541,13 +525,8 @@ pub contract TreasureHunt {
         assert(game.status == STATUS_PLAYING);
         assert(game.current_turn.eq(player));
 
-        if game.skip_turn.eq(player) {
-            let cleared = game.clear_skip_turn().switch_turn();
-            self.storage.games.at(game_id).write(cleared);
-        } else {
-            let updated = game.switch_turn();
-            self.storage.games.at(game_id).write(updated);
-        }
+        let updated = game.maybe_use_extra_turn();
+        self.storage.games.at(game_id).write(updated);
     }
 
     // ============ POWER: TRAP ============
@@ -583,13 +562,8 @@ pub contract TreasureHunt {
         assert(game.status == STATUS_PLAYING);
         assert(game.current_turn.eq(player));
 
-        if game.skip_turn.eq(player) {
-            let cleared = game.clear_skip_turn().switch_turn();
-            self.storage.games.at(game_id).write(cleared);
-        } else {
-            let updated = game.switch_turn();
-            self.storage.games.at(game_id).write(updated);
-        }
+        let updated = game.maybe_use_extra_turn();
+        self.storage.games.at(game_id).write(updated);
     }
 
     // ============ UTILITY FUNCTIONS (READ-ONLY) ============

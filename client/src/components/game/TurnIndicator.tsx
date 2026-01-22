@@ -5,6 +5,7 @@ interface TurnIndicatorProps {
   isLoading?: boolean;
   statusMessage?: string;
   mySetupDone?: boolean;
+  hasExtraTurn?: boolean;
 }
 
 export function TurnIndicator({
@@ -13,13 +14,17 @@ export function TurnIndicator({
   gameId,
   isLoading,
   statusMessage,
-  mySetupDone
+  mySetupDone,
+  hasExtraTurn
 }: TurnIndicatorProps) {
   let text = '';
 
   // If loading, show the status message
   if (isLoading && statusMessage) {
     text = statusMessage;
+  } else if (hasExtraTurn && isMyTurn && gamePhase === 'playing') {
+    // Show extra turn message - opponent hit your trap!
+    text = 'EXTRA TURN! Opponent hit your trap!';
   } else {
     switch (gamePhase) {
       case 'lobby':

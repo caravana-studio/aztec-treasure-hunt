@@ -118,8 +118,7 @@ const initialState: GameState = {
   compassResult: null,
   shovelSourcePosition: null,
   myTrapPositions: [],
-  mustSkipTurn: false,
-  lastSkippedPlayer: null,
+  hasExtraTurn: false,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -198,11 +197,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const p2Score = Number(game.player2_found);
       const mySetupDone = isP1 ? game.player1_setup_done : game.player2_setup_done;
 
-      // Check skip_turn status
-      const skipTurnAddress = game.skip_turn.toString();
+      // Check extra_turn status (player who gets an extra turn due to opponent hitting their trap)
+      const extraTurnAddress = game.extra_turn.toString();
       const zeroAddress = '0x0000000000000000000000000000000000000000000000000000000000000000';
-      const hasSkipTurn = skipTurnAddress !== zeroAddress;
-      const iMustSkip = hasSkipTurn && skipTurnAddress === myAddress.toString();
+      const hasExtraTurn = extraTurnAddress !== zeroAddress;
+      const iHaveExtraTurn = hasExtraTurn && extraTurnAddress === myAddress.toString();
+
       const detectorCount = Number(game.last_detector_count);
       const compassDistance = Number(game.last_compass_distance);
 
@@ -344,27 +344,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
 
-      // Track skip turn changes and log them
-      const { mustSkipTurn: previousMustSkip, lastSkippedPlayer: prevSkipped } = get();
-      let newLastSkippedPlayer: 'me' | 'opponent' | null = prevSkipped;
+      // Track extra turn changes and log them
+      const { hasExtraTurn: previousHasExtraTurn } = get();
 
-      // Detect when opponent just had their turn skipped (they had skip_turn set, now it's cleared and it was their turn)
-      if (hasSkipTurn) {
-        // Someone is marked to skip their next turn
-        if (iMustSkip && !previousMustSkip) {
-          // I just got marked to skip (I hit a trap)
-          newLastSkippedPlayer = 'me';
-        } else if (!iMustSkip && hasSkipTurn) {
-          // Opponent is marked to skip
-          newLastSkippedPlayer = 'opponent';
-        }
-      } else if (previousMustSkip && !iMustSkip) {
-        // My skip was just cleared - log it
-        addLog('Your turn was skipped due to trap!');
-      } else if (prevSkipped === 'opponent' && !hasSkipTurn && gamePhase === 'playing') {
-        // Opponent's skip was just cleared
-        addLog('Opponent\'s turn was skipped due to trap!');
-        newLastSkippedPlayer = null;
+      // Detect when I just got an extra turn (opponent hit my trap)
+      if (iHaveExtraTurn && !previousHasExtraTurn) {
+        addLog('Opponent hit your trap! You get an extra turn!');
+      } else if (!iHaveExtraTurn && previousHasExtraTurn && gamePhase === 'playing') {
+        // Extra turn was just consumed
+        addLog('Extra turn used.');
       }
 
       set({
@@ -388,8 +376,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastCompassDistance: newCompassDistance,
         lastCompassPosition: newCompassPosition,
         compassResult: newCompassResult,
-        mustSkipTurn: iMustSkip,
-        lastSkippedPlayer: newLastSkippedPlayer,
+        hasExtraTurn: iHaveExtraTurn,
         ...(shouldClearDiggingCell && { diggingCell: null }),
         ...(shouldClearActiveAction && { activeAction: null }),
       });
