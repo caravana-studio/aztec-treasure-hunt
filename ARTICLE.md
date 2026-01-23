@@ -107,8 +107,27 @@ La gracia no es que todo sea privado. Es que puedes *elegir* qué revelar y qué
 
 ## Pruébalo
 
+### Prerequisites
+Before working with devnet, ensure you have:
+
 ```bash
-# Terminal 1: Red local de Aztec
+# Docker installed
+
+# Aztec CLI installed:
+bash -i <(curl -s https://install.aztec.network)
+
+# The devnet version installed:
+aztec-up 3.0.0-devnet.20251212
+```
+
+> ⚠️ **WARNING**
+>  
+> The devnet is version dependent. It is currently running version 3.0.0-devnet.20251212. Maintain version consistency when interacting with the devnet to reduce errors.
+
+### Game
+
+```bash
+# Terminal 1: Start the local network
 aztec start --local-network
 
 # Terminal 2: Contratos
