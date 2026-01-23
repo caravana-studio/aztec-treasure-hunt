@@ -1,16 +1,14 @@
-# Tu oponente acaba de hacer algo. No sabes qué.
+# Treasure Hunt
 
-Estás jugando Treasure Hunt. Tu oponente pasa su turno sin hacer nada visible.
-
-¿Movió su tesoro a otra casilla? ¿Puso una trampa donde planeas cavar? No hay forma de saberlo. Solo sabes que *algo* cambió.
+Tu oponente acaba de hacer algo. No sabes qué. ¿Movió su tesoro a otra casilla? ¿Puso una trampa donde planeas cavar? No hay forma de saberlo. Solo sabes que *algo* cambió.
 
 Esa incertidumbre genuina no existe en ningún otro juego on-chain.
 
 ---
 
-## El problema con los juegos en blockchain
+## El problema con los juegos que tienen privacidad en blockchain
 
-Los juegos on-chain tienen dos opciones, ambas malas:
+Los juegos con privacidad en blockchain tienen dos opciones, ambas malas:
 
 **Todo público:** Imagina jugar Batalla Naval donde tu oponente ve exactamente dónde están tus barcos. No hay estrategia posible.
 
@@ -104,23 +102,6 @@ PÚBLICO                              PRIVADO
 Esto crea una dinámica interesante: Radar y Brújula son *deducibles por descarte* porque su uso es público y la cantidad inicial se conoce. Pero Pala y Trampa permanecen ambiguas hasta el final.
 
 La gracia no es que todo sea privado. Es que puedes *elegir* qué revelar y qué no.
-
----
-
-## Cómo funciona (para los curiosos)
-
-Aztec usa un modelo de notas privadas similar a UTXO. Cada tesoro, trampa y poder es una "nota" que solo el dueño puede ver y modificar.
-
-```
-contracts/src/
-├── main.nr           # Contrato principal
-├── treasure_note.nr  # Nota privada: posición de tesoro
-├── trap_note.nr      # Nota privada: posición de trampa
-├── power_note.nr     # Nota privada: inventario de poderes
-└── game.nr           # Estado público del juego
-```
-
-Las funciones privadas (`use_shovel`, `use_trap`) generan pruebas ZK en el cliente. Las públicas (`dig`, `create_game`) ejecutan on-chain. El contrato puede verificar que una acción es válida sin saber qué acción es.
 
 ---
 
