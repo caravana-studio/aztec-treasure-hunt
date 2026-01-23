@@ -1,4 +1,8 @@
-# Treasure Hunt
+<h1 align="center">Treasure Hunt - Game on Aztec</h1>
+
+<p align="center">
+  <img src="img/game.png" width="80%" />
+</p>
 
 Tu oponente acaba de hacer algo. No sabes qué. ¿Movió su tesoro a otra casilla? ¿Puso una trampa donde planeas cavar? No hay forma de saberlo. Solo sabes que *algo* cambió.
 
