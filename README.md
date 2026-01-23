@@ -1,4 +1,4 @@
-<h1>Aztec – Treasure Hunt</h1>
+<h1 align="center">Aztec – Treasure Hunt</h1>
 
 <p align="center">
   <img src="img/game.jpg" />
