@@ -1,4 +1,4 @@
-<h1 align="center">Aztec – Treasure Hunt</h1>
+<h1>Aztec – Treasure Hunt</h1>
 
 <p align="center">
   <img src="img/game.jpg" />
@@ -7,7 +7,8 @@
 **Treasure Hunt** is a two-player strategy game built on the **Aztec network**.
 The goal is simple: **find your opponent's hidden treasures before they find yours**.
 
-## Demo Video
+
+## <img width="24" height="24" alt="image" src="https://github.com/user-attachments/assets/1a035f51-9b5c-4772-9d18-bf7b44767adc" /> [Demo Video](https://www.youtube.com/watch?v=idaOl2Ocqg0)
 
 Aztec supports **private state** and **private actions**, which enables game mechanics that are not possible in traditional on-chain games.
 
