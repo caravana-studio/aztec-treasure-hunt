@@ -1,8 +1,12 @@
-<h1 align="center">Treasure Hunt - Game on Aztec</h1>
+<h1 align="center">Aztec - Treasure Hunt </h1>
 
 <p align="center">
   <img src="img/game.png" width="80%" />
 </p>
+
+Treasure Hunt es un juego desarrollado en la red de Aztec, donde el objetivo del juego es encontrar los tesoros escondidos del oponente.
+
+En Aztec tenemos la ventaja de poder tener estados privados y acciones privadas, lo que permite crear juegos mas complejos y divertidos.
 
 Tu oponente acaba de hacer algo. No sabes qué. ¿Movió su tesoro a otra casilla? ¿Puso una trampa donde planeas cavar? No hay forma de saberlo. Solo sabes que *algo* cambió.
 
@@ -32,7 +36,7 @@ Hasta ahí, suena como Batalla Naval. La diferencia está en los poderes:
 
 | Poder | Qué hace |
 |-------|----------|
-| **Radar** | Escanea un área 3x3, revela cuántos tesoros hay |
+| **Radar** | Escanea un área 3x3, revela cuántos tesoros hay pero no su posicion |
 | **Brújula** | Da la distancia al tesoro más cercano |
 | **Pala Dorada** | Mueve uno de tus tesoros a otra casilla |
 | **Trampa** | Si el oponente cava ahí, pierde su turno |
@@ -41,7 +45,7 @@ Radar y Brújula son públicos: cuando los usas, tu oponente lo sabe.
 
 Pala Dorada y Trampa son invisibles: tu oponente solo ve que "pasaste el turno".
 
-Acá está lo interesante: **Pala y Trampa son indistinguibles**. Cuando tu oponente hace una acción invisible, no sabes si movió su tesoro o puso una trampa. Ambas lucen exactamente igual desde afuera.
+Cuando tu oponente hace una acción invisible, no sabes si movió su tesoro o puso una trampa. Ambas lucen exactamente igual desde afuera.
 
 ---
 
@@ -62,17 +66,6 @@ Siguiente turno, cava en (5,5) → Vacío.
 
 ¿Calculó mal la distancia? ¿O moviste el tesoro? Él no puede saberlo.
 
-Ahora imagina el otro lado. Tu oponente tiene 1 Pala + 2 Trampas = 3 acciones invisibles:
-
-```
-Turno 6:  Hace algo invisible  → ¿Pala o Trampa?
-Turno 10: Hace algo invisible  → ¿Cuántas trampas quedan?
-Turno 12: Cavas en (3,3) → ¡TRAMPA!
-
-Una era trampa. Pero la otra... ¿fue Pala o la segunda Trampa?
-No hay forma de saberlo.
-```
-
 Cada acción invisible agrega incertidumbre. ¿El tesoro sigue donde estaba? ¿Hay trampas esperándote? La información es genuinamente privada, no solo oculta temporalmente.
 
 ---
@@ -86,8 +79,6 @@ Con commit-reveal, publicas `hash(posiciones + salt)` al inicio. El estado queda
 | Mover tesoros después de empezar | Necesitas re-commit (visible, te delata) | Cambio invisible |
 | Poner trampas durante la partida | Imposible, no estaban en el commit original | Sin problema |
 | Acciones indistinguibles | Cada tipo de acción deja huella diferente | Pala y Trampa lucen igual |
-
-La diferencia fundamental: en commit-reveal el estado privado es *estático*. En Aztec es *dinámico*. Puedes modificarlo, agregar cosas nuevas, y el oponente solo ve que algo cambió, sin saber qué.
 
 ---
 
@@ -105,14 +96,11 @@ PÚBLICO                              PRIVADO
 
 Esto crea una dinámica interesante: Radar y Brújula son *deducibles por descarte* porque su uso es público y la cantidad inicial se conoce. Pero Pala y Trampa permanecen ambiguas hasta el final.
 
-La gracia no es que todo sea privado. Es que puedes *elegir* qué revelar y qué no.
-
 ---
 
 ## Pruébalo
 
 ### Prerequisites
-Before working with devnet, ensure you have:
 
 ```bash
 # Docker installed
@@ -123,10 +111,6 @@ bash -i <(curl -s https://install.aztec.network)
 # The devnet version installed:
 aztec-up 3.0.0-devnet.20251212
 ```
-
-> ⚠️ **WARNING**
->  
-> The devnet is version dependent. It is currently running version 3.0.0-devnet.20251212. Maintain version consistency when interacting with the devnet to reduce errors.
 
 ### Game
 
@@ -144,15 +128,3 @@ cd client && yarn install && yarn dev
 ```
 
 ---
-
-## Construye algo similar
-
-Treasure Hunt demuestra tres capacidades de Aztec:
-
-1. **Estado privado modificable** — mover tesoros sin dejar rastro
-2. **Estado privado dinámico** — agregar trampas que no existían al inicio
-3. **Acciones indistinguibles** — el oponente no puede diferenciar Pala de Trampa
-
-Si estás construyendo algo donde la privacidad importa (juegos, votaciones, subastas, DeFi), [Aztec](https://aztec.network) te da herramientas que no existen en otras cadenas.
-
-[Documentación](https://docs.aztec.network) · [Noir (lenguaje)](https://noir-lang.org) · [Discord](https://discord.gg/aztec)
