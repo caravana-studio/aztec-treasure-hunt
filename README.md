@@ -7,9 +7,7 @@
 **Treasure Hunt** is a two-player strategy game built on the **Aztec network**.
 The goal is simple: **find your opponent's hidden treasures before they find yours**.
 
-## Demo
-
-[![Demo Video](https://img.youtube.com/vi/idaOl2Ocqg0/0.jpg)](https://www.youtube.com/watch?v=idaOl2Ocqg0)
+## Demo Video
 
 Aztec supports **private state** and **private actions**, which enables game mechanics that are not possible in traditional on-chain games.
 
@@ -180,9 +178,9 @@ yarn dev
 <table>
   <tbody>
     <tr>
+            <td align="center" valign="top" width="33%"><a href="https://caravana.studio"><img src="img/caravana.png" width="100px;" alt="Caravana Studio"/><br /><sub><b>Caravana Studio</b></sub></a></td>
       <td align="center" valign="top" width="33%"><a href="https://x.com/dub_zn"><img src="img/dub_zn.png" width="100px;" alt="dub_zn"/><br /><sub><b>@dub_zn</b></sub></a></td>
       <td align="center" valign="top" width="33%"><a href="https://x.com/dpinoness"><img src="img/dpinoness.png" width="100px;" alt="dpinoness"/><br /><sub><b>@dpinoness</b></sub></a></td>
-      <td align="center" valign="top" width="33%"><a href="https://caravana.studio"><img src="img/caravana.png" width="100px;" alt="Caravana Studio"/><br /><sub><b>Caravana Studio</b></sub></a></td>
     </tr>
   </tbody>
 </table>
