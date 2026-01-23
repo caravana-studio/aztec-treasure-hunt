@@ -1,7 +1,7 @@
 <h1 align="center">Aztec - Treasure Hunt </h1>
 
 <p align="center">
-  <img src="img/game.png" width="80%" />
+  <img src="img/game.jpg"/>
 </p>
 
 Treasure Hunt es un juego desarrollado en la red de Aztec, donde el objetivo del juego es encontrar los tesoros escondidos del oponente.
@@ -126,5 +126,3 @@ yarn compile && yarn codegen && yarn deploy
 cd client && yarn install && yarn dev
 # Abrir http://localhost:3001
 ```
-
----
