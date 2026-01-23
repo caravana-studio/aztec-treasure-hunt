@@ -1,177 +1,158 @@
-# Treasure Hunt - Aztec
+<h1 align="center">Treasure Hunt - Game on Aztec</h1>
 
-Un juego de dos jugadores construido sobre Aztec Protocol que demuestra el poder del estado privado en blockchain.
+<p align="center">
+  <img src="img/game.png" width="80%" />
+</p>
 
-## Requisitos Previos
+Tu oponente acaba de hacer algo. No sabes qué. ¿Movió su tesoro a otra casilla? ¿Puso una trampa donde planeas cavar? No hay forma de saberlo. Solo sabes que *algo* cambió.
 
-- **Node.js** v22 o superior
-- **Yarn** 1.22+
-- **Aztec CLI** instalado globalmente
+Esa incertidumbre genuina no existe en ningún otro juego on-chain.
 
-```bash
-# Instalar Aztec CLI
-curl -L https://install.aztec.network | bash
-aztec-up
+---
+
+## El problema con los juegos que tienen privacidad en blockchain
+
+Los juegos con privacidad en blockchain tienen dos opciones, ambas malas:
+
+**Todo público:** Imagina jugar Batalla Naval donde tu oponente ve exactamente dónde están tus barcos. No hay estrategia posible.
+
+**Commit-reveal:** Publicas un hash de tu estado al inicio. Funciona para estados fijos, pero tiene un problema fundamental: *tu estrategia queda congelada*. No puedes cambiar nada después del commit inicial sin delatarte.
+
+¿Qué pasa si quieres un juego donde puedas adaptarte durante la partida? ¿Mover piezas secretamente? ¿Agregar trampas que no existían al inicio?
+
+Con commit-reveal, simplemente no se puede.
+
+---
+
+## Treasure Hunt: un juego que no debería ser posible
+
+Treasure Hunt es un juego de dos jugadores donde cada uno esconde 3 tesoros en un tablero 8x8. Se turnan para buscar los tesoros del oponente. El primero en encontrar 2 gana.
+
+Hasta ahí, suena como Batalla Naval. La diferencia está en los poderes:
+
+| Poder | Qué hace |
+|-------|----------|
+| **Radar** | Escanea un área 3x3, revela cuántos tesoros hay |
+| **Brújula** | Da la distancia al tesoro más cercano |
+| **Pala Dorada** | Mueve uno de tus tesoros a otra casilla |
+| **Trampa** | Si el oponente cava ahí, pierde su turno |
+
+Radar y Brújula son públicos: cuando los usas, tu oponente lo sabe.
+
+Pala Dorada y Trampa son invisibles: tu oponente solo ve que "pasaste el turno".
+
+Acá está lo interesante: **Pala y Trampa son indistinguibles**. Cuando tu oponente hace una acción invisible, no sabes si movió su tesoro o puso una trampa. Ambas lucen exactamente igual desde afuera.
+
+---
+
+## Un turno que cambia todo
+
+Imagina esta situación:
+
+```
+Tu tesoro está en (5,5).
+Tu oponente usa Brújula → "Distancia: 3"
+Está triangulando. Se acerca.
+
+Usas Pala Dorada → Mueves el tesoro a (1,1)
+Tu oponente ve: "hizo algo invisible"
+
+Siguiente turno, cava en (5,5) → Vacío.
 ```
 
-## Estructura del Proyecto
+¿Calculó mal la distancia? ¿O moviste el tesoro? Él no puede saberlo.
+
+Ahora imagina el otro lado. Tu oponente tiene 1 Pala + 2 Trampas = 3 acciones invisibles:
 
 ```
-treasure-hunt-aztec/
-├── contracts/          # Contratos Noir/Aztec
-│   ├── src/            # Código fuente Noir
-│   ├── scripts/        # Scripts de deployment
-│   └── config/         # Configuración de redes
-├── client/             # Frontend React/Vite
-│   ├── src/            # Código fuente React
-│   └── scripts/        # Scripts de deployment del cliente
+Turno 6:  Hace algo invisible  → ¿Pala o Trampa?
+Turno 10: Hace algo invisible  → ¿Cuántas trampas quedan?
+Turno 12: Cavas en (3,3) → ¡TRAMPA!
+
+Una era trampa. Pero la otra... ¿fue Pala o la segunda Trampa?
+No hay forma de saberlo.
 ```
 
-## Inicio Rápido
+Cada acción invisible agrega incertidumbre. ¿El tesoro sigue donde estaba? ¿Hay trampas esperándote? La información es genuinamente privada, no solo oculta temporalmente.
 
-### 1. Iniciar la Red Local de Aztec
+---
 
-```bash
-aztec start --local-network
+## Por qué esto no funciona con commit-reveal
+
+Con commit-reveal, publicas `hash(posiciones + salt)` al inicio. El estado queda grabado en piedra.
+
+| Lo que quieres hacer | Commit-reveal | Aztec |
+|---------------------|---------------|-------|
+| Mover tesoros después de empezar | Necesitas re-commit (visible, te delata) | Cambio invisible |
+| Poner trampas durante la partida | Imposible, no estaban en el commit original | Sin problema |
+| Acciones indistinguibles | Cada tipo de acción deja huella diferente | Pala y Trampa lucen igual |
+
+La diferencia fundamental: en commit-reveal el estado privado es *estático*. En Aztec es *dinámico*. Puedes modificarlo, agregar cosas nuevas, y el oponente solo ve que algo cambió, sin saber qué.
+
+---
+
+## Privacidad selectiva
+
+No todo en Treasure Hunt es privado. El juego mezcla deliberadamente información pública y privada:
+
+```
+PÚBLICO                              PRIVADO
+─────────────────────────────────    ─────────────────────────────────
+• De quién es el turno               • Dónde están los tesoros
+• Resultados de excavaciones         • Dónde están las trampas
+• Cuándo se usa Radar o Brújula      • ¿Fue Pala o Trampa?
 ```
 
-> Mantener esta terminal abierta durante el desarrollo.
+Esto crea una dinámica interesante: Radar y Brújula son *deducibles por descarte* porque su uso es público y la cantidad inicial se conoce. Pero Pala y Trampa permanecen ambiguas hasta el final.
 
-### 2. Compilar y Desplegar Contratos
+La gracia no es que todo sea privado. Es que puedes *elegir* qué revelar y qué no.
+
+---
+
+## Pruébalo
+
+### Prerequisites
+Before working with devnet, ensure you have:
 
 ```bash
-cd contracts
+# Docker installed
 
-# Instalar dependencias
-yarn install
+# Aztec CLI installed:
+bash -i <(curl -s https://install.aztec.network)
 
-# Compilar contratos Noir
-yarn compile
-
-# Generar artefactos TypeScript
-yarn codegen
-
-# Desplegar contrato (requiere red local corriendo)
-yarn deploy
+# The devnet version installed:
+aztec-up 3.0.0-devnet.20251212
 ```
 
-### 3. Configurar y Ejecutar el Cliente
+> ⚠️ **WARNING**
+>  
+> The devnet is version dependent. It is currently running version 3.0.0-devnet.20251212. Maintain version consistency when interacting with the devnet to reduce errors.
+
+### Game
 
 ```bash
-cd client
-
-# Instalar dependencias
-yarn install
-
-```bash
-# Iniciar servidor de desarrollo
-yarn dev
-```
-
-El cliente estará disponible en `http://localhost:3001`
-
-## Comandos Útiles
-
-### Contratos
-
-| Comando | Descripción |
-|---------|-------------|
-| `yarn compile` | Compilar contratos Noir |
-| `yarn codegen` | Generar artefactos TypeScript |
-| `yarn deploy` | Desplegar en red local |
-| `yarn deploy::devnet` | Desplegar en devnet |
-| `yarn test` | Ejecutar todos los tests |
-| `yarn test:js` | Solo tests e2e TypeScript |
-| `yarn test:nr` | Solo tests Noir TXE |
-| `yarn clean` | Limpiar artefactos compilados |
-| `yarn clear-store` | Limpiar store PXE |
-
-### Cliente
-
-| Comando | Descripción |
-|---------|-------------|
-| `yarn dev` | Iniciar servidor de desarrollo |
-| `yarn build` | Compilar para producción |
-| `yarn preview` | Previsualizar build de producción |
-| `yarn deploy-contracts` | Desplegar contrato desde el cliente |
-
-## Solución de Problemas
-
-### Error de PXE después de reiniciar la red
-
-```bash
-cd contracts
-yarn clear-store
-```
-
-### Artefactos no encontrados en el cliente
-
-```bash
-cd client
-yarn copy-artifacts
-```
-
-### La red local no responde
-
-Reiniciar la red:
-```bash
-# Ctrl+C para detener
-aztec start --local-network
-```
-
-## Cómo Jugar
-
-1. **Conectar cuenta**: Usa una cuenta de prueba o crea una nueva
-2. **Crear/Unirse a partida**: Ingresa un ID de juego
-3. **Colocar tesoros**: Selecciona 3 posiciones en la grilla
-4. **Jugar**: Alterna turnos para excavar y encontrar tesoros del oponente
-5. **Ganar**: El primero en encontrar 2 tesoros gana
-
-### Acciones Disponibles
-
-- **Dig**: Excavar una celda
-- **Detector**: Detectar tesoros cercanos
-- **Compass**: Obtener dirección hacia un tesoro
-- **Shovel**: Mover tus tesoros (poder especial)
-- **Trap**: Colocar una trampa
-
-## Desarrollo
-
-### Compilar todo desde cero
-
-```bash
-# Terminal 1 - Red Aztec
+# Terminal 1: Start the local network
 aztec start --local-network
 
-# Terminal 2 - Contratos
-cd contracts
-yarn install && yarn compile && yarn codegen && yarn deploy
+# Terminal 2: Contratos
+cd contracts && yarn install
+yarn compile && yarn codegen && yarn deploy
 
-# Terminal 3 - Cliente
-cd client
-yarn install
-# Configurar .env con valores del deployment
-yarn dev
+# Terminal 3: Cliente
+cd client && yarn install && yarn dev
+# Abrir http://localhost:3001
 ```
 
-### Ejecutar tests
+---
 
-```bash
-# Desde contracts/
-yarn test          # Todos los tests
-yarn test:js       # Solo TypeScript e2e
-yarn test:nr       # Solo Noir TXE
-```
+## Construye algo similar
 
-## Arquitectura
+Treasure Hunt demuestra tres capacidades de Aztec:
 
-El juego utiliza el modelo híbrido público/privado de Aztec:
+1. **Estado privado modificable** — mover tesoros sin dejar rastro
+2. **Estado privado dinámico** — agregar trampas que no existían al inicio
+3. **Acciones indistinguibles** — el oponente no puede diferenciar Pala de Trampa
 
-- **Estado Privado**: Posiciones de tesoros, trampas e inventario de poderes
-- **Estado Público**: Jugadores, turnos, tesoros encontrados
-- **Funciones Privadas**: `place_treasures`, `use_shovel`, `use_trap`
-- **Funciones Públicas**: `create_game`, `join_game`, `dig`
+Si estás construyendo algo donde la privacidad importa (juegos, votaciones, subastas, DeFi), [Aztec](https://aztec.network) te da herramientas que no existen en otras cadenas.
 
-## Licencia
-
-MIT
+[Documentación](https://docs.aztec.network) · [Noir (lenguaje)](https://noir-lang.org) · [Discord](https://discord.gg/aztec)
