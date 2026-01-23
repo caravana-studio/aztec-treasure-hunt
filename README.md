@@ -1,128 +1,173 @@
-<h1 align="center">Aztec - Treasure Hunt </h1>
+<h1 align="center">Aztec – Treasure Hunt</h1>
 
 <p align="center">
-  <img src="img/game.jpg"/>
+  <img src="img/game.jpg" />
 </p>
 
-Treasure Hunt es un juego desarrollado en la red de Aztec, donde el objetivo del juego es encontrar los tesoros escondidos del oponente.
+**Treasure Hunt** is a two-player strategy game built on the **Aztec network**.  
+The goal is simple: **find your opponent’s hidden treasures before they find yours**.
 
-En Aztec tenemos la ventaja de poder tener estados privados y acciones privadas, lo que permite crear juegos mas complejos y divertidos.
+Aztec supports **private state** and **private actions**, which enables game mechanics that are not possible in traditional on-chain games.
 
-Tu oponente acaba de hacer algo. No sabes qué. ¿Movió su tesoro a otra casilla? ¿Puso una trampa donde planeas cavar? No hay forma de saberlo. Solo sabes que *algo* cambió.
+Your opponent just did something.  
+You don’t know what.
 
-Esa incertidumbre genuina no existe en ningún otro juego on-chain.
+Did they move a treasure?  
+Did they place a trap where you’re about to dig?
 
----
+There is no way to know. You only know that *something* changed.
 
-## El problema con los juegos que tienen privacidad en blockchain
-
-Los juegos con privacidad en blockchain tienen dos opciones, ambas malas:
-
-**Todo público:** Imagina jugar Batalla Naval donde tu oponente ve exactamente dónde están tus barcos. No hay estrategia posible.
-
-**Commit-reveal:** Publicas un hash de tu estado al inicio. Funciona para estados fijos, pero tiene un problema fundamental: *tu estrategia queda congelada*. No puedes cambiar nada después del commit inicial sin delatarte.
-
-¿Qué pasa si quieres un juego donde puedas adaptarte durante la partida? ¿Mover piezas secretamente? ¿Agregar trampas que no existían al inicio?
-
-Con commit-reveal, simplemente no se puede.
+That kind of genuine uncertainty does not exist in other on-chain games.
 
 ---
 
-## Treasure Hunt: un juego que no debería ser posible
+## The problem with privacy in blockchain games
 
-Treasure Hunt es un juego de dos jugadores donde cada uno esconde 3 tesoros en un tablero 8x8. Se turnan para buscar los tesoros del oponente. El primero en encontrar 2 gana.
+Most blockchain games that want privacy end up with one of these two approaches — and both have major downsides:
 
-Hasta ahí, suena como Batalla Naval. La diferencia está en los poderes:
+### 1) Everything is public
+Imagine playing Battleship while your opponent can see exactly where your ships are.  
+There is no strategy, no bluffing, no mind games.
 
-| Poder | Qué hace |
-|-------|----------|
-| **Radar** | Escanea un área 3x3, revela cuántos tesoros hay pero no su posicion |
-| **Brújula** | Da la distancia al tesoro más cercano |
-| **Pala Dorada** | Mueve uno de tus tesoros a otra casilla |
-| **Trampa** | Si el oponente cava ahí, pierde su turno |
+### 2) Commit–reveal
+You publish a hash of your state at the start of the game.
 
-Radar y Brújula son públicos: cuando los usas, tu oponente lo sabe.
+This works for fixed setups, but it has a fundamental limitation: **your strategy becomes frozen**.
 
-Pala Dorada y Trampa son invisibles: tu oponente solo ve que "pasaste el turno".
+You cannot:
+- Move pieces secretly
+- Add hidden elements during the match
+- Adapt your strategy mid-game
 
-Cuando tu oponente hace una acción invisible, no sabes si movió su tesoro o puso una trampa. Ambas lucen exactamente igual desde afuera.
+If you re-commit, you leak that something changed (and often *what* changed).
+
+So if you want a game where players can adapt privately during the match, commit–reveal doesn’t work.
 
 ---
 
-## Un turno que cambia todo
+## Treasure Hunt: a game with real privacy
 
-Imagina esta situación:
+Treasure Hunt is a two-player game:
 
+- Each player hides **3 treasures** on an **8×8** board
+- Players take turns digging on the opponent’s board
+- The first player to find **2 treasures** wins
+
+At first glance, it sounds like Battleship. The difference is **powers**:
+
+| Power | What it does |
+|------|--------------|
+| **Radar** | Scans a 3×3 area and reveals how many treasures are inside (not their positions) |
+| **Compass** | Reveals the distance to the closest treasure |
+| **Golden Shovel** | Moves one of your treasures to another tile |
+| **Trap** | If the opponent digs there, they lose their next turn |
+
+### Public vs private actions
+
+- **Radar** and **Compass** are **public**: when you use them, your opponent knows.
+- **Golden Shovel** and **Trap** are **private**: your opponent only sees that you “used an invisible action”.
+
+From the outside, **moving a treasure** and **placing a trap look exactly the same**.
+
+---
+
+## A single turn can change everything
+
+Imagine this situation:
+
+```text
+Your treasure is at (5,5).
+Your opponent uses Compass → "Distance: 3"
+They are getting close.
+
+You use Golden Shovel → move the treasure to (1,1)
+Your opponent only sees: "invisible action used"
+
+Next turn, they dig at (5,5) → Empty.
+````
+
+Did they miscalculate the distance?
+Or did you move the treasure?
+
+They cannot know.
+
+Each private action adds real uncertainty:
+
+* Is the treasure still there?
+* Was a trap placed?
+* Did nothing happen at all?
+
+The information is truly private, not just hidden temporarily.
+
+---
+
+## Why commit–reveal cannot do this
+
+With commit–reveal, you publish something like:
+
+```text
+hash(initial_positions + salt)
 ```
-Tu tesoro está en (5,5).
-Tu oponente usa Brújula → "Distancia: 3"
-Está triangulando. Se acerca.
 
-Usas Pala Dorada → Mueves el tesoro a (1,1)
-Tu oponente ve: "hizo algo invisible"
+That locks your state in place.
 
-Siguiente turno, cava en (5,5) → Vacío.
-```
-
-¿Calculó mal la distancia? ¿O moviste el tesoro? Él no puede saberlo.
-
-Cada acción invisible agrega incertidumbre. ¿El tesoro sigue donde estaba? ¿Hay trampas esperándote? La información es genuinamente privada, no solo oculta temporalmente.
+| What you want to do                      | Commit–reveal                            | Aztec                          |
+| ---------------------------------------- | ---------------------------------------- | ------------------------------ |
+| Move treasures mid-game                  | Requires re-commit (reveals a change)    | Fully invisible                |
+| Place traps during the match             | Not possible (not in the initial commit) | Works naturally                |
+| Make different actions indistinguishable | Different actions leak different signals | Shovel and Trap look identical |
 
 ---
 
-## Por qué esto no funciona con commit-reveal
+## Selective privacy
 
-Con commit-reveal, publicas `hash(posiciones + salt)` al inicio. El estado queda grabado en piedra.
+Not everything in Treasure Hunt is private.
+The game intentionally mixes **public and private information**:
 
-| Lo que quieres hacer | Commit-reveal | Aztec |
-|---------------------|---------------|-------|
-| Mover tesoros después de empezar | Necesitas re-commit (visible, te delata) | Cambio invisible |
-| Poner trampas durante la partida | Imposible, no estaban en el commit original | Sin problema |
-| Acciones indistinguibles | Cada tipo de acción deja huella diferente | Pala y Trampa lucen igual |
-
----
-
-## Privacidad selectiva
-
-No todo en Treasure Hunt es privado. El juego mezcla deliberadamente información pública y privada:
-
-```
-PÚBLICO                              PRIVADO
+```text
+PUBLIC                               PRIVATE
 ─────────────────────────────────    ─────────────────────────────────
-• De quién es el turno               • Dónde están los tesoros
-• Resultados de excavaciones         • Dónde están las trampas
-• Cuándo se usa Radar o Brújula      • ¿Fue Pala o Trampa?
+• Whose turn it is                   • Treasure positions
+• Dig results                        • Trap positions
+• When Radar or Compass is used      • Was it Shovel or Trap?
 ```
 
-Esto crea una dinámica interesante: Radar y Brújula son *deducibles por descarte* porque su uso es público y la cantidad inicial se conoce. Pero Pala y Trampa permanecen ambiguas hasta el final.
+This creates interesting gameplay:
+
+* Radar and Compass are **deducible** (their usage is public and limited)
+* Golden Shovel and Trap remain **ambiguous until the end**
 
 ---
 
-## Pruébalo
+## Try it yourself
 
 ### Prerequisites
 
 ```bash
 # Docker installed
 
-# Aztec CLI installed:
+# Install Aztec CLI
 bash -i <(curl -s https://install.aztec.network)
 
-# The devnet version installed:
+# Install the devnet version
 aztec-up 3.0.0-devnet.20251212
 ```
 
-### Game
+### Run the game
 
 ```bash
 # Terminal 1: Start the local network
 aztec start --local-network
 
-# Terminal 2: Contratos
+# Terminal 2: Contracts
 cd contracts && yarn install
 yarn compile && yarn codegen && yarn deploy
 
-# Terminal 3: Cliente
-cd client && yarn install && yarn dev
-# Abrir http://localhost:3001
+# Terminal 3: Client
+cd client && yarn install
+yarn dev
+# Open http://localhost:3001
+```
+
+```
 ```
