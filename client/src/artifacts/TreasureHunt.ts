@@ -195,8 +195,8 @@ dig_results: {
     /** respond_detector(game_id: field, center_x: integer, center_y: integer) */
     respond_detector: ((game_id: FieldLike, center_x: (bigint | number), center_y: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** sync_private_state() */
-    sync_private_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** sync_state() */
+    sync_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** use_compass(game_id: field, from_x: integer, from_y: integer) */
     use_compass: ((game_id: FieldLike, from_x: (bigint | number), from_y: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
