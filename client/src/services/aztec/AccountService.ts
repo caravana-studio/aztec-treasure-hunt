@@ -1,8 +1,8 @@
 import { Account } from '@aztec/aztec.js/account';
-import { AccountManager, type DeployAccountOptions } from '@aztec/aztec.js/wallet';
+import { AccountManager } from '@aztec/aztec.js/wallet';
 import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
 import { randomBytes } from '@aztec/foundation/crypto/random';
-import { Fr } from '@aztec/foundation/curves/bn254';
+import { Fr } from '@aztec/aztec.js/fields';
 import { EcdsaRAccountContract } from '@aztec/accounts/ecdsa/lazy';
 import { SchnorrAccountContract } from '@aztec/accounts/schnorr/lazy';
 import { getInitialTestAccountsData } from '@aztec/accounts/testing/lazy';
@@ -56,16 +56,13 @@ export class AccountService {
     // Deploy the account with sponsored fees
     const sponsoredFPC = await FeeService.getSponsoredFPCContract();
     const deployMethod = await accountManager.getDeployMethod();
-    const deployOpts: DeployAccountOptions = {
+    const receipt = await deployMethod.send({
       from: AztecAddress.ZERO,
       fee: {
         paymentMethod: new SponsoredFeePaymentMethod(sponsoredFPC.instance.address),
       },
-      skipClassPublication: true,
-      skipInstancePublication: true,
-    };
-
-    const receipt = await deployMethod.send(deployOpts).wait({ timeout: 120 });
+      wait: { timeout: 120000 },
+    });
     logger.info('Account deployed', receipt);
 
     // Store credentials in localStorage

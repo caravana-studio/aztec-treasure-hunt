@@ -1,8 +1,8 @@
 import { getContractInstanceFromInstantiationParams } from '@aztec/aztec.js/contracts';
 import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
 import { SPONSORED_FPC_SALT } from '@aztec/constants';
-import { Fr } from '@aztec/foundation/curves/bn254';
-import type { PXE } from '@aztec/pxe/client/lazy';
+import { Fr } from '@aztec/aztec.js/fields';
+import type { PXE } from '@aztec/pxe/server';
 
 export interface SponsoredFPCContract {
   instance: Awaited<ReturnType<typeof getContractInstanceFromInstantiationParams>>;

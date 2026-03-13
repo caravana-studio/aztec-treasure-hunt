@@ -17,25 +17,12 @@ function LoadingScreen() {
 }
 
 function App() {
-  const { isInitializing, error } = useWallet();
+  const { isInitializing } = useWallet();
 
+  // Only block render while PXE is initializing.
+  // Wallet connection errors are shown inline in ConnectModal.
   if (isInitializing) {
     return <LoadingScreen />;
-  }
-
-  if (error) {
-    return (
-      <div className="lobby-container">
-        <AnimatedClouds />
-        <div className="lobby-card" style={{ textAlign: 'center' }}>
-          <h2 style={{ color: '#e74c3c', marginBottom: '16px' }}>Connection Error</h2>
-          <p style={{ marginBottom: '16px' }}>{error}</p>
-          <button className="glass-btn" onClick={() => window.location.reload()}>
-            Retry
-          </button>
-        </div>
-      </div>
-    );
   }
 
   return (

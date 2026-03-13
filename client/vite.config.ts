@@ -169,10 +169,13 @@ export default defineConfig({
       '@aztec/bb.js',
       '@aztec/pxe',
       '@aztec/pxe/client/lazy',
+      '@aztec/pxe/client/bundle',
       '@aztec/foundation',
       '@aztec/circuits.js',
       '@aztec/noir-contracts.js',
       '@aztec/accounts',
+      '@aztec/kv-store',
+      '@aztec/wallets',
     ],
     esbuildOptions: {
       define: {

@@ -1,9 +1,11 @@
 import { createAztecNodeClient, type AztecNode } from '@aztec/aztec.js/node';
 import { getPXEConfig } from '@aztec/pxe/config';
-import { createPXE, type PXE } from '@aztec/pxe/client/lazy';
+import { createPXE, type PXE } from '@aztec/pxe/client/bundle';
+import { createStore } from '@aztec/kv-store/indexeddb';
 import { createLogger } from '@aztec/aztec.js/log';
 
 const logger = createLogger('pxe-service');
+const pxeLogger = createLogger('pxe');
 
 export interface PXEInstance {
   pxe: PXE;
@@ -12,29 +14,22 @@ export interface PXEInstance {
 
 /**
  * Singleton service for managing the PXE instance.
- * Ensures only one PXE is created per session.
+ * Uses IndexedDB for persistence across page reloads.
  */
 export class PXEService {
   private static instance: PXEInstance | null = null;
   private static initPromise: Promise<PXEInstance> | null = null;
   private static currentNodeUrl: string | null = null;
 
-  /**
-   * Get or create the PXE instance.
-   * If already initialized with a different URL, it will reinitialize.
-   */
   static async getInstance(nodeUrl: string, proverEnabled = false): Promise<PXEInstance> {
-    // If same URL and already initialized, return existing
     if (this.instance && this.currentNodeUrl === nodeUrl) {
       return this.instance;
     }
 
-    // If initialization is in progress for same URL, wait for it
     if (this.initPromise && this.currentNodeUrl === nodeUrl) {
       return this.initPromise;
     }
 
-    // Start new initialization
     this.currentNodeUrl = nodeUrl;
     this.initPromise = this.initialize(nodeUrl, proverEnabled);
 
@@ -46,24 +41,14 @@ export class PXEService {
     }
   }
 
-  /**
-   * Get existing instance without creating a new one.
-   * Returns null if not initialized.
-   */
   static getExistingInstance(): PXEInstance | null {
     return this.instance;
   }
 
-  /**
-   * Check if PXE is initialized.
-   */
   static isInitialized(): boolean {
     return this.instance !== null;
   }
 
-  /**
-   * Reset the PXE instance (useful for network switching).
-   */
   static reset(): void {
     this.instance = null;
     this.currentNodeUrl = null;
@@ -74,20 +59,35 @@ export class PXEService {
   private static async initialize(nodeUrl: string, proverEnabled: boolean): Promise<PXEInstance> {
     logger.info('Initializing PXE with node URL:', nodeUrl);
 
-    // Create Aztec Node Client
     const aztecNode = createAztecNodeClient(nodeUrl);
+    const l1Contracts = await aztecNode.getL1ContractAddresses();
 
-    // Get PXE config and populate with L1 contracts
+    // Create persistent IndexedDB store
+    const storeName = `aztec-pxe-${nodeUrl.replace(/[^a-z0-9]/gi, '-')}`;
+    let pxeStore: Awaited<ReturnType<typeof createStore>>;
+    try {
+      pxeStore = await createStore(
+        storeName,
+        { dataDirectory: 'pxe', dataStoreMapSizeKb: 5e5 },
+        undefined,
+        pxeLogger
+      );
+    } catch {
+      logger.warn('Failed to create persistent PXE store, using smaller ephemeral store');
+      pxeStore = await createStore(
+        `${storeName}-tmp`,
+        { dataDirectory: 'pxe-tmp', dataStoreMapSizeKb: 1e5 },
+        undefined,
+        pxeLogger
+      );
+    }
+
     const config = getPXEConfig();
-    config.l1Contracts = await aztecNode.getL1ContractAddresses();
+    config.l1Contracts = l1Contracts;
     config.proverEnabled = proverEnabled;
 
-    // Create PXE instance
-    const pxe = await createPXE(aztecNode, config, {
-      useLogSuffix: true,
-    });
+    const pxe = await createPXE(aztecNode, config, { store: pxeStore });
 
-    // Log connection info
     const nodeInfo = await aztecNode.getNodeInfo();
     logger.info('PXE connected to node', nodeInfo);
 

@@ -1,22 +1,11 @@
 import { Account, SignerlessAccount } from '@aztec/aztec.js/account';
-import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
 import { createLogger } from '@aztec/aztec.js/log';
-import { AccountManager, type SimulateOptions } from '@aztec/aztec.js/wallet';
 import { AccountFeePaymentMethodOptions } from '@aztec/entrypoints/account';
-import { Fr } from '@aztec/foundation/curves/bn254';
-import {
-  getStubAccountContractArtifact,
-  createStubAccount,
-} from '@aztec/accounts/stub/lazy';
-import { getContractInstanceFromInstantiationParams } from '@aztec/aztec.js/contracts';
-import {
-  ExecutionPayload,
-  mergeExecutionPayloads,
-  type TxSimulationResult,
-} from '@aztec/stdlib/tx';
 import { GasSettings } from '@aztec/stdlib/gas';
 import { AztecAddress } from '@aztec/stdlib/aztec-address';
+import { type AztecNode } from '@aztec/aztec.js/node';
 import { type FeeOptions, BaseWallet } from '@aztec/wallet-sdk/base-wallet';
+import type { PXE } from '@aztec/pxe/client/bundle';
 import { PXEService } from './services/aztec/PXEService';
 import { FeeService } from './services/aztec/FeeService';
 import { AccountService } from './services/aztec/AccountService';
@@ -34,10 +23,13 @@ export class EmbeddedWallet extends BaseWallet {
   connectedAccount: AztecAddress | null = null;
   protected accounts: Map<string, Account> = new Map();
 
+  constructor(pxe: PXE, aztecNode: AztecNode) {
+    super(pxe, aztecNode);
+  }
+
   protected async getAccountFromAddress(address: AztecAddress): Promise<Account> {
     if (address.equals(AztecAddress.ZERO)) {
-      const chainInfo = await this.getChainInfo();
-      return new SignerlessAccount(chainInfo);
+      return new SignerlessAccount();
     }
 
     const account = this.accounts.get(address.toString());
@@ -57,7 +49,7 @@ export class EmbeddedWallet extends BaseWallet {
   ): Promise<FeeOptions> {
     const maxFeesPerGas =
       gasSettings?.maxFeesPerGas ??
-      (await this.aztecNode.getCurrentBaseFees()).mul(1 + this.baseFeePadding);
+      (await this.aztecNode.getCurrentMinFees()).mul(1 + this.minFeePadding);
 
     let walletFeePaymentMethod;
     let accountFeePaymentMethodOptions;
@@ -147,70 +139,4 @@ export class EmbeddedWallet extends BaseWallet {
     return accountData.address;
   }
 
-  private async getFakeAccountDataFor(address: AztecAddress) {
-    const chainInfo = await this.getChainInfo();
-    const originalAccount = await this.getAccountFromAddress(address);
-    const originalAddress = await originalAccount.getCompleteAddress();
-    const { contractInstance } = await this.pxe.getContractMetadata(originalAddress.address);
-
-    if (!contractInstance) {
-      throw new Error(`No contract instance found for address: ${originalAddress.address}`);
-    }
-
-    const stubAccount = createStubAccount(originalAddress, chainInfo);
-    const StubAccountContractArtifact = await getStubAccountContractArtifact();
-    const instance = await getContractInstanceFromInstantiationParams(
-      StubAccountContractArtifact,
-      { salt: Fr.random() }
-    );
-
-    return {
-      account: stubAccount,
-      instance,
-      artifact: StubAccountContractArtifact,
-    };
-  }
-
-  async simulateTx(
-    executionPayload: ExecutionPayload,
-    opts: SimulateOptions
-  ): Promise<TxSimulationResult> {
-    const feeOptions = opts.fee?.estimateGas
-      ? await this.completeFeeOptionsForEstimation(
-          opts.from,
-          executionPayload.feePayer,
-          opts.fee?.gasSettings
-        )
-      : await this.completeFeeOptions(
-          opts.from,
-          executionPayload.feePayer,
-          opts.fee?.gasSettings
-        );
-
-    const feeExecutionPayload = await feeOptions.walletFeePaymentMethod?.getExecutionPayload();
-
-    const executionOptions = {
-      txNonce: Fr.random(),
-      cancellable: this.cancellableTransactions,
-      feePaymentMethodOptions: feeOptions.accountFeePaymentMethodOptions,
-    };
-
-    const finalExecutionPayload = feeExecutionPayload
-      ? mergeExecutionPayloads([feeExecutionPayload, executionPayload])
-      : executionPayload;
-
-    const { account: fromAccount, instance, artifact } = await this.getFakeAccountDataFor(opts.from);
-
-    const txRequest = await fromAccount.createTxExecutionRequest(
-      finalExecutionPayload,
-      feeOptions.gasSettings,
-      executionOptions
-    );
-
-    const contractOverrides = {
-      [opts.from.toString()]: { instance, artifact },
-    };
-
-    return this.pxe.simulateTx(txRequest, true, true, true, { contracts: contractOverrides });
-  }
 }
