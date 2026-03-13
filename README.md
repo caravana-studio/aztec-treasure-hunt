@@ -142,34 +142,111 @@ This creates interesting gameplay:
 
 ---
 
-## Try it yourself
+## Run locally
 
 ### Prerequisites
 
-```bash
-# Docker installed
+This repository is pinned to **Aztec `4.0.0-devnet.2-patch.1`**.
+If you have a newer global Aztec version installed, use the project scripts below instead of relying on the global `aztec` wrapper.
 
-# Install Aztec CLI
+```bash
+# Node.js 22+
+# Yarn 1.22+
+
+# Install Aztec version manager
 bash -i <(curl -s https://install.aztec.network)
 
-# Install the devnet version
-aztec-up 3.0.0-devnet.20251212
+# Install the exact toolchain used by this repo
+PATH="$HOME/.aztec/bin:$PATH" aztec-up install 4.0.0-devnet.2-patch.1
 ```
 
-### Run the game
+### 1. Install dependencies
 
 ```bash
-# Terminal 1: Start the local network
-aztec start --local-network
-
-# Terminal 2: Contracts
 cd contracts && yarn install
-yarn compile && yarn codegen && yarn deploy
+cd ../client && yarn install
+```
 
-# Terminal 3: Client
-cd client && yarn install
+### 2. Start the local Aztec network
+
+Use the repo-local wrapper. It starts the local network with the pinned Aztec version for this project.
+
+```bash
+cd contracts
+yarn aztec:start
+```
+
+Wait until the node is up before deploying contracts.
+
+If you need to stop it later:
+
+```bash
+cd contracts
+yarn aztec:stop
+```
+
+### 3. Compile and deploy the contracts
+
+In a second terminal:
+
+```bash
+cd contracts
+yarn compile
+yarn codegen
+yarn deploy
+```
+
+`yarn deploy` will:
+
+- deploy a local Schnorr account
+- deploy the `TreasureHunt` contract
+- copy generated artifacts into `client/src/artifacts`
+- write `client/.env` with the deployed local addresses
+
+### 4. Start the client
+
+In a third terminal:
+
+```bash
+cd client
 yarn dev
-# Open http://localhost:3001
+```
+
+Then open [http://localhost:3001](http://localhost:3001).
+
+### 5. Production build check
+
+If you want to verify the full local build:
+
+```bash
+cd client
+yarn build
+```
+
+## Troubleshooting
+
+### `aztec --version` fails with `shopt: inherit_errexit: invalid shell option name`
+
+That comes from the global Aztec wrapper on macOS systems still using an older Bash. For this repository, use:
+
+```bash
+cd contracts
+yarn aztec:start
+yarn aztec:stop
+yarn compile
+yarn codegen
+yarn deploy
+```
+
+Those commands use the repo-local wrapper and the pinned Aztec toolchain instead of the broken global wrapper.
+
+### I restarted the local network and the app stopped working
+
+If you restart the local Aztec network, redeploy the contracts:
+
+```bash
+cd contracts
+yarn deploy
 ```
 
 ---
