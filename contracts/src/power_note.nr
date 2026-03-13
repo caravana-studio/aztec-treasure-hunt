@@ -1,4 +1,4 @@
-use aztec::{macros::notes::note, protocol_types::{traits::Packable, address::AztecAddress}};
+use aztec::{macros::notes::note, protocol::{traits::Packable, address::AztecAddress}};
 
 // Power types
 pub global POWER_DETECTOR: u8 = 0;  // Metal detector - scan 3x3 area, returns treasure count

@@ -34,7 +34,7 @@ pub contract TreasureHunt {
         note::note_interface::NoteProperties,
         utils::comparison::Comparator,
     };
-    use dep::aztec::protocol_types::address::AztecAddress;
+    use dep::aztec::protocol::address::AztecAddress;
     use dep::aztec::state_vars::{Map, Owned, PrivateSet, PublicMutable};
 
     use crate::treasure_note::TreasureNote;
@@ -82,14 +82,14 @@ pub contract TreasureHunt {
         let game_id = self.storage.next_game_id.read();
         self.storage.next_game_id.write(game_id + 1);
 
-        let game = Game::new(self.context.msg_sender().unwrap());
+        let game = Game::new(self.msg_sender());
         self.storage.games.at(game_id).write(game);
     }
 
     #[external("public")]
     fn join_game(game_id: Field) {
         let game = self.storage.games.at(game_id).read();
-        let joined = game.join(self.context.msg_sender().unwrap());
+        let joined = game.join(self.msg_sender());
         self.storage.games.at(game_id).write(joined);
     }
 
@@ -102,7 +102,7 @@ pub contract TreasureHunt {
         x2: u8, y2: u8,
         x3: u8, y3: u8,
     ) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         // Validate positions are within bounds
         assert(x1 < MAP_SIZE & y1 < MAP_SIZE);
@@ -117,32 +117,32 @@ pub contract TreasureHunt {
         // Create treasure notes
         self.storage.treasures.at(game_id).at(player)
             .insert(TreasureNote::new(x1, y1, player))
-            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+            .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
         self.storage.treasures.at(game_id).at(player)
             .insert(TreasureNote::new(x2, y2, player))
-            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+            .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
         self.storage.treasures.at(game_id).at(player)
             .insert(TreasureNote::new(x3, y3, player))
-            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+            .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
 
         // Create power notes: 3 detectors, 2 compasses, 1 shovel, 2 traps
         for _ in 0..3 {
             self.storage.powers.at(game_id).at(player)
                 .insert(PowerNote::new(POWER_DETECTOR, player))
-                .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+                .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
         }
         for _ in 0..2 {
             self.storage.powers.at(game_id).at(player)
                 .insert(PowerNote::new(POWER_COMPASS, player))
-                .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+                .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
         }
         self.storage.powers.at(game_id).at(player)
             .insert(PowerNote::new(POWER_SHOVEL, player))
-            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+            .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
         for _ in 0..2 {
             self.storage.powers.at(game_id).at(player)
                 .insert(PowerNote::new(POWER_TRAP, player))
-                .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+                .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
         }
 
         self.enqueue(TreasureHunt::at(self.context.this_address()).confirm_setup(player, game_id));
@@ -164,7 +164,7 @@ pub contract TreasureHunt {
         assert(x < MAP_SIZE & y < MAP_SIZE);
 
         let game = self.storage.games.at(game_id).read();
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         assert(game.status == STATUS_PLAYING);
         assert(game.current_turn.eq(player));
@@ -176,7 +176,7 @@ pub contract TreasureHunt {
     /// Check if dig hit a trap or treasure (called by responder privately)
     #[external("private")]
     fn check_dig_result(game_id: Field, dig_x: u8, dig_y: u8) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         // Check traps
         let trap_notes = self.storage.traps.at(game_id).at(player).get_notes(NoteGetterOptions::new());
@@ -282,7 +282,7 @@ pub contract TreasureHunt {
     /// Use metal detector to scan 3x3 area
     #[external("private")]
     fn use_detector(game_id: Field, center_x: u8, center_y: u8) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         // Find and consume a detector power using pop_notes (nullifies the note)
         let options = NoteGetterOptions::new()
@@ -315,7 +315,7 @@ pub contract TreasureHunt {
     /// Opponent responds with treasure count in 3x3 area
     #[external("private")]
     fn respond_detector(game_id: Field, center_x: u8, center_y: u8) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         let treasure_notes = self.storage.treasures.at(game_id).at(player).get_notes(NoteGetterOptions::new());
         let mut count: u8 = 0;
@@ -382,7 +382,7 @@ pub contract TreasureHunt {
     /// Use compass to get distance to nearest opponent treasure
     #[external("private")]
     fn use_compass(game_id: Field, from_x: u8, from_y: u8) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         // Find and consume a compass power using pop_notes (nullifies the note)
         let options = NoteGetterOptions::new()
@@ -415,7 +415,7 @@ pub contract TreasureHunt {
     /// Opponent responds with minimum distance
     #[external("private")]
     fn respond_compass(game_id: Field, from_x: u8, from_y: u8) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         let treasure_notes = self.storage.treasures.at(game_id).at(player).get_notes(NoteGetterOptions::new());
         let mut min_distance: u8 = 255;
@@ -487,7 +487,7 @@ pub contract TreasureHunt {
         old_x: u8, old_y: u8,
         new_x: u8, new_y: u8,
     ) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         assert(new_x < MAP_SIZE & new_y < MAP_SIZE);
 
@@ -513,7 +513,7 @@ pub contract TreasureHunt {
         // Create new treasure at new position
         self.storage.treasures.at(game_id).at(player)
             .insert(TreasureNote::new(new_x, new_y, player))
-            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+            .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
 
         self.enqueue(TreasureHunt::at(self.context.this_address()).confirm_shovel_used(player, game_id));
     }
@@ -534,7 +534,7 @@ pub contract TreasureHunt {
     /// Place a trap at a location
     #[external("private")]
     fn use_trap(game_id: Field, trap_x: u8, trap_y: u8) {
-        let player = self.context.msg_sender().unwrap();
+        let player = self.msg_sender();
 
         assert(trap_x < MAP_SIZE & trap_y < MAP_SIZE);
 
@@ -550,7 +550,7 @@ pub contract TreasureHunt {
         // Create trap note
         self.storage.traps.at(game_id).at(player)
             .insert(TrapNote::new(trap_x, trap_y, player))
-            .deliver(MessageDelivery.CONSTRAINED_ONCHAIN);
+            .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
 
         self.enqueue(TreasureHunt::at(self.context.this_address()).confirm_trap_placed(player, game_id));
     }

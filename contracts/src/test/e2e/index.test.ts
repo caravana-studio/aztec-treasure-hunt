@@ -2,18 +2,19 @@
 // Tests the game lifecycle on a real Aztec network with state verification
 
 import { TreasureHuntContract } from "../../artifacts/TreasureHunt.js"
-import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee/testing'
+import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee'
 import { getSponsoredFPCInstance } from "../../utils/sponsored_fpc.js";
 import { setupWallet } from "../../utils/setup_wallet.js";
-import { SponsoredFPCContract } from "@aztec/noir-contracts.js/SponsoredFPC";
+import { SponsoredFPCContractArtifact } from "@aztec/noir-contracts.js/SponsoredFPC";
 import { getTimeouts } from "../../../config/config.js";
 import { AztecAddress } from "@aztec/stdlib/aztec-address";
 import { Logger, createLogger } from "@aztec/aztec.js/log";
 import { ContractInstanceWithAddress } from "@aztec/stdlib/contract";
 import { Fr, GrumpkinScalar } from "@aztec/aztec.js/fields";
 import { TxStatus } from "@aztec/stdlib/tx";
-import { TestWallet } from '@aztec/test-wallet/server';
+import { EmbeddedWallet } from "@aztec/wallets/embedded";
 import { AccountManager } from "@aztec/aztec.js/wallet";
+import { SchnorrAccountContract } from "@aztec/accounts/schnorr";
 
 // Game status constants (must match contract)
 const STATUS_CREATED = 0;
@@ -51,7 +52,7 @@ describe("Treasure Hunt Game", () => {
     let logger: Logger;
     let sponsoredFPC: ContractInstanceWithAddress;
     let sponsoredPaymentMethod: SponsoredFeePaymentMethod;
-    let wallet: TestWallet;
+    let wallet: EmbeddedWallet;
     let player1Account: AccountManager;
     let player2Account: AccountManager;
     let contract: TreasureHuntContract;
@@ -62,7 +63,7 @@ describe("Treasure Hunt Game", () => {
         wallet = await setupWallet();
 
         sponsoredFPC = await getSponsoredFPCInstance();
-        await wallet.registerContract(sponsoredFPC, SponsoredFPCContract.artifact);
+        await wallet.registerContract(sponsoredFPC, SponsoredFPCContractArtifact);
         sponsoredPaymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
 
         // Create two player accounts
@@ -70,7 +71,7 @@ describe("Treasure Hunt Game", () => {
         let secretKey1 = Fr.random();
         let signingKey1 = GrumpkinScalar.random();
         let salt1 = Fr.random();
-        player1Account = await wallet.createSchnorrAccount(secretKey1, salt1, signingKey1);
+        player1Account = await AccountManager.create(wallet, secretKey1, new SchnorrAccountContract(signingKey1), salt1);
         await (await player1Account.getDeployMethod()).send({
             from: AztecAddress.ZERO,
             fee: { paymentMethod: sponsoredPaymentMethod }
@@ -79,14 +80,12 @@ describe("Treasure Hunt Game", () => {
         let secretKey2 = Fr.random();
         let signingKey2 = GrumpkinScalar.random();
         let salt2 = Fr.random();
-        player2Account = await wallet.createSchnorrAccount(secretKey2, salt2, signingKey2);
+        player2Account = await AccountManager.create(wallet, secretKey2, new SchnorrAccountContract(signingKey2), salt2);
         await (await player2Account.getDeployMethod()).send({
             from: AztecAddress.ZERO,
             fee: { paymentMethod: sponsoredPaymentMethod }
         }).wait({ timeout: getTimeouts().deployTimeout });
 
-        await wallet.registerSender(player1Account.address);
-        await wallet.registerSender(player2Account.address);
         logger.info('Player accounts created and registered');
 
         // Deploy the contract once for all tests

@@ -1,4 +1,4 @@
-use aztec::{macros::notes::note, protocol_types::{traits::Packable, address::AztecAddress}};
+use aztec::{macros::notes::note, protocol::{traits::Packable, address::AztecAddress}};
 
 /// Private note storing a trap's position
 /// Traps cause the opponent to lose their turn when they dig at that location
