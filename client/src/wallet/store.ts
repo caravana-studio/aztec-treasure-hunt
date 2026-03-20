@@ -1,7 +1,7 @@
 /**
  * Multi-wallet Zustand store
  *
- * Supports Embedded, MetaMask and Azguard wallet types. The `wallet` property
+ * Supports Embedded and Azguard wallet types. The `wallet` property
  * is always a BaseWallet-compatible object that can be passed to
  * TreasureHuntContract.at(address, wallet).
  */
@@ -9,7 +9,6 @@ import { create } from 'zustand';
 import type { MultiWalletStore, AzguardDiscoveryState } from './types';
 import { WalletType } from './types';
 import { reconnectEmbedded, createEmbeddedAccount } from './connectors/EmbeddedConnector';
-import { connectMetaMask } from './connectors/MetaMaskConnector';
 import {
   discoverWallets,
   establishChannel,
@@ -105,28 +104,6 @@ export const useMultiWalletStore = create<MultiWalletStore>((set, get) => ({
       set({
         status: 'disconnected',
         error: err instanceof Error ? err.message : 'Failed to create embedded account',
-      });
-    }
-  },
-
-  connectMetaMask: async () => {
-    if (get().status === 'connecting') return;
-    set({ status: 'connecting', error: null });
-    try {
-      const result = await connectMetaMask(getNodeUrl());
-      localStorage.setItem('aztec-wallet-type', WalletType.METAMASK);
-      set({
-        wallet: result.wallet,
-        address: result.address,
-        contractAddress: result.contractAddress,
-        walletType: WalletType.METAMASK,
-        status: 'connected',
-        error: null,
-      });
-    } catch (err) {
-      set({
-        status: 'disconnected',
-        error: err instanceof Error ? err.message : 'Failed to connect MetaMask',
       });
     }
   },

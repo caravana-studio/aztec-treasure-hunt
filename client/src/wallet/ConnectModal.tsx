@@ -1,10 +1,9 @@
 /**
  * ConnectModal — wallet selector using the game's glass morphism CSS.
  *
- * Shows 3 wallet options:
+ * Shows 2 wallet options:
  *   1. Embedded Wallet (keys in localStorage, no extension required)
- *   2. MetaMask / EVM Wallet (signs with MetaMask, keys derived from signature)
- *   3. Azguard (browser extension wallet via Wallet SDK discovery + emoji verification)
+ *   2. Azguard (browser extension wallet via Wallet SDK discovery + emoji verification)
  */
 import { useState, useEffect } from 'react';
 import { useMultiWalletStore } from './store';
@@ -26,7 +25,6 @@ interface WalletOption {
 export function ConnectModal() {
   const {
     connectEmbedded,
-    connectMetaMask,
     startAzguardDiscovery,
     selectAzguardProvider,
     confirmAzguardConnection,
@@ -44,25 +42,12 @@ export function ConnectModal() {
     isAzguardInstalled().then(setHasAzguard);
   }, []);
 
-  const hasMetaMask = typeof window !== 'undefined' && !!window.ethereum;
-
   const handleEmbedded = async () => {
     if (connecting) return;
     clearError();
     setConnecting('embedded');
     try {
       await connectEmbedded();
-    } finally {
-      setConnecting(null);
-    }
-  };
-
-  const handleMetaMask = async () => {
-    if (connecting) return;
-    clearError();
-    setConnecting('metamask');
-    try {
-      await connectMetaMask();
     } finally {
       setConnecting(null);
     }
@@ -96,15 +81,6 @@ export function ConnectModal() {
       icon: '🔑',
       action: handleEmbedded,
       available: true,
-    },
-    {
-      id: 'metamask',
-      name: 'MetaMask',
-      description: 'Use your MetaMask wallet to derive an Aztec account',
-      icon: '🦊',
-      action: handleMetaMask,
-      available: hasMetaMask,
-      unavailableReason: 'MetaMask not detected. Install it and refresh.',
     },
     {
       id: 'azguard',

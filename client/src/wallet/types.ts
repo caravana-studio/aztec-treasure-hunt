@@ -8,7 +8,6 @@ import type {
 
 export enum WalletType {
   EMBEDDED = 'embedded',
-  METAMASK = 'metamask',
   AZGUARD = 'azguard',
 }
 
@@ -41,7 +40,6 @@ export interface MultiWalletState {
 export interface MultiWalletActions {
   initialize: (nodeUrl: string) => Promise<void>;
   connectEmbedded: () => Promise<void>;
-  connectMetaMask: () => Promise<void>;
   startAzguardDiscovery: () => Promise<void>;
   selectAzguardProvider: (provider: WalletProvider) => Promise<void>;
   confirmAzguardConnection: () => Promise<void>;

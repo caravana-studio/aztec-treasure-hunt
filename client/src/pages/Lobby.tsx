@@ -37,8 +37,6 @@ export function Lobby() {
   const walletLabel =
     walletType === 'embedded'
       ? 'Embedded Wallet'
-      : walletType === 'metamask'
-      ? 'MetaMask'
       : walletType === 'azguard'
       ? 'Azguard'
       : 'Connected';
