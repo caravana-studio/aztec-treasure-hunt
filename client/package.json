@@ -9,7 +9,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "dev": "PROVER_ENABLED=false vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "typecheck": "tsc -b",
     "preview": "vite preview",
     "lint": "prettier --check ./src"
   },
