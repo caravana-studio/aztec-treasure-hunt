@@ -25,8 +25,6 @@
     "@aztec/stdlib": "4.0.0-devnet.2-patch.1",
     "@aztec/wallet-sdk": "4.0.0-devnet.2-patch.1",
     "@aztec/wallets": "4.0.0-devnet.2-patch.1",
-    "@azguardwallet/client": "0.7.0",
-    "@azguardwallet/types": "0.7.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.12.0",

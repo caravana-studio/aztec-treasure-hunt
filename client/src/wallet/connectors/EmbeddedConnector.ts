@@ -21,11 +21,13 @@ export interface EmbeddedConnectorResult {
 }
 
 async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
-  const { pxe, aztecNode } = await PXEService.getInstance(nodeUrl, false);
+  const config = getNetworkConfig();
+  const isRemoteNetwork = !nodeUrl.includes('localhost') && !nodeUrl.includes('127.0.0.1');
+  const proverEnabled = config.proverEnabled || isRemoteNetwork;
+  const { pxe, aztecNode } = await PXEService.getInstance(nodeUrl, proverEnabled);
   await FeeService.registerWithPXE(pxe);
   const wallet = new EmbeddedWallet(pxe, aztecNode);
 
-  const config = getNetworkConfig();
   const instance = await getContractInstanceFromInstantiationParams(
     TreasureHuntContract.artifact,
     {

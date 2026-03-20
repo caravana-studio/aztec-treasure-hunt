@@ -17,7 +17,7 @@ export interface WalletActions {
   initialize: (nodeUrl: string) => Promise<void>;
   connectEmbedded: () => Promise<void>;
   connectMetaMask: () => Promise<void>;
-  connectAzguard: () => Promise<void>;
+  startAzguardDiscovery: () => Promise<void>;
   disconnect: () => void;
   clearError: () => void;
 }

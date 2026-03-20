@@ -1,20 +1,26 @@
 /**
- * Azguard Browser Wallet Connector
+ * Azguard Browser Wallet Connector — Wallet SDK Protocol
  *
- * Azguard is a browser extension that manages its own PXE and Aztec accounts.
- * It uses a CAIP-based wallet protocol.
- *
- * This connector:
- * 1. Checks if Azguard is installed
- * 2. Connects to Azguard and gets the user's Aztec account
- * 3. For game operations, proxies transactions through Azguard's interface
- *
- * Note: Azguard manages its own PXE, so the game uses Azguard's wallet
- * directly for transaction signing.
+ * Uses @aztec/wallet-sdk WalletManager for discovery, secure channel (ECDH),
+ * and emoji-based verification. Replaces the old CAIP-based @azguardwallet/client.
  */
 import { AztecAddress } from '@aztec/aztec.js/addresses';
+import { Fr } from '@aztec/aztec.js/fields';
+import { createAztecNodeClient } from '@aztec/aztec.js/node';
+import { WalletManager } from '@aztec/wallet-sdk/manager';
+import type {
+  DiscoverySession,
+  WalletProvider,
+  PendingConnection,
+} from '@aztec/wallet-sdk/manager';
+import { hashToEmoji } from '@aztec/wallet-sdk/crypto';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
 import { getNetworkConfig } from '../../config/network';
+
+export type { DiscoverySession, WalletProvider, PendingConnection };
+
+const APP_ID = 'treasure-hunt';
+const DISCOVERY_TIMEOUT_MS = 30_000;
 
 export interface AzguardConnectorResult {
   wallet: BaseWallet;
@@ -22,117 +28,127 @@ export interface AzguardConnectorResult {
   contractAddress: AztecAddress;
 }
 
-/** Check if Azguard is installed */
-export function isAzguardInstalled(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).azguard;
-}
-
-export async function connectAzguard(nodeUrl: string): Promise<AzguardConnectorResult> {
-  const config = getNetworkConfig();
-
-  if (!isAzguardInstalled()) {
-    throw new Error(
-      'Azguard wallet extension is not installed. ' +
-      'Please install it from the browser extension store and try again.'
-    );
-  }
-
-  // Dynamically import to avoid bundling if not used
-  let AzguardClient: any;
-  try {
-    const mod = await import('@azguardwallet/client');
-    AzguardClient = mod.AzguardClient ?? mod.default;
-  } catch {
-    throw new Error('Failed to load @azguardwallet/client. Please check the installation.');
-  }
-
-  // Determine network name for CAIP chain
-  const isDevnet = nodeUrl.includes('devnet');
-  const chainId = isDevnet ? 'aztec:1647720761' : 'aztec:0';
-
-  const client = new AzguardClient({
-    dappMetadata: {
-      name: 'Aztec Treasure Hunt',
-      description: 'Strategic treasure hunting with private game state on Aztec Network',
-      url: window.location.origin,
-    },
+/** Check if Azguard is installed (polls for async content script injection) */
+export function isAzguardInstalled(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve(false);
+      return;
+    }
+    if ((window as any).azguard) {
+      resolve(true);
+      return;
+    }
+    let remaining = 500;
+    const id = setInterval(() => {
+      remaining -= 10;
+      if ((window as any).azguard) {
+        clearInterval(id);
+        resolve(true);
+      } else if (remaining <= 0) {
+        clearInterval(id);
+        resolve(false);
+      }
+    }, 10);
   });
-
-  // Connect to Azguard
-  const connectionResult = await client.connect({
-    requiredPermissions: [
-      {
-        chains: [chainId],
-        methods: [
-          'aztec_getAccounts',
-          'aztec_requestAccounts',
-          'aztec_sendTransaction',
-          'aztec_getTxReceipt',
-          'aztec_simulateViews',
-        ],
-      },
-    ],
-  });
-
-  if (!connectionResult || !connectionResult.accounts || connectionResult.accounts.length === 0) {
-    throw new Error('No Aztec accounts found in Azguard');
-  }
-
-  // Get the first connected account
-  const caipAccount = connectionResult.accounts[0];
-  const addressStr = extractAddressFromCaip(caipAccount);
-  const address = AztecAddress.fromString(addressStr);
-  const contractAddress = AztecAddress.fromString(config.contractAddress);
-
-  // Create a proxy wallet that routes calls through Azguard
-  const proxyWallet = createAzguardProxyWallet(client, address, nodeUrl);
-
-  return { wallet: proxyWallet, address, contractAddress };
-}
-
-/** Extract address from CAIP account string like "aztec:chainId:0x..." */
-function extractAddressFromCaip(caipAccount: string): string {
-  const parts = caipAccount.split(':');
-  if (parts.length === 3 && parts[0] === 'aztec') {
-    return parts[2];
-  }
-  return caipAccount;
 }
 
 /**
- * Create a proxy wallet that routes contract calls through Azguard.
- * This wraps the Azguard client in a BaseWallet-compatible interface.
+ * Start wallet discovery. Calls `onDiscovered` each time a wallet extension
+ * is found. Returns a DiscoverySession with `.cancel()` and `.done`.
  */
-function createAzguardProxyWallet(client: any, address: AztecAddress, _nodeUrl: string): BaseWallet {
-  // Create a minimal wallet-like proxy object
-  // The game uses wallet.getAddress() and passes wallet to TreasureHuntContract.at()
-  // For Azguard, we need to intercept contract method calls and route through Azguard
-  const proxyHandler = {
-    get(target: any, prop: string) {
-      if (prop === 'getAddress') {
-        return () => address;
-      }
-      if (prop === 'getAccounts') {
-        return async () => [{ alias: '', item: address }];
-      }
-      // For PXE methods, proxy to Azguard
-      if (typeof target[prop] === 'function') {
-        return (...args: unknown[]) => {
-          console.warn(`AzguardProxy: ${prop}() called - routing through Azguard`);
-          return (target[prop] as (...a: unknown[]) => unknown)(...args);
-        };
-      }
-      return target[prop];
-    },
+export async function discoverWallets(
+  nodeUrl: string,
+  onDiscovered: (provider: WalletProvider) => void
+): Promise<DiscoverySession> {
+  const node = createAztecNodeClient(nodeUrl);
+  const nodeInfo = await node.getNodeInfo();
+
+  const chainInfo = {
+    chainId: new Fr(nodeInfo.l1ChainId),
+    version: new Fr(nodeInfo.rollupVersion),
   };
 
-  // Create a minimal target object with Azguard client as backing
-  const target = {
-    _azguardClient: client,
-    _address: address,
-    getAddress: () => address,
-    getAccounts: async () => [{ alias: '', item: address }],
-  };
+  const session = WalletManager.configure({
+    extensions: { enabled: true },
+  }).getAvailableWallets({
+    chainInfo,
+    appId: APP_ID,
+    timeout: DISCOVERY_TIMEOUT_MS,
+    onWalletDiscovered: onDiscovered,
+  });
 
-  return new Proxy(target, proxyHandler) as unknown as BaseWallet;
+  return session;
+}
+
+/**
+ * Establish a secure ECDH channel with the selected wallet provider.
+ * Returns a PendingConnection for emoji verification.
+ */
+export async function establishChannel(
+  provider: WalletProvider
+): Promise<PendingConnection> {
+  return provider.establishSecureChannel(APP_ID);
+}
+
+/**
+ * Get the 9 verification emojis from a pending connection's hash.
+ */
+export function getVerificationEmojis(pending: PendingConnection): string[] {
+  return Array.from(hashToEmoji(pending.verificationHash.toString()));
+}
+
+/**
+ * Confirm the pending connection and return a wallet + address ready for gameplay.
+ */
+export async function confirmConnection(
+  pending: PendingConnection
+): Promise<AzguardConnectorResult> {
+  const config = getNetworkConfig();
+  const contractAddress = AztecAddress.fromString(config.contractAddress);
+
+  const wallet = (await pending.confirm()) as unknown as BaseWallet;
+
+  // Get the wallet's account address
+  let address: AztecAddress;
+  try {
+    // Try requestCapabilities first for wallets that support it
+    const capabilities = await (wallet as any).requestCapabilities({
+      version: '1.0' as const,
+      metadata: {
+        name: 'Aztec Treasure Hunt',
+        version: '1.0.0',
+        description:
+          'Strategic treasure hunting with private state on Aztec Network',
+        url: typeof window !== 'undefined' ? window.location.origin : '',
+      },
+      capabilities: [
+        { type: 'accounts', canGet: true },
+        {
+          type: 'contracts',
+          contracts: [contractAddress],
+          canRegister: true,
+        },
+      ],
+    });
+    const accountsCap = capabilities.granted?.find(
+      (c: any) => c.type === 'accounts'
+    );
+    const accounts = accountsCap?.accounts ?? [];
+    if (accounts.length > 0) {
+      address = accounts[0].item ?? accounts[0].address ?? accounts[0];
+    } else {
+      throw new Error('No accounts from capabilities');
+    }
+  } catch {
+    // Fallback: getAccounts()
+    const raw = await wallet.getAccounts();
+    if (!raw || raw.length === 0) {
+      throw new Error('Wallet returned no accounts');
+    }
+    const first = raw[0] as any;
+    address = first.item ?? first.address ?? first;
+  }
+
+  return { wallet, address, contractAddress };
 }

@@ -6,6 +6,7 @@ import { getSponsoredFPCInstance } from "../src/utils/sponsored_fpc.js";
 import { SponsoredFPCContractArtifact } from "@aztec/noir-contracts.js/SponsoredFPC";
 import { deploySchnorrAccount } from "../src/utils/deploy_account.js";
 import { getTimeouts, getAztecNodeUrl } from "../config/config.js";
+import configManager from "../config/config.js";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
@@ -50,9 +51,10 @@ function writeClientEnv(
     deployerAddress: string,
     deploymentSalt: string
 ) {
-    logger.info('📝 Writing client .env file...');
+    const envSuffix = configManager.isDevnet() ? '.env.devnet' : '.env.local';
+    logger.info(`📝 Writing client ${envSuffix} file...`);
 
-    const envFilePath = path.resolve(CLIENT_DIR, ".env");
+    const envFilePath = path.resolve(CLIENT_DIR, envSuffix);
     const nodeUrl = getAztecNodeUrl();
 
     const envContent = `VITE_CONTRACT_ADDRESS=${contractAddress}
@@ -132,8 +134,12 @@ async function main() {
     }
     logger.info(`Constructor args: ${JSON.stringify([address.toString()])}`);
 
-    // Copy artifacts and write client .env
-    copyArtifactsToClient(logger);
+    // Copy artifacts only for local deploys (avoid overwriting)
+    if (!configManager.isDevnet()) {
+        copyArtifactsToClient(logger);
+    } else {
+        logger.info('⏭️  Skipping artifact copy for devnet deploy');
+    }
     writeClientEnv(
         logger,
         treasureHuntContract.address.toString(),
