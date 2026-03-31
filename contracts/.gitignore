@@ -6,5 +6,7 @@ log/
 .DS_Store
 codegenCache.json
 store/
+pxe_data_*/
+wallet_data_*/
 .tsbuildinfo
 .env
