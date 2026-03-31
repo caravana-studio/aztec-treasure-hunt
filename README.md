@@ -146,8 +146,7 @@ This creates interesting gameplay:
 
 ### Prerequisites
 
-This repository is pinned to **Aztec `4.0.0-devnet.2-patch.1`**.
-If you have a newer global Aztec version installed, use the project scripts below instead of relying on the global `aztec` wrapper.
+This repository uses **Aztec `4.2.0-aztecnr-rc.2`** (developer SDK), compatible with Alpha (Mainnet) node `4.1.2`.
 
 ```bash
 # Node.js 22+
@@ -157,7 +156,7 @@ If you have a newer global Aztec version installed, use the project scripts belo
 bash -i <(curl -s https://install.aztec.network)
 
 # Install the exact toolchain used by this repo
-PATH="$HOME/.aztec/bin:$PATH" aztec-up install 4.0.0-devnet.2-patch.1
+PATH="$HOME/.aztec/bin:$PATH" aztec-up install 4.2.0-aztecnr-rc.2
 ```
 
 ### 1. Install dependencies
@@ -169,21 +168,12 @@ cd ../client && yarn install
 
 ### 2. Start the local Aztec network
 
-Use the repo-local wrapper. It starts the local network with the pinned Aztec version for this project.
-
 ```bash
 cd contracts
 yarn aztec:start
 ```
 
-Wait until the node is up before deploying contracts.
-
-If you need to stop it later:
-
-```bash
-cd contracts
-yarn aztec:stop
-```
+Wait until you see `Aztec Server listening on port 8080` before continuing. To stop it later: `yarn aztec:stop`.
 
 ### 3. Compile and deploy the contracts
 
@@ -197,11 +187,10 @@ yarn deploy
 ```
 
 `yarn deploy` will:
-
-- deploy a local Schnorr account
+- deploy a Schnorr account (fees paid via SponsoredFPC)
 - deploy the `TreasureHunt` contract
 - copy generated artifacts into `client/src/artifacts`
-- write `client/.env` with the deployed local addresses
+- write `client/.env.local` with the deployed addresses
 
 ### 4. Start the client
 
@@ -214,38 +203,94 @@ yarn dev
 
 Then open [http://localhost:3001](http://localhost:3001).
 
-### 5. Production build check
+---
 
-If you want to verify the full local build:
+## Deploy to networks
+
+If contract code changed, compile first:
+
+```bash
+cd contracts
+yarn compile
+yarn codegen
+```
+
+Then deploy from `contracts/`:
+
+```bash
+# Local / devnet — same flow as before
+yarn deploy
+yarn deploy::devnet
+
+# Testnet / Mainnet — requires an L1 account with ETH for gas
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::testnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::mainnet
+```
+
+| Network | Command | Fee payment | Client env file |
+|---------|---------|-------------|-----------------|
+| Local | `yarn deploy` | SponsoredFPC | `client/.env.local` |
+| Devnet | `yarn deploy::devnet` | SponsoredFPC | `client/.env.devnet` |
+| Testnet (Sepolia) | `L1_PRIVATE_KEY=0x... yarn deploy::testnet` | Fee Juice bridged from L1 | `client/.env.testnet` |
+| Mainnet (Alpha) | `L1_PRIVATE_KEY=0x... yarn deploy::mainnet` | Fee Juice bridged from L1 | `client/.env.mainnet` |
+
+> **Compatibility:** local, testnet, and mainnet use SDK `4.2.0-aztecnr-rc.2`. Devnet still runs `4.0.0-devnet.2-patch.1`, so expect possible incompatibilities.
+
+### Testnet / Mainnet flow
+
+For `yarn deploy::testnet` and `yarn deploy::mainnet`, the script:
+
+1. Creates the `AccountManager` first, so it gets a deterministic L2 address without deploying it yet
+2. Bridges 1000 Fee Juice from your L1 account to that L2 address
+3. Deploys the account using the bridge claim to pay the first fees
+4. Deploys the `TreasureHunt` contract, which is then paid automatically by that funded account
+
+To run the client against a non-local deployment:
 
 ```bash
 cd client
-yarn build
+cp .env.devnet .env    # or .env.testnet / .env.mainnet
+yarn dev
 ```
+
+For local deploys, Vite reads `client/.env.local` automatically.
+
+---
 
 ## Troubleshooting
 
 ### `aztec --version` fails with `shopt: inherit_errexit: invalid shell option name`
 
-That comes from the global Aztec wrapper on macOS systems still using an older Bash. For this repository, use:
+macOS ships with Bash 3.2, but the Aztec CLI requires Bash 4.4+. Fix:
+
+```bash
+brew install bash
+```
+
+Then optionally set it as default (open a new terminal after):
+
+```bash
+sudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'
+chsh -s /opt/homebrew/bin/bash
+```
+
+Alternatively, the repo-local wrapper bypasses the global `aztec` command:
 
 ```bash
 cd contracts
-yarn aztec:start
-yarn aztec:stop
+yarn aztec:start  # instead of aztec start --local-network
 yarn compile
 yarn codegen
 yarn deploy
 ```
 
-Those commands use the repo-local wrapper and the pinned Aztec toolchain instead of the broken global wrapper.
-
 ### I restarted the local network and the app stopped working
 
-If you restart the local Aztec network, redeploy the contracts:
+Redeploy the contracts and clear the PXE store:
 
 ```bash
 cd contracts
+yarn clear-store
 yarn deploy
 ```
 

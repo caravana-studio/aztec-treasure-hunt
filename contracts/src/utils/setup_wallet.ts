@@ -7,7 +7,7 @@ export async function setupWallet(): Promise<EmbeddedWallet> {
     const nodeUrl = getAztecNodeUrl();
     const node = createAztecNodeClient(nodeUrl);
     const wallet = await EmbeddedWallet.create(node, {
-        pxeConfig: { proverEnabled: configManager.isDevnet() },
+        pxeConfig: { proverEnabled: configManager.requiresProver() },
     });
     return wallet;
 }

@@ -1,10 +1,15 @@
 import { TreasureHuntContract } from "../src/artifacts/TreasureHunt.js"
 import { Logger, createLogger } from "@aztec/aztec.js/log";
-import { SponsoredFeePaymentMethod } from "@aztec/aztec.js/fee";
+import { SponsoredFeePaymentMethod, FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js/fee";
 import { setupWallet } from "../src/utils/setup_wallet.js";
 import { getSponsoredFPCInstance } from "../src/utils/sponsored_fpc.js";
 import { SponsoredFPCContractArtifact } from "@aztec/noir-contracts.js/SponsoredFPC";
-import { deploySchnorrAccount } from "../src/utils/deploy_account.js";
+import {
+    deploySchnorrAccount,
+    createSchnorrAccountManager,
+    deployAccountManager,
+} from "../src/utils/deploy_account.js";
+import { bridgeFeeJuice, DEFAULT_FEE_JUICE_AMOUNT } from "../src/utils/bridge_fee_juice.js";
 import { getTimeouts, getAztecNodeUrl } from "../config/config.js";
 import configManager from "../config/config.js";
 import fs from "fs";
@@ -21,12 +26,10 @@ function copyArtifactsToClient(logger: Logger) {
     const artifactsDest = path.resolve(CLIENT_DIR, "src/artifacts");
     const targetDest = path.resolve(CLIENT_DIR, "target");
 
-    // Create artifacts directory if it doesn't exist
     if (!fs.existsSync(artifactsDest)) {
         fs.mkdirSync(artifactsDest, { recursive: true });
     }
 
-    // Copy .ts files from artifacts
     const artifactFiles = fs.readdirSync(artifactsSource).filter(f => f.endsWith('.ts'));
     for (const file of artifactFiles) {
         fs.copyFileSync(
@@ -36,7 +39,6 @@ function copyArtifactsToClient(logger: Logger) {
         logger.info(`   Copied ${file}`);
     }
 
-    // Copy target directory
     if (fs.existsSync(targetSource)) {
         execSync(`cp -r "${targetSource}" "${targetDest}"`, { stdio: 'inherit' });
         logger.info(`   Copied target/ directory`);
@@ -51,7 +53,8 @@ function writeClientEnv(
     deployerAddress: string,
     deploymentSalt: string
 ) {
-    const envSuffix = configManager.isDevnet() ? '.env.devnet' : '.env.local';
+    const env = configManager.getConfig().environment;
+    const envSuffix = env === 'local' ? '.env.local' : `.env.${env}`;
     logger.info(`📝 Writing client ${envSuffix} file...`);
 
     const envFilePath = path.resolve(CLIENT_DIR, envSuffix);
@@ -68,35 +71,72 @@ VITE_AZTEC_NODE_URL=${nodeUrl}
 }
 
 async function main() {
-    let logger: Logger;
-
-    logger = createLogger('aztec:treasure-hunt');
+    const logger = createLogger('aztec:treasure-hunt');
     logger.info(`🚀 Starting contract deployment process...`);
 
     const timeouts = getTimeouts();
+    const hasSponsoredFPC = configManager.hasSponsoredFPC();
 
     // Setup wallet
     logger.info('📡 Setting up wallet...');
     const wallet = await setupWallet();
     logger.info(`📊 Wallet set up successfully`);
 
-    // Setup sponsored FPC
-    logger.info('💰 Setting up sponsored fee payment contract...');
-    const sponsoredFPC = await getSponsoredFPCInstance();
-    logger.info(`💰 Sponsored FPC instance obtained at: ${sponsoredFPC.address}`);
+    let accountManager;
+    let contractPaymentMethod;
 
-    logger.info('📝 Registering sponsored FPC contract with wallet...');
-    await wallet.registerContract(sponsoredFPC, SponsoredFPCContractArtifact);
-    const sponsoredPaymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
-    logger.info('✅ Sponsored fee payment method configured');
+    if (hasSponsoredFPC) {
+        // ── Local / Devnet: use SponsoredFPC ──────────────────────────────
+        logger.info('💰 Setting up SponsoredFPC fee payment...');
+        const sponsoredFPC = await getSponsoredFPCInstance();
+        await wallet.registerContract(sponsoredFPC, SponsoredFPCContractArtifact);
+        const sponsoredPaymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
+        logger.info(`✅ SponsoredFPC configured at: ${sponsoredFPC.address}`);
 
-    // Deploy account
-    logger.info('👤 Deploying Schnorr account...');
-    let accountManager = await deploySchnorrAccount(wallet);
+        logger.info('👤 Deploying Schnorr account...');
+        accountManager = await deploySchnorrAccount(wallet);
+        logger.info(`✅ Account deployed at: ${accountManager.address}`);
+
+        contractPaymentMethod = sponsoredPaymentMethod;
+
+    } else {
+        // ── Mainnet / Testnet: bridge Fee Juice from L1 ───────────────────
+        const l1PrivateKey = process.env.L1_PRIVATE_KEY;
+        if (!l1PrivateKey) {
+            throw new Error(
+                '❌ L1_PRIVATE_KEY env var is required for mainnet/testnet deploy.\n' +
+                '   Set it to the private key of an Ethereum account with ETH for L1 gas.\n' +
+                '   Example: L1_PRIVATE_KEY=0x... yarn deploy::mainnet'
+            );
+        }
+
+        // Create account manager first to get the deterministic L2 address
+        logger.info('👤 Creating Schnorr account (not yet deployed)...');
+        accountManager = await createSchnorrAccountManager(wallet);
+        logger.info(`📍 Account address: ${accountManager.address}`);
+
+        // Bridge Fee Juice from L1 to the new account address
+        const bridgeAmount = BigInt(configManager.getConfig().settings.bridgeAmount ?? DEFAULT_FEE_JUICE_AMOUNT);
+        const claim = await bridgeFeeJuice(
+            accountManager.address,
+            l1PrivateKey,
+            bridgeAmount,
+            logger
+        );
+
+        // Deploy account using the claim to pay fees
+        logger.info('👤 Deploying account with Fee Juice claim...');
+        const claimPaymentMethod = new FeeJuicePaymentMethodWithClaim(accountManager.address, claim);
+        await deployAccountManager(wallet, accountManager, claimPaymentMethod, logger);
+        logger.info(`✅ Account deployed at: ${accountManager.address}`);
+
+        // After claim, the account has Fee Juice — subsequent txs are auto-paid
+        contractPaymentMethod = undefined;
+    }
+
     const address = accountManager.address;
-    logger.info(`✅ Account deployed successfully at: ${address}`);
 
-    // Deploy treasure hunt contract
+    // Deploy TreasureHunt contract
     logger.info('🏴‍☠️  Starting treasure hunt contract deployment...');
     logger.info(`📋 Admin address for treasure hunt contract: ${address}`);
 
@@ -106,11 +146,15 @@ async function main() {
     await deployRequest.simulate({ from: address });
     logger.info('✅ Simulation successful');
 
-    const deployResult = await deployRequest.send({
+    const sendOptions: any = {
         from: address,
-        fee: { paymentMethod: sponsoredPaymentMethod },
         wait: { timeout: timeouts.deployTimeout, returnReceipt: true }
-    });
+    };
+    if (contractPaymentMethod) {
+        sendOptions.fee = { paymentMethod: contractPaymentMethod };
+    }
+
+    const deployResult = await deployRequest.send(sendOptions);
 
     const treasureHuntContract = deployResult.contract;
     const instance = deployResult.instance;
@@ -118,10 +162,6 @@ async function main() {
     logger.info(`🎉 Treasure Hunt Contract deployed successfully!`);
     logger.info(`📍 Contract address: ${treasureHuntContract.address}`);
     logger.info(`👤 Admin address: ${address}`);
-
-    // Verify deployment
-    logger.info('🔍 Verifying contract deployment...');
-    logger.info('✅ Contract deployed and ready for game creation');
 
     logger.info('📦 Contract instantiation data:');
     logger.info(`Salt: ${instance.salt}`);
@@ -134,11 +174,10 @@ async function main() {
     }
     logger.info(`Constructor args: ${JSON.stringify([address.toString()])}`);
 
-    // Copy artifacts only for local deploys (avoid overwriting)
-    if (!configManager.isDevnet()) {
+    if (configManager.isLocalNetwork()) {
         copyArtifactsToClient(logger);
     } else {
-        logger.info('⏭️  Skipping artifact copy for devnet deploy');
+        logger.info('⏭️  Skipping artifact copy for remote deploy');
     }
     writeClientEnv(
         logger,
@@ -151,9 +190,9 @@ async function main() {
     logger.info(`📋 Summary:`);
     logger.info(`   - Contract Address: ${treasureHuntContract.address}`);
     logger.info(`   - Admin Address: ${address}`);
-    logger.info(`   - Sponsored FPC: ${sponsoredFPC.address}`);
+    logger.info(`   - Fee method: ${hasSponsoredFPC ? 'SponsoredFPC' : 'Fee Juice (bridged from L1)'}`);
     logger.info(`   - Client .env: Updated ✅`);
-    logger.info(`   - Client artifacts: Copied ✅`);
+    if (configManager.isLocalNetwork()) logger.info(`   - Client artifacts: Copied ✅`);
 }
 
 main().catch((error) => {
