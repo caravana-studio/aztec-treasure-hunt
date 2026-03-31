@@ -56,6 +56,15 @@ const lazyAccountContracts = {
 let cachedWallet: EmbeddedWallet | null = null;
 let cachedFeePaymentMethod: SponsoredFeePaymentMethod | null = null;
 
+function supportsSponsoredFpc(nodeUrl: string): boolean {
+  const normalized = nodeUrl.toLowerCase();
+  return normalized.includes('localhost') || normalized.includes('127.0.0.1') || normalized.includes('devnet');
+}
+
+export function getSponsoredFeePaymentMethod(): SponsoredFeePaymentMethod | null {
+  return cachedFeePaymentMethod;
+}
+
 export interface EmbeddedConnectorResult {
   wallet: BaseWallet;
   address: AztecAddress;
@@ -67,6 +76,7 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
 
   const config = getNetworkConfig();
   const isRemoteNetwork = !nodeUrl.includes('localhost') && !nodeUrl.includes('127.0.0.1');
+  const useSponsoredFpc = supportsSponsoredFpc(nodeUrl);
 
   // Connect to Aztec node
   const aztecNode = createAztecNodeClient(nodeUrl);
@@ -93,13 +103,16 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   // Create EmbeddedWallet
   const wallet = new EmbeddedWallet(pxe, aztecNode, walletDB, lazyAccountContracts);
 
-  // Register Sponsored FPC contract
-  const fpcInstance = await getContractInstanceFromInstantiationParams(
-    SponsoredFPCContract.artifact,
-    { salt: new Fr(SPONSORED_FPC_SALT) }
-  );
-  await wallet.registerContract(fpcInstance, SponsoredFPCContract.artifact);
-  cachedFeePaymentMethod = new SponsoredFeePaymentMethod(fpcInstance.address);
+  if (useSponsoredFpc) {
+    const fpcInstance = await getContractInstanceFromInstantiationParams(
+      SponsoredFPCContract.artifact,
+      { salt: new Fr(SPONSORED_FPC_SALT) }
+    );
+    await wallet.registerContract(fpcInstance, SponsoredFPCContract.artifact);
+    cachedFeePaymentMethod = new SponsoredFeePaymentMethod(fpcInstance.address);
+  } else {
+    cachedFeePaymentMethod = null;
+  }
 
   // Register game contract
   const gameInstance = await getContractInstanceFromInstantiationParams(
@@ -144,6 +157,10 @@ export async function createEmbeddedAccount(
   const secret = Fr.random();
   const salt = Fr.random();
   const accountManager = await wallet.createSchnorrAccount(secret, salt);
+
+  if (!cachedFeePaymentMethod) {
+    throw new Error('Embedded wallet account creation currently supports only local/devnet networks with SponsoredFPC.');
+  }
 
   // Deploy account with sponsored fees
   const deployMethod = await accountManager.getDeployMethod();

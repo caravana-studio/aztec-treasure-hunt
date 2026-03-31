@@ -1,9 +1,35 @@
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import { resolve } from 'path';
+/**
+ * Plugin to strip import attributes from JSON imports so Rollup
+ * doesn't complain about inconsistent `with { type: "json" }`.
+ */
+var jsonImportAttributesFix = function () { return ({
+    name: 'json-import-attributes-fix',
+    enforce: 'pre',
+    resolveId: function (source, importer, options) {
+        var _a;
+        if (((_a = options === null || options === void 0 ? void 0 : options.attributes) === null || _a === void 0 ? void 0 : _a.type) === 'json') {
+            return this.resolve(source, importer, __assign(__assign({}, options), { skipSelf: true, attributes: {} }));
+        }
+        return null;
+    },
+}); };
 /**
  * Plugin to shim Node.js built-in modules that shouldn't run in browser.
  * Must run before nodePolyfills to intercept fs/promises correctly.
@@ -35,6 +61,7 @@ var nodeBuiltinsShim = function () { return ({
 }); };
 export default defineConfig({
     plugins: [
+        jsonImportAttributesFix(),
         nodeBuiltinsShim(),
         react(),
         wasm(),
