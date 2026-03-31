@@ -7,8 +7,8 @@ DEFAULT_AZTEC_VERSION="4.2.0-aztecnr-rc.2"
 VERSION_FILE="$CONTRACTS_DIR/.aztecrc"
 ORIGINAL_HOME="${HOME:-}"
 TMP_BASE="${TMPDIR:-/tmp}"
-DEFAULT_TOOL_HOME="${TMP_BASE%/}/aztec-treasure-hunt-tool-home"
-DEFAULT_XDG_CACHE_HOME="${TMP_BASE%/}/aztec-treasure-hunt-xdg-cache"
+DEFAULT_TOOL_HOME_BASE="${TMP_BASE%/}/aztec-treasure-hunt-tool-home"
+DEFAULT_XDG_CACHE_HOME_BASE="${TMP_BASE%/}/aztec-treasure-hunt-xdg-cache"
 LOCAL_NETWORK_RUN_DIR="${LOCAL_NETWORK_RUN_DIR:-${TMP_BASE%/}/aztec-treasure-hunt-local-network}"
 AZTEC_NODE_PORT="${AZTEC_NODE_PORT:-8080}"
 DEFAULT_ANVIL_PORT="${ANVIL_PORT:-8545}"
@@ -20,11 +20,12 @@ if [ -f "$VERSION_FILE" ]; then
   AZTEC_VERSION=$(sed -n '1p' "$VERSION_FILE")
 fi
 
+DEFAULT_TOOL_HOME="${DEFAULT_TOOL_HOME_BASE}-${AZTEC_VERSION}"
+DEFAULT_XDG_CACHE_HOME="${DEFAULT_XDG_CACHE_HOME_BASE}-${AZTEC_VERSION}"
+
 AZTEC_HOME_DIR="${AZTEC_HOME_DIR:-$ORIGINAL_HOME/.aztec}"
 AZTEC_ROOT="$AZTEC_HOME_DIR/versions/$AZTEC_VERSION"
 AZTEC_BIN="$AZTEC_ROOT/node_modules/@aztec/aztec/dest/bin/index.js"
-AZTEC_COMPILE_SH="$AZTEC_ROOT/node_modules/@aztec/aztec/scripts/compile.sh"
-
 if [ ! -f "$AZTEC_BIN" ]; then
   echo "Aztec $AZTEC_VERSION is not installed." >&2
   echo "Run: PATH=\"$HOME/.aztec/bin:\$PATH\" $HOME/.aztec/bin/aztec-up install $AZTEC_VERSION" >&2
@@ -176,7 +177,7 @@ case "$CMD" in
     export HOME="${TOOL_HOME:-$DEFAULT_TOOL_HOME}"
     export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$DEFAULT_XDG_CACHE_HOME}"
     mkdir -p "$HOME" "$XDG_CACHE_HOME"
-    exec /bin/bash "$AZTEC_COMPILE_SH" "$@"
+    exec node "$AZTEC_BIN" compile "$@"
     ;;
   test)
     export HOME="${TOOL_HOME:-$DEFAULT_TOOL_HOME}"

@@ -3,7 +3,7 @@
 
 /* eslint-disable */
 import { AztecAddress, CompleteAddress } from '@aztec/aztec.js/addresses';
-import { type AbiType, type AztecAddressLike, type ContractArtifact, EventSelector, decodeFromAbi, type EthAddressLike, type FieldLike, type FunctionSelectorLike, loadContractArtifact, loadContractArtifactForPublic, type NoirCompiledContract, type U128Like, type WrappedFieldLike } from '@aztec/aztec.js/abi';
+import { type AbiType, type AztecAddressLike, type ContractArtifact, EventSelector, decodeFromAbi, type EthAddressLike, type FieldLike, type FunctionSelectorLike, loadContractArtifact, loadContractArtifactForPublic, type NoirCompiledContract, type OptionLike, type U128Like, type WrappedFieldLike } from '@aztec/aztec.js/abi';
 import { Contract, ContractBase, ContractFunctionInteraction, type ContractMethod, type ContractStorageLayout, DeployMethod } from '@aztec/aztec.js/contracts';
 import { EthAddress } from '@aztec/aztec.js/addresses';
 import { Fr, Point } from '@aztec/aztec.js/fields';
@@ -180,11 +180,11 @@ dig_results: {
     /** join_game(game_id: field) */
     join_game: ((game_id: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** offchain_receive(messages: struct) */
+    offchain_receive: ((messages: { ciphertext: FieldLike[], recipient: AztecAddressLike, tx_hash: OptionLike<FieldLike>, anchor_block_timestamp: (bigint | number) }[]) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** place_treasures(game_id: field, x1: integer, y1: integer, x2: integer, y2: integer, x3: integer, y3: integer) */
     place_treasures: ((game_id: FieldLike, x1: (bigint | number), y1: (bigint | number), x2: (bigint | number), y2: (bigint | number), x3: (bigint | number), y3: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
-
-    /** process_message(message_ciphertext: struct, message_context: struct) */
-    process_message: ((message_ciphertext: FieldLike[], message_context: { tx_hash: FieldLike, unique_note_hashes_in_tx: FieldLike[], first_nullifier_in_tx: FieldLike, recipient: AztecAddressLike }) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** public_dispatch(selector: field) */
     public_dispatch: ((selector: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
@@ -195,8 +195,8 @@ dig_results: {
     /** respond_detector(game_id: field, center_x: integer, center_y: integer) */
     respond_detector: ((game_id: FieldLike, center_x: (bigint | number), center_y: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
-    /** sync_state() */
-    sync_state: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+    /** sync_state(scope: struct) */
+    sync_state: ((scope: AztecAddressLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
     /** use_compass(game_id: field, from_x: integer, from_y: integer) */
     use_compass: ((game_id: FieldLike, from_x: (bigint | number), from_y: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;

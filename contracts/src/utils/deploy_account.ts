@@ -49,7 +49,7 @@ export async function deployAccountManager(
         wait: { timeout: 120000, returnReceipt: true },
     });
     logger.info(`✅ Account deployment transaction successful!`);
-    logger.info(`📋 Transaction hash: ${tx.txHash}`);
+    logger.info(`📋 Transaction hash: ${tx.receipt.txHash}`);
 }
 
 /**

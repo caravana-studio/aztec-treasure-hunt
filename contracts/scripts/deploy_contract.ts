@@ -155,9 +155,9 @@ async function main() {
     }
 
     const deployResult = await deployRequest.send(sendOptions);
-
-    const treasureHuntContract = deployResult.contract;
-    const instance = deployResult.instance;
+    const receipt = deployResult.receipt;
+    const treasureHuntContract = receipt.contract;
+    const instance = receipt.instance;
 
     logger.info(`🎉 Treasure Hunt Contract deployed successfully!`);
     logger.info(`📍 Contract address: ${treasureHuntContract.address}`);
