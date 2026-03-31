@@ -8,8 +8,8 @@ use crate::game::{
     STATUS_CREATED, STATUS_SETUP, STATUS_PLAYING, STATUS_AWAITING,
     ACTION_NONE, ACTION_DIG
 };
-use dep::aztec::protocol::address::AztecAddress;
-use dep::aztec::protocol::storage::map::derive_storage_slot_in_map;
+use ::aztec::protocol::address::AztecAddress;
+use ::aztec::protocol::storage::map::derive_storage_slot_in_map;
 
 // ============================================================================
 // STORAGE LAYOUT OFFSETS FOR GAME STRUCT

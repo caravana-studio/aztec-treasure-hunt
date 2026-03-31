@@ -1,3 +1,2 @@
-export { PXEService, type PXEInstance } from './PXEService';
-export { FeeService, type SponsoredFPCContract } from './FeeService';
-export { AccountService, type StoredAccount, type AccountData } from './AccountService';
+// Aztec services are now handled directly by the wallet connectors.
+// This module is kept for backwards compatibility but no longer exports services.

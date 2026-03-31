@@ -22,11 +22,11 @@ mod power_note;
 mod game;
 mod test;
 
-use dep::aztec::macros::aztec;
+use ::aztec::macros::aztec;
 
 #[aztec]
 pub contract TreasureHunt {
-    use dep::aztec::{
+    use ::aztec::{
         macros::{functions::{external, initializer, only_self}, storage::storage},
         messages::message_delivery::MessageDelivery,
         note::note_getter_options::NoteGetterOptions,
@@ -34,8 +34,8 @@ pub contract TreasureHunt {
         note::note_interface::NoteProperties,
         utils::comparison::Comparator,
     };
-    use dep::aztec::protocol::address::AztecAddress;
-    use dep::aztec::state_vars::{Map, Owned, PrivateSet, PublicMutable};
+    use ::aztec::protocol::address::AztecAddress;
+    use ::aztec::state_vars::{Map, Owned, PrivateSet, PublicMutable};
 
     use crate::treasure_note::TreasureNote;
     use crate::trap_note::TrapNote;
@@ -145,7 +145,7 @@ pub contract TreasureHunt {
                 .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
         }
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).confirm_setup(player, game_id));
+        self.enqueue_self.confirm_setup(player, game_id);
     }
 
     #[external("public")]
@@ -204,14 +204,14 @@ pub contract TreasureHunt {
             }
         }
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).record_dig_result(
+        self.enqueue_self.record_dig_result(
             player,
             game_id,
             dig_x,
             dig_y,
             hit_trap,
             hit_treasure,
-        ));
+        );
     }
 
     #[external("public")]
@@ -293,12 +293,12 @@ pub contract TreasureHunt {
         // Ensure we had a detector to use
         assert(power_notes.len() == 1);
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).set_detector_pending(
+        self.enqueue_self.set_detector_pending(
             player,
             game_id,
             center_x,
             center_y,
-        ));
+        );
     }
 
     #[external("public")]
@@ -336,13 +336,13 @@ pub contract TreasureHunt {
             }
         }
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).record_detector_result(
+        self.enqueue_self.record_detector_result(
             player,
             game_id,
             center_x,
             center_y,
             count,
-        ));
+        );
     }
 
     #[external("public")]
@@ -393,12 +393,12 @@ pub contract TreasureHunt {
         // Ensure we had a compass to use
         assert(power_notes.len() == 1);
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).set_compass_pending(
+        self.enqueue_self.set_compass_pending(
             player,
             game_id,
             from_x,
             from_y,
-        ));
+        );
     }
 
     #[external("public")]
@@ -437,13 +437,13 @@ pub contract TreasureHunt {
             }
         }
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).record_compass_result(
+        self.enqueue_self.record_compass_result(
             player,
             game_id,
             from_x,
             from_y,
             min_distance,
-        ));
+        );
     }
 
     #[external("public")]
@@ -515,7 +515,7 @@ pub contract TreasureHunt {
             .insert(TreasureNote::new(new_x, new_y, player))
             .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).confirm_shovel_used(player, game_id));
+        self.enqueue_self.confirm_shovel_used(player, game_id);
     }
 
     #[external("public")]
@@ -552,7 +552,7 @@ pub contract TreasureHunt {
             .insert(TrapNote::new(trap_x, trap_y, player))
             .deliver(MessageDelivery.ONCHAIN_CONSTRAINED);
 
-        self.enqueue(TreasureHunt::at(self.context.this_address()).confirm_trap_placed(player, game_id));
+        self.enqueue_self.confirm_trap_placed(player, game_id);
     }
 
     #[external("public")]

@@ -6,6 +6,25 @@ import topLevelAwait from 'vite-plugin-top-level-await';
 import { resolve } from 'path';
 
 /**
+ * Plugin to strip import attributes from JSON imports so Rollup
+ * doesn't complain about inconsistent `with { type: "json" }`.
+ */
+const jsonImportAttributesFix = (): Plugin => ({
+  name: 'json-import-attributes-fix',
+  enforce: 'pre',
+  resolveId(source, importer, options) {
+    if (options?.attributes?.type === 'json') {
+      return this.resolve(source, importer, {
+        ...options,
+        skipSelf: true,
+        attributes: {},
+      });
+    }
+    return null;
+  },
+});
+
+/**
  * Plugin to shim Node.js built-in modules that shouldn't run in browser.
  * Must run before nodePolyfills to intercept fs/promises correctly.
  */
@@ -56,6 +75,7 @@ const nodeBuiltinsShim = (): Plugin => ({
 
 export default defineConfig({
   plugins: [
+    jsonImportAttributesFix(),
     nodeBuiltinsShim(),
     react(),
     wasm(),

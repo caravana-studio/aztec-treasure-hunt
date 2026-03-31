@@ -3,7 +3,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 CONTRACTS_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
-DEFAULT_AZTEC_VERSION="4.0.0-devnet.2-patch.1"
+DEFAULT_AZTEC_VERSION="4.2.0-aztecnr-rc.2"
 VERSION_FILE="$CONTRACTS_DIR/.aztecrc"
 ORIGINAL_HOME="${HOME:-}"
 TMP_BASE="${TMPDIR:-/tmp}"
