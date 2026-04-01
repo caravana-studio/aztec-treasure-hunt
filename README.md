@@ -190,7 +190,7 @@ yarn deploy
 - deploy a Schnorr account (fees paid via SponsoredFPC)
 - deploy the `TreasureHunt` contract
 - copy generated artifacts into `client/src/artifacts`
-- write `client/.env.local` with the deployed addresses
+- write `client/.env.local` with the deployed addresses and deployment metadata
 
 ### 4. Start the client
 
@@ -249,11 +249,19 @@ To run the client against a non-local deployment:
 
 ```bash
 cd client
-cp .env.devnet .env    # or .env.testnet / .env.mainnet
+cp .env.devnet .env.local    # or .env.testnet / .env.mainnet
 yarn dev
 ```
 
-For local deploys, Vite reads `client/.env.local` automatically.
+`client/.env.local` has priority over `client/.env` in Vite. If you switch networks, make sure `.env.local` matches the network you want to use, or remove it before starting `yarn dev`.
+
+Remote env files now include:
+
+- `VITE_CONTRACT_ADDRESS`
+- `VITE_DEPLOYER_ADDRESS`
+- `VITE_ADMIN_ADDRESS`
+- `VITE_DEPLOYMENT_SALT`
+- `VITE_AZTEC_NODE_URL`
 
 ---
 

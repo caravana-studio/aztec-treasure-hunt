@@ -34,9 +34,9 @@ The deploy script writes one frontend env file per network:
 | Network | Generated file | How to use it |
 |---------|----------------|---------------|
 | Local | `.env.local` | Picked up automatically by `yarn dev` |
-| Devnet | `.env.devnet` | Copy to `.env` before `yarn dev` |
-| Testnet | `.env.testnet` | Copy to `.env` before `yarn dev` |
-| Mainnet | `.env.mainnet` | Copy to `.env` before `yarn dev` |
+| Devnet | `.env.devnet` | Copy to `.env.local` before `yarn dev` |
+| Testnet | `.env.testnet` | Copy to `.env.local` before `yarn dev` |
+| Mainnet | `.env.mainnet` | Copy to `.env.local` before `yarn dev` |
 
 Examples:
 
@@ -45,9 +45,15 @@ Examples:
 yarn dev
 
 # Devnet / testnet / mainnet
-cp .env.devnet .env      # or .env.testnet / .env.mainnet
+cp .env.devnet .env.local      # or .env.testnet / .env.mainnet
 yarn dev
 ```
+
+Important:
+
+- Vite gives `.env.local` priority over `.env` during `yarn dev`.
+- If you switch from local/devnet to testnet/mainnet, replace `.env.local` or remove the old one first.
+- The generated env files include the contract deployment metadata used by the client and Azguard: contract address, deployer, admin, deployment salt, and node URL.
 
 The dev server runs on [http://localhost:3001](http://localhost:3001).
 

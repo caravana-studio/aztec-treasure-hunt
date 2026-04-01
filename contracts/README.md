@@ -190,6 +190,14 @@ Deploy outputs by network:
 - `yarn deploy::testnet` bridges Fee Juice from L1 and writes `../client/.env.testnet`
 - `yarn deploy::mainnet` bridges Fee Juice from L1 and writes `../client/.env.mainnet`
 
+Each generated client env file includes:
+
+- `VITE_CONTRACT_ADDRESS`
+- `VITE_DEPLOYER_ADDRESS`
+- `VITE_ADMIN_ADDRESS`
+- `VITE_DEPLOYMENT_SALT`
+- `VITE_AZTEC_NODE_URL`
+
 For `deploy::testnet` and `deploy::mainnet`, the script:
 
 1. Creates the `AccountManager` first to derive the deterministic L2 address
