@@ -121,8 +121,10 @@ export default defineConfig({
         },
     },
     build: {
+        target: 'es2022',
         sourcemap: false,
-        minify: 'esbuild',
+        // esbuild 0.25 is breaking Aztec field class initialization in production bundles.
+        minify: false,
         chunkSizeWarningLimit: 2000,
         commonjsOptions: {
             defaultIsModuleExports: function (id) {
