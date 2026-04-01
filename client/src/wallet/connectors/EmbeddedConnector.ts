@@ -10,15 +10,17 @@ import { NO_FROM } from '@aztec/aztec.js/account';
 import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
 import { Fr } from '@aztec/aztec.js/fields';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
-import { SPONSORED_FPC_SALT } from '@aztec/constants';
 import { createStore } from '@aztec/kv-store/indexeddb';
 import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
+import { AcceleratorProver } from '@alejoamiras/aztec-accelerator';
 import { createPXE, getPXEConfig } from '@aztec/pxe/client/lazy';
 import { getContractInstanceFromInstantiationParams } from '@aztec/stdlib/contract';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
 import { EmbeddedWallet, WalletDB } from '@aztec/wallets/embedded';
 import { TreasureHuntContract } from '../../artifacts/TreasureHunt';
 import { getNetworkConfig } from '../../config/network';
+import { useAcceleratorStore } from '../../store/accelerator';
+import type { AcceleratorPhaseLabel } from '../../store/accelerator';
 
 /**
  * Lazy account contracts provider — uses dynamic imports so Vite can
@@ -56,13 +58,15 @@ const lazyAccountContracts = {
 let cachedWallet: EmbeddedWallet | null = null;
 let cachedFeePaymentMethod: SponsoredFeePaymentMethod | null = null;
 
-function supportsSponsoredFpc(nodeUrl: string): boolean {
-  const normalized = nodeUrl.toLowerCase();
-  return normalized.includes('localhost') || normalized.includes('127.0.0.1') || normalized.includes('devnet');
-}
 
 export function getSponsoredFeePaymentMethod(): SponsoredFeePaymentMethod | null {
   return cachedFeePaymentMethod;
+}
+
+let cachedProver: AcceleratorProver | null = null;
+
+export function getAcceleratorProver(): AcceleratorProver | null {
+  return cachedProver;
 }
 
 export interface EmbeddedConnectorResult {
@@ -76,7 +80,6 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
 
   const config = getNetworkConfig();
   const isRemoteNetwork = !nodeUrl.includes('localhost') && !nodeUrl.includes('127.0.0.1');
-  const useSponsoredFpc = supportsSponsoredFpc(nodeUrl);
 
   // Connect to Aztec node
   const aztecNode = createAztecNodeClient(nodeUrl);
@@ -89,7 +92,33 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   pxeConfig.proverEnabled = config.proverEnabled || isRemoteNetwork;
   pxeConfig.l1Contracts = l1Contracts;
 
-  const pxe = await createPXE(aztecNode, pxeConfig);
+  // Set up AcceleratorProver (routes to native desktop app at localhost:59833, falls back to WASM)
+  const prover = new AcceleratorProver();
+  cachedProver = prover;
+
+  const acceleratorStatus = await prover.checkAcceleratorStatus();
+  const { setAvailable, setPhase, setLastProofMs } = useAcceleratorStore.getState();
+  setAvailable(acceleratorStatus.available);
+
+  if (acceleratorStatus.available) {
+    console.log('[accelerator] Native proving active — desktop accelerator detected at localhost:59833');
+  } else {
+    console.log('[accelerator] Native proving unavailable — falling back to WASM proving');
+  }
+
+  prover.setOnPhase((phase, data) => {
+    setPhase(phase as AcceleratorPhaseLabel);
+    if (phase === 'proved') {
+      if (data?.durationMs) setLastProofMs(data.durationMs);
+      console.log(`[accelerator] Proof complete${data?.durationMs ? ` in ${(data.durationMs / 1000).toFixed(1)}s` : ''}`);
+      // Clear phase after a short delay so UI returns to idle
+      setTimeout(() => setPhase(null), 2000);
+    } else {
+      console.log(`[accelerator] Phase: ${phase}`);
+    }
+  });
+
+  const pxe = await createPXE(aztecNode, pxeConfig, { proverOrOptions: prover });
 
   // Create WalletDB (IndexedDB-backed account persistence)
   const walletDBStore = await createStore(`wallet-${rollupAddress}`, {
@@ -103,16 +132,14 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   // Create EmbeddedWallet
   const wallet = new EmbeddedWallet(pxe, aztecNode, walletDB, lazyAccountContracts);
 
-  if (useSponsoredFpc) {
-    const fpcInstance = await getContractInstanceFromInstantiationParams(
-      SponsoredFPCContract.artifact,
-      { salt: new Fr(SPONSORED_FPC_SALT) }
-    );
-    await wallet.registerContract(fpcInstance, SponsoredFPCContract.artifact);
-    cachedFeePaymentMethod = new SponsoredFeePaymentMethod(fpcInstance.address);
-  } else {
-    cachedFeePaymentMethod = null;
-  }
+  // SponsoredFPC is available on all Aztec networks (local, devnet, testnet).
+  // Use salt=0 as the canonical default, matching the playground.
+  const fpcInstance = await getContractInstanceFromInstantiationParams(
+    SponsoredFPCContract.artifact,
+    { salt: new Fr(0) }
+  );
+  await wallet.registerContract(fpcInstance, SponsoredFPCContract.artifact);
+  cachedFeePaymentMethod = new SponsoredFeePaymentMethod(fpcInstance.address);
 
   // Register game contract
   const gameInstance = await getContractInstanceFromInstantiationParams(
@@ -161,15 +188,18 @@ export async function createEmbeddedAccount(
   const accountManager = await wallet.createSchnorrAccount(secret, salt);
 
   if (!cachedFeePaymentMethod) {
-    throw new Error('Embedded wallet account creation currently supports only local/devnet networks with SponsoredFPC.');
+    throw new Error('Fee payment method not initialized. Call initWallet first.');
   }
 
   // Deploy account with sponsored fees
+  // additionalScopes is required: the account constructor initializes private storage
+  // and needs its own nullifier key in scope (same pattern as the playground).
   const deployMethod = await accountManager.getDeployMethod();
   await deployMethod.send({
     from: NO_FROM,
     skipClassPublication: true,
     fee: { paymentMethod: cachedFeePaymentMethod! },
+    additionalScopes: [accountManager.address],
     wait: { timeout: 120000 },
   });
 

@@ -6,6 +6,24 @@ import topLevelAwait from 'vite-plugin-top-level-await';
 import { resolve } from 'path';
 
 /**
+ * Plugin to fix @alejoamiras/aztec-accelerator which is published with a broken
+ * exports field (built files land in dist/src/ instead of dist/).
+ */
+const aztecAcceleratorResolve = (): Plugin => ({
+  name: 'aztec-accelerator-resolve',
+  enforce: 'pre',
+  resolveId(source) {
+    if (source === '@alejoamiras/aztec-accelerator') {
+      return resolve(
+        __dirname,
+        'node_modules/@alejoamiras/aztec-accelerator/dist/src/index.js'
+      );
+    }
+    return null;
+  },
+});
+
+/**
  * Plugin to strip import attributes from JSON imports so Rollup
  * doesn't complain about inconsistent `with { type: "json" }`.
  */
@@ -75,6 +93,7 @@ const nodeBuiltinsShim = (): Plugin => ({
 
 export default defineConfig({
   plugins: [
+    aztecAcceleratorResolve(),
     jsonImportAttributesFix(),
     nodeBuiltinsShim(),
     react(),
@@ -186,6 +205,7 @@ export default defineConfig({
       'hmac-drbg',
     ],
     exclude: [
+      '@alejoamiras/aztec-accelerator',
       '@aztec/bb.js',
       '@aztec/pxe',
       '@aztec/pxe/client/lazy',

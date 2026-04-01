@@ -8,13 +8,15 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "dev": "PROVER_ENABLED=false vite",
+    "postinstall": "node -e \"const fs=require('fs'),p='node_modules/@alejoamiras/aztec-accelerator/package.json',pkg=JSON.parse(fs.readFileSync(p,'utf8'));if(pkg.exports['.'].default!=='./dist/src/index.js'){pkg.exports['.'].default='./dist/src/index.js';pkg.exports['.'].types='./dist/src/index.d.ts';pkg.main='./dist/src/index.js';pkg.types='./dist/src/index.d.ts';fs.writeFileSync(p,JSON.stringify(pkg,null,2))}\"",
+    "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview",
     "lint": "prettier --check ./src"
   },
   "dependencies": {
+    "@alejoamiras/aztec-accelerator": "latest",
     "@aztec/accounts": "4.2.0-aztecnr-rc.2",
     "@aztec/aztec.js": "4.2.0-aztecnr-rc.2",
     "@aztec/constants": "4.2.0-aztecnr-rc.2",
