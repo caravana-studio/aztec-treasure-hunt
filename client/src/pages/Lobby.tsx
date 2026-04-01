@@ -4,6 +4,7 @@ import { useWallet } from '../context/WalletContext';
 import { useMultiWalletStore } from '../wallet/store';
 import { useGame } from '../hooks/useGame';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
+import { AcceleratorBadge } from '../components/ui/AcceleratorBadge';
 import { ConnectModal } from '../wallet/ConnectModal';
 
 export function Lobby() {
@@ -76,6 +77,12 @@ export function Lobby() {
                   {walletLabel}
                 </span>
               </div>
+
+              {walletType === 'embedded' && (
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <AcceleratorBadge />
+                </div>
+              )}
 
               <button
                 className="glass-btn lobby-btn-full"

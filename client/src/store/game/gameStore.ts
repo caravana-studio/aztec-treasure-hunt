@@ -4,6 +4,7 @@ import { Fr } from '@aztec/aztec.js/fields';
 import { TreasureHuntContract } from '../../artifacts/TreasureHunt';
 import { useMultiWalletStore } from '../../wallet/store';
 import { getSponsoredFeePaymentMethod } from '../../wallet/connectors/EmbeddedConnector';
+import { useAcceleratorStore } from '../accelerator';
 import {
   GameState,
   GamePhase,
@@ -81,6 +82,31 @@ function toFr(value: bigint | number | string | Fr): Fr {
 
 function toNumber(value: bigint | number | string | Fr): number {
   return value instanceof Fr ? Number(value.toBigInt()) : Number(value);
+}
+
+/**
+ * Wraps a contract .send() call with timing and accelerator logs.
+ * Logs go to both console and the in-game log panel.
+ */
+async function sendTx(
+  name: string,
+  sendCall: Promise<unknown>,
+  addLog: (msg: string) => void,
+): Promise<void> {
+  const walletType = useMultiWalletStore.getState().walletType;
+  const { available, mode } = useAcceleratorStore.getState();
+  const isNative = walletType === 'embedded' && available && mode === 'accelerated';
+  const proverLabel = walletType !== 'embedded' ? 'Azguard' : isNative ? '⚡ Native' : '🌐 WASM';
+
+  console.log(`[tx] ${name} — proving with ${proverLabel}`);
+  addLog(`${name} — proving with ${proverLabel}...`);
+
+  const start = Date.now();
+  await sendCall;
+  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+
+  console.log(`[tx] ${name} done in ${elapsed}s`);
+  addLog(`${name} confirmed in ${elapsed}s`);
 }
 
 function getSendOptions(from: AztecAddress) {
@@ -484,7 +510,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const nextGameId = unwrapSimulationResult(await contract.methods.get_next_game_id().simulate({ from: myAddress }));
       const id = toFr(nextGameId);
 
-      await contract.methods.create_game().send(getSendOptions(myAddress));
+      await sendTx('Create game', contract.methods.create_game().send(getSendOptions(myAddress)), addLog);
 
       set({ gameId: id, isPlayer1: true });
 
@@ -513,7 +539,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       const id = new Fr(Number(gameIdStr));
-      await contract.methods.join_game(id).send(getSendOptions(myAddress));
+      await sendTx('Join game', contract.methods.join_game(id).send(getSendOptions(myAddress)), addLog);
 
       set({ gameId: id, isPlayer1: false });
 
@@ -542,9 +568,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       const [t1, t2, t3] = selectedTreasures;
-      await contract.methods
-        .place_treasures(gameId, t1.x, t1.y, t2.x, t2.y, t3.x, t3.y)
-        .send(getSendOptions(myAddress));
+      await sendTx(
+        'Place treasures',
+        contract.methods.place_treasures(gameId, t1.x, t1.y, t2.x, t2.y, t3.x, t3.y).send(getSendOptions(myAddress)),
+        addLog,
+      );
 
       set((state) => ({ myTreasurePositions: [...state.selectedTreasures] }));
 
@@ -574,7 +602,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
-      await contract.methods.dig(gameId, x, y).send(getSendOptions(myAddress));
+      await sendTx('Dig', contract.methods.dig(gameId, x, y).send(getSendOptions(myAddress)), addLog);
 
       addLog(`You dig at (${x}, ${y})...`);
       // Don't clear activeAction here - keep animation until opponent responds
@@ -601,7 +629,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       console.log('Responding to dig at:', pendingX, pendingY);
 
-      await contract.methods.check_dig_result(gameId, pendingX, pendingY).send(getSendOptions(myAddress));
+      await sendTx('Check dig result', contract.methods.check_dig_result(gameId, pendingX, pendingY).send(getSendOptions(myAddress)), addLog);
 
       addLog(`Opponent digs at (${pendingX}, ${pendingY})...`);
       await refreshGameState();
@@ -629,7 +657,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
-      await contract.methods.use_detector(gameId, x, y).send(getSendOptions(myAddress));
+      await sendTx('Use detector', contract.methods.use_detector(gameId, x, y).send(getSendOptions(myAddress)), addLog);
 
       addLog(`You scan area around (${x}, ${y})...`);
       await refreshGameState();
@@ -655,7 +683,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       console.log('Responding to detector at:', pendingX, pendingY);
 
-      await contract.methods.respond_detector(gameId, pendingX, pendingY).send(getSendOptions(myAddress));
+      await sendTx('Respond detector', contract.methods.respond_detector(gameId, pendingX, pendingY).send(getSendOptions(myAddress)), addLog);
 
       addLog(`Opponent scans area around (${pendingX}, ${pendingY})`);
       await refreshGameState();
@@ -683,7 +711,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
-      await contract.methods.use_compass(gameId, x, y).send(getSendOptions(myAddress));
+      await sendTx('Use compass', contract.methods.use_compass(gameId, x, y).send(getSendOptions(myAddress)), addLog);
 
       addLog(`You use compass from (${x}, ${y})...`);
       await refreshGameState();
@@ -709,7 +737,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       console.log('Responding to compass at:', pendingX, pendingY);
 
-      await contract.methods.respond_compass(gameId, pendingX, pendingY).send(getSendOptions(myAddress));
+      await sendTx('Respond compass', contract.methods.respond_compass(gameId, pendingX, pendingY).send(getSendOptions(myAddress)), addLog);
 
       addLog(`Opponent uses compass from (${pendingX}, ${pendingY})`);
       await refreshGameState();
@@ -737,7 +765,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
-      await contract.methods.use_shovel(gameId, oldX, oldY, newX, newY).send(getSendOptions(myAddress));
+      await sendTx('Use shovel', contract.methods.use_shovel(gameId, oldX, oldY, newX, newY).send(getSendOptions(myAddress)), addLog);
 
       // Update local treasure positions
       const newTreasurePositions = myTreasurePositions.map((pos) =>
@@ -770,7 +798,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
-      await contract.methods.use_trap(gameId, x, y).send(getSendOptions(myAddress));
+      await sendTx('Use trap', contract.methods.use_trap(gameId, x, y).send(getSendOptions(myAddress)), addLog);
 
       // Add trap position to local state for visual feedback
       const newTrapPositions = [...myTrapPositions, { x, y }];

@@ -3,13 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Fr } from '@aztec/aztec.js/fields';
 import { useWallet } from '../context/WalletContext';
 import { useGame } from '../hooks/useGame';
+import { useMultiWalletStore } from '../wallet/store';
 import { PlayerCard, PowersPanel, GameGrid, GameLogs, TurnIndicator } from '../components/game';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
+import { AcceleratorBadge } from '../components/ui/AcceleratorBadge';
 
 export function Game() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { myAddress } = useWallet();
+  const { walletType } = useMultiWalletStore();
 
   const {
     gameId,
@@ -156,6 +159,13 @@ export function Game() {
       )}
 
       <div className="game-layout">
+        {/* Accelerator status — only for embedded wallet */}
+        {walletType === 'embedded' && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+            <AcceleratorBadge />
+          </div>
+        )}
+
         {/* Turn indicator */}
         <TurnIndicator
           isMyTurn={isMyTurn}
