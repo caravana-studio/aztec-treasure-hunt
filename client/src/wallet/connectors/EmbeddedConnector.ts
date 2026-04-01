@@ -12,7 +12,7 @@ import { Fr } from '@aztec/aztec.js/fields';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
 import { createStore } from '@aztec/kv-store/indexeddb';
 import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
-import { AcceleratorProver } from '@alejoamiras/aztec-accelerator';
+import type { AcceleratorProver as AcceleratorProverType } from '@alejoamiras/aztec-accelerator';
 import { createPXE, getPXEConfig } from '@aztec/pxe/client/lazy';
 import { getContractInstanceFromInstantiationParams } from '@aztec/stdlib/contract';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
@@ -63,9 +63,9 @@ export function getSponsoredFeePaymentMethod(): SponsoredFeePaymentMethod | null
   return cachedFeePaymentMethod;
 }
 
-let cachedProver: AcceleratorProver | null = null;
+let cachedProver: AcceleratorProverType | null = null;
 
-export function getAcceleratorProver(): AcceleratorProver | null {
+export function getAcceleratorProver(): AcceleratorProverType | null {
   return cachedProver;
 }
 
@@ -92,33 +92,44 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   pxeConfig.proverEnabled = config.proverEnabled || isRemoteNetwork;
   pxeConfig.l1Contracts = l1Contracts;
 
-  // Set up AcceleratorProver (routes to native desktop app at localhost:59833, falls back to WASM)
-  const prover = new AcceleratorProver();
-  cachedProver = prover;
-
-  const acceleratorStatus = await prover.checkAcceleratorStatus();
+  // Set up AcceleratorProver via dynamic import — avoids Rollup bundling issues
+  // with @aztec/bb-prover WASM dependencies in production builds.
+  let prover: AcceleratorProverType | null = null;
   const { setAvailable, setPhase, setLastProofMs } = useAcceleratorStore.getState();
-  setAvailable(acceleratorStatus.available);
+  try {
+    const { AcceleratorProver } = await import('@alejoamiras/aztec-accelerator');
+    prover = new AcceleratorProver();
+    cachedProver = prover;
 
-  if (acceleratorStatus.available) {
-    console.log('[accelerator] Native proving active — desktop accelerator detected at localhost:59833');
-  } else {
-    console.log('[accelerator] Native proving unavailable — falling back to WASM proving');
+    const acceleratorStatus = await prover.checkAcceleratorStatus();
+    setAvailable(acceleratorStatus.available);
+
+    if (acceleratorStatus.available) {
+      console.log('[accelerator] Native proving active — desktop accelerator detected at localhost:59833');
+    } else {
+      console.log('[accelerator] Native proving unavailable — falling back to WASM proving');
+    }
+
+    prover.setOnPhase((phase, data) => {
+      setPhase(phase as AcceleratorPhaseLabel);
+      if (phase === 'proved') {
+        if (data?.durationMs) setLastProofMs(data.durationMs);
+        console.log(`[accelerator] Proof complete${data?.durationMs ? ` in ${(data.durationMs / 1000).toFixed(1)}s` : ''}`);
+        setTimeout(() => setPhase(null), 2000);
+      } else {
+        console.log(`[accelerator] Phase: ${phase}`);
+      }
+    });
+  } catch (e) {
+    console.warn('[accelerator] AcceleratorProver unavailable, using default WASM prover:', e);
+    setAvailable(false);
   }
 
-  prover.setOnPhase((phase, data) => {
-    setPhase(phase as AcceleratorPhaseLabel);
-    if (phase === 'proved') {
-      if (data?.durationMs) setLastProofMs(data.durationMs);
-      console.log(`[accelerator] Proof complete${data?.durationMs ? ` in ${(data.durationMs / 1000).toFixed(1)}s` : ''}`);
-      // Clear phase after a short delay so UI returns to idle
-      setTimeout(() => setPhase(null), 2000);
-    } else {
-      console.log(`[accelerator] Phase: ${phase}`);
-    }
-  });
-
-  const pxe = await createPXE(aztecNode, pxeConfig, { proverOrOptions: prover });
+  const pxe = await createPXE(
+    aztecNode,
+    pxeConfig,
+    prover ? { proverOrOptions: prover } : undefined,
+  );
 
   // Create WalletDB (IndexedDB-backed account persistence)
   const walletDBStore = await createStore(`wallet-${rollupAddress}`, {
