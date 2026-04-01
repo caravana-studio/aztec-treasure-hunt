@@ -10,13 +10,9 @@ import { NO_FROM } from '@aztec/aztec.js/account';
 import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
 import { Fr } from '@aztec/aztec.js/fields';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
-import { createStore } from '@aztec/kv-store/indexeddb';
-import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
-import type { AcceleratorProver as AcceleratorProverType } from '@alejoamiras/aztec-accelerator';
-import { createPXE, getPXEConfig } from '@aztec/pxe/client/lazy';
 import { getContractInstanceFromInstantiationParams } from '@aztec/stdlib/contract';
+import type { AcceleratorProver as AcceleratorProverType } from '@alejoamiras/aztec-accelerator';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
-import { EmbeddedWallet, WalletDB } from '@aztec/wallets/embedded';
 import { TreasureHuntContract } from '../../artifacts/TreasureHunt';
 import { getNetworkConfig } from '../../config/network';
 import { useAcceleratorStore } from '../../store/accelerator';
@@ -55,7 +51,8 @@ const lazyAccountContracts = {
   },
 };
 
-let cachedWallet: EmbeddedWallet | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedWallet: any | null = null;
 let cachedFeePaymentMethod: SponsoredFeePaymentMethod | null = null;
 
 
@@ -75,7 +72,8 @@ export interface EmbeddedConnectorResult {
   contractAddress: AztecAddress;
 }
 
-async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function initWallet(nodeUrl: string): Promise<any> {
   if (cachedWallet) return cachedWallet;
 
   const config = getNetworkConfig();
@@ -85,6 +83,12 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   const aztecNode = createAztecNodeClient(nodeUrl);
   const l1Contracts = await aztecNode.getL1ContractAddresses();
   const rollupAddress = l1Contracts.rollupAddress;
+
+  // Dynamically import heavy PXE/wallet modules to avoid Rollup bundle initialization errors
+  const { createPXE, getPXEConfig } = await import('@aztec/pxe/client/lazy');
+  const { createStore } = await import('@aztec/kv-store/indexeddb');
+  const { EmbeddedWallet, WalletDB } = await import('@aztec/wallets/embedded');
+  const { SponsoredFPCContract } = await import('@aztec/noir-contracts.js/SponsoredFPC');
 
   // Create PXE
   const pxeConfig = getPXEConfig();
@@ -125,11 +129,13 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
     setAvailable(false);
   }
 
-  const pxe = await createPXE(
-    aztecNode,
-    pxeConfig,
-    prover ? { proverOrOptions: prover } : undefined,
-  );
+  // Always pass proverOrOptions so createPXE skips its internal
+  // `new BBLazyPrivateKernelProver()` call, which fails in production bundles.
+  // AcceleratorProver extends BBLazyPrivateKernelProver extends BBPrivateKernelProver,
+  // so instanceof check passes and no extra prover is created.
+  // If AcceleratorProver failed to load, fall back by letting createPXE use its default.
+  const pxeOptions = prover ? { proverOrOptions: prover } : {};
+  const pxe = await createPXE(aztecNode, pxeConfig, pxeOptions);
 
   // Create WalletDB (IndexedDB-backed account persistence)
   const walletDBStore = await createStore(`wallet-${rollupAddress}`, {

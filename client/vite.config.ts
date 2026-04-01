@@ -3,7 +3,6 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 import { resolve } from 'path';
 
 const require = createRequire(import.meta.url);
@@ -141,7 +140,6 @@ export default defineConfig({
     nodeBuiltinsShim(),
     react(),
     wasm(),
-    topLevelAwait(),
     nodePolyfills({
       include: ['buffer', 'crypto', 'util', 'assert', 'process', 'stream', 'path', 'events'],
       globals: {
@@ -175,7 +173,7 @@ export default defineConfig({
       'lodash.pickby': 'lodash.pickby/index.js',
       'json-stringify-deterministic': 'json-stringify-deterministic/lib/index.js',
     },
-    dedupe: ['@aztec/foundation', '@aztec/circuits.js', '@noble/curves', '@aztec/bb-prover', '@aztec/bb.js'],
+    dedupe: ['@aztec/foundation', '@aztec/circuits.js', '@noble/curves', '@aztec/bb-prover', '@aztec/bb.js', '@aztec/noir-protocol-circuits-types'],
   },
   server: {
     port: 3001,
@@ -254,6 +252,7 @@ export default defineConfig({
       '@aztec/bb-prover',
       '@aztec/noir-acvm_js',
       '@aztec/noir-noirc_abi',
+      '@aztec/noir-protocol-circuits-types',
       '@aztec/pxe',
       '@aztec/pxe/client/lazy',
       '@aztec/pxe/client/bundle',
@@ -262,7 +261,11 @@ export default defineConfig({
       '@aztec/noir-contracts.js',
       '@aztec/accounts',
       '@aztec/kv-store',
+      '@aztec/kv-store/indexeddb',
       '@aztec/wallets',
+      '@aztec/wallets/embedded',
+      '@aztec/noir-contracts.js',
+      '@aztec/noir-contracts.js/SponsoredFPC',
     ],
     esbuildOptions: {
       define: {
