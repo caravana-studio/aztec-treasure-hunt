@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
+import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 /**
@@ -73,10 +74,46 @@ const nodeBuiltinsShim = (): Plugin => ({
   },
 });
 
+const patchAnonymousClassAssignments = (code: string) => {
+  const anonymousClassAssignment =
+    /(^|[^\w$.])([A-Za-z_$][\w$]*)\s*=\s*class(\s*(?:extends\s+[^{]+)?\s*\{)/gm;
+
+  return code.replace(anonymousClassAssignment, (_, prefix, className, suffix) => {
+    return `${prefix}${className} = class ${className}${suffix}`;
+  });
+};
+
+/**
+ * Rollup rewrites some exported classes to `Foo = class extends ...` for live bindings.
+ * That breaks self-referential static initializers such as `static ZERO = new Foo(0n)`.
+ * Naming the class expression restores the local class binding without changing exports.
+ */
+const nameAnonymousClassAssignments = (): Plugin => ({
+  name: 'name-anonymous-class-assignments',
+  apply: 'build',
+  writeBundle(outputOptions, bundle) {
+    const outputDir = outputOptions.dir ? resolve(__dirname, outputOptions.dir) : resolve(__dirname, 'dist');
+
+    for (const output of Object.values(bundle)) {
+      if (output.type !== 'chunk' || !output.fileName.endsWith('.js')) {
+        continue;
+      }
+
+      const patchedCode = patchAnonymousClassAssignments(output.code);
+      if (patchedCode === output.code) {
+        continue;
+      }
+
+      writeFileSync(resolve(outputDir, output.fileName), patchedCode);
+    }
+  },
+});
+
 export default defineConfig({
   plugins: [
     jsonImportAttributesFix(),
     nodeBuiltinsShim(),
+    nameAnonymousClassAssignments(),
     react(),
     wasm(),
     topLevelAwait(),
