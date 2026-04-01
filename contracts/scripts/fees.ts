@@ -8,7 +8,7 @@ import { FeeJuiceContract } from "@aztec/noir-contracts.js/FeeJuice";
 import { FPCContract } from "@aztec/noir-contracts.js/FPC";
 import { PodRacingContract } from "../src/artifacts/PodRacing.js"
 import { TokenContract } from "@aztec/noir-contracts.js/Token";
-import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee/testing'
+import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee'
 import { getSponsoredFPCInstance } from "../src/utils/sponsored_fpc.js";
 import { createEthereumChain } from '@aztec/ethereum/chain';
 import { createExtendedL1Client } from '@aztec/ethereum/client';
@@ -18,12 +18,14 @@ import { Logger, createLogger } from '@aztec/aztec.js/log';
 import { FeeJuicePaymentMethodWithClaim, PrivateFeePaymentMethod, PublicFeePaymentMethod } from '@aztec/aztec.js/fee';
 import { Fr, GrumpkinScalar } from '@aztec/aztec.js/fields';
 import { L1FeeJuicePortalManager } from '@aztec/aztec.js/ethereum';
-import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
+import { SponsoredFPCContractArtifact } from '@aztec/noir-contracts.js/SponsoredFPC';
 import { getCanonicalFeeJuice } from '@aztec/protocol-contracts/fee-juice';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
 import { AztecAddress } from '@aztec/stdlib/aztec-address';
 import { getAztecNodeUrl } from '../config/config.js';
 import { GasSettings } from '@aztec/stdlib/gas';
+import { AccountManager } from "@aztec/aztec.js/wallet";
+import { SchnorrAccountContract } from "@aztec/accounts/schnorr";
 
 const MNEMONIC = 'test test test test test test test test test test test junk';
 const FEE_FUNDING_FOR_TESTER_ACCOUNT = 1000000000000000000000n;
@@ -49,7 +51,7 @@ async function main() {
     let secretKey = Fr.random();
     let signingKey = GrumpkinScalar.random();
     let salt = Fr.random();
-    let account2 = await wallet.createSchnorrAccount(secretKey, salt, signingKey);
+    let account2 = await AccountManager.create(wallet, secretKey, new SchnorrAccountContract(signingKey), salt);
     const feeJuiceRecipient = account2.address;
 
     // Setup and bridge fee asset to L2 to get fee juice
@@ -66,7 +68,7 @@ async function main() {
 
     // set up sponsored fee payments
     const sponsoredFPC = await getSponsoredFPCInstance();
-    await wallet.registerContract(sponsoredFPC, SponsoredFPCContract.artifact);
+    await wallet.registerContract(sponsoredFPC, SponsoredFPCContractArtifact);
     const paymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
 
     // Two arbitrary txs to make the L1 message available on L2

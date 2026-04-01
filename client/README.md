@@ -1,76 +1,64 @@
-# aztec-web-starter
+# Treasure Hunt Frontend
 
-This is an example web app that demonstrates how to interact with an Aztec contract using the Aztec JS SDK.
+React/Vite client for the Treasure Hunt game. Contract compilation and deployment happen in [`/contracts`](../contracts); this app consumes the generated artifacts and the `client/.env*` files written by the deploy script.
 
-- Uses the [Private Voting](https://docs.aztec.network/developers/tutorials/codealong/contract_tutorials/private_voting_contract) example
-- Includes an embedded wallet. This is only for demonstration purposes and not for production use.
-- Works on top of the local network, but can be adapted to work with a testnet.
-
-### Setup
-
-1. Install the Aztec tools from the first few steps in [Quick Start Guide](https://docs.aztec.network/developers/getting_started).
-
-Please note that this project uses `3.0.0-devnet.20251212` version of Aztec SDK. If you wish to use a different version, please update the dependencies in the `package.json` and in `contracts/Nargo.toml` file to match your version.
-
-You can install a specific version of Aztec tools by running `aztec-up 3.0.0-devnet.20251212`
-
-2. Compile smart contracts in `/contracts`:
-
-```sh
-yarn build-contracts
-```
-
-The build script compiles the contract and generates the artifacts.
-
-3. Deploy the contracts
-
-Run the JS deploy script to deploy the contracts (NodeJS v20.0):
+## Install
 
 ```sh
 yarn install
-yarn deploy-contracts
 ```
 
-The deploy script generates a random account and deploys the voting contract with it. It also uses the SponsoredFPC contract for fee payment. This is sufficient for testing with local network, but is not suitable for production setup.
+## Deploy contracts first
 
-The script also writes the deployment info to `.env` (which our web-app reads from).
-
-> Note that the script generates client proofs and it may take a couple of seconds. For faster development, you can disable proving by calling with `PROVER_ENABLED=false` (The local network accepts transactions without a valid proof).
-
-4. Run the app (development mode):
+Run these commands from [`/contracts`](../contracts):
 
 ```sh
+yarn compile
+yarn codegen
+
+# Local / devnet
+yarn deploy
+yarn deploy::devnet
+
+# Testnet / Mainnet — requires an L1 account with ETH for gas
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::testnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::mainnet
+```
+
+Local and devnet use SponsoredFPC. Testnet and mainnet create the `AccountManager` first, bridge Fee Juice from L1 to its deterministic L2 address, deploy the account with that claim, and then deploy the contract.
+
+## Environment files
+
+The deploy script writes one frontend env file per network:
+
+| Network | Generated file | How to use it |
+|---------|----------------|---------------|
+| Local | `.env.local` | Picked up automatically by `yarn dev` |
+| Devnet | `.env.devnet` | Copy to `.env.local` before `yarn dev` |
+| Testnet | `.env.testnet` | Copy to `.env.local` before `yarn dev` |
+| Mainnet | `.env.mainnet` | Copy to `.env.local` before `yarn dev` |
+
+Examples:
+
+```sh
+# Local
+yarn dev
+
+# Devnet / testnet / mainnet
+cp .env.devnet .env.local      # or .env.testnet / .env.mainnet
 yarn dev
 ```
 
-### Test the app
+Important:
 
-You can now interact with the deployed contract using the web app:
+- Vite gives `.env.local` priority over `.env` during `yarn dev`.
+- If you switch from local/devnet to testnet/mainnet, replace `.env.local` or remove the old one first.
+- The generated env files include the contract deployment metadata used by the client and Azguard: contract address, deployer, admin, deployment salt, and node URL.
 
-- Create a new account
-  - Like before, this will take some time to generate proofs (especially the first time as it needs to download a ~67MB proving key)
-  - Note: this will save your account keys to your browser's local storage
-- Cast a vote for one of the 5 candidates
-- Voting again should throw an error
-- Open another browser (or an incognito window), create a new account, and cast a vote
-- See the updated vote results in the first browser
+The dev server runs on [http://localhost:3001](http://localhost:3001).
 
-You can also run the E2E tests:
+## Notes
 
-```sh
-yarn test
-```
-
-<br />
-
-## Disable client proofs
-
-The local network will accept transactions without a valid proof. You can disable proof generation when working against the local network as it will save time during development.
-
-To disable proving in the deploy script, run:
-
-```sh
-PXE_PROVER=none ./deploy.sh
-```
-
-To disable proving in the web app, you can set `PROVER_ENABLED` to `false` in `embedded-wallet.ts` file.
+- `contracts/scripts/deploy_contract.ts` currently copies contract artifacts into `client/src/artifacts` only on local deploy. Remote deploys update the env file but skip artifact copying.
+- `yarn build` creates the production bundle.
+- `yarn lint` runs the Prettier check used by this frontend.

@@ -1,4 +1,4 @@
-use aztec::{macros::notes::note, protocol_types::{traits::Packable, address::AztecAddress}};
+use aztec::{macros::notes::note, protocol::{traits::Packable, address::AztecAddress}};
 
 /// Private note storing a treasure's position
 /// Only the owner can read their treasure locations

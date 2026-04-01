@@ -24,6 +24,8 @@ export interface EnvironmentConfig {
   settings: {
     skipLocalNetwork: boolean;
     version: string;
+    sponsoredFPC?: boolean;
+    bridgeAmount?: string;
   };
   timeouts?: TimeoutConfig;
 }
@@ -71,6 +73,27 @@ export class ConfigManager {
 
   public isLocalNetwork(): boolean {
     return this.config.environment === 'local';
+  }
+
+  public isMainnet(): boolean {
+    return this.config.environment === 'mainnet';
+  }
+
+  public isTestnet(): boolean {
+    return this.config.environment === 'testnet';
+  }
+
+  public hasSponsoredFPC(): boolean {
+    // SponsoredFPC is only available on local (auto-deployed) and devnet (canonical deployment).
+    // Mainnet and testnet require paying fees via Fee Juice bridged from L1.
+    if (this.config.settings.sponsoredFPC !== undefined) {
+      return this.config.settings.sponsoredFPC;
+    }
+    return this.isLocalNetwork() || this.isDevnet();
+  }
+
+  public requiresProver(): boolean {
+    return !this.isLocalNetwork();
   }
 
   public getNodeUrl(): string {

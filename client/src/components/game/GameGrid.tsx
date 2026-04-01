@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Position, GRID_SIZE, CellState, ScannedArea, CompassResult, PowerType, ActiveAction } from '../../types/game';
+import { Position, GRID_SIZE, CellState, ScannedArea, CompassResult, PowerType, ActiveAction, DugCell } from '../../types/game';
 import '../../styles/tooltip.css';
 
 interface GameGridProps {
   myTreasures?: Position[];
   myTraps?: Position[];
-  dugCells?: (Position & { found: boolean; isMine: boolean })[];
+  dugCells?: DugCell[];
   selectedCells?: Position[];
   clickable?: boolean;
   onCellClick?: (x: number, y: number) => void;

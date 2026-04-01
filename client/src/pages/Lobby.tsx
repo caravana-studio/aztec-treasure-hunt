@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
+import { useMultiWalletStore } from '../wallet/store';
 import { useGame } from '../hooks/useGame';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
+import { ConnectModal } from '../wallet/ConnectModal';
 
 export function Lobby() {
   const navigate = useNavigate();
-  const { myAddress, isConnecting, createAccount, connectTestAccount } = useWallet();
-  const { createGame, joinGame, isLoading, statusMessage, error, setError } = useGame();
+  const { myAddress, error: walletError, clearError: clearWalletError } = useWallet();
+  const { disconnect, walletType } = useMultiWalletStore();
+  const { createGame, joinGame, isLoading, statusMessage, error: gameError, setError: setGameError } = useGame();
   const [gameIdInput, setGameIdInput] = useState('');
-  const [testAccountIndex, setTestAccountIndex] = useState(0);
 
   const handleCreateGame = async () => {
     const id = await createGame();
@@ -26,9 +28,18 @@ export function Lobby() {
     }
   };
 
-  const handleConnectTestAccount = async () => {
-    await connectTestAccount(testAccountIndex);
+  const error = walletError || gameError;
+  const clearError = () => {
+    clearWalletError();
+    setGameError(null);
   };
+
+  const walletLabel =
+    walletType === 'embedded'
+      ? 'Embedded Wallet'
+      : walletType === 'azguard'
+      ? 'Azguard'
+      : 'Connected';
 
   return (
     <>
@@ -36,49 +47,34 @@ export function Lobby() {
         <AnimatedClouds />
         <img src="/images/logo.png" alt="Treasure Hunt" className="lobby-logo" />
         <div className="lobby-card">
-          <p className="lobby-subtitle">Strategic treasure hunting with truly private game state on Aztec Network</p>
+          <p className="lobby-subtitle">
+            Strategic treasure hunting with truly private game state on Aztec Network
+          </p>
 
           {error && (
-            <div className="error-toast" onClick={() => setError(null)}>
+            <div className="error-toast" onClick={clearError}>
               {error}
             </div>
           )}
 
           {!myAddress ? (
-            <div className="lobby-form">
-              <div className="lobby-row">
-                <select
-                  className="glass-input"
-                  value={testAccountIndex}
-                  onChange={(e) => setTestAccountIndex(Number(e.target.value))}
-                >
-                  <option value={0}>Test Account 1</option>
-                  <option value={1}>Test Account 2</option>
-                  <option value={2}>Test Account 3</option>
-                </select>
-                <button
-                  className="glass-btn"
-                  onClick={handleConnectTestAccount}
-                  disabled={isConnecting}
-                >
-                  Connect
-                </button>
-              </div>
-
-              <div className="lobby-divider">or</div>
-
-              <button
-                className="glass-btn-secondary lobby-btn-full"
-                onClick={createAccount}
-                disabled={isConnecting}
-              >
-                {isConnecting ? 'Creating...' : 'Create New Account'}
-              </button>
-            </div>
+            <ConnectModal />
           ) : (
             <div className="lobby-form">
-              <div className="lobby-address">
-                {myAddress.toString().slice(0, 10)}...{myAddress.toString().slice(-8)}
+              {/* Connected account info */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                <div className="lobby-address">
+                  {myAddress.toString().slice(0, 10)}...{myAddress.toString().slice(-8)}
+                </div>
+                <span style={{
+                  fontSize: '11px',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.15)',
+                  color: 'rgba(255,255,255,0.8)',
+                }}>
+                  {walletLabel}
+                </span>
               </div>
 
               <button
@@ -108,13 +104,20 @@ export function Lobby() {
                   {isLoading ? 'Joining...' : 'Join'}
                 </button>
               </div>
+
+              <button
+                className="glass-btn-secondary lobby-btn-full"
+                onClick={disconnect}
+                style={{ fontSize: '13px', opacity: 0.7 }}
+              >
+                Disconnect
+              </button>
             </div>
           )}
-
         </div>
       </div>
 
-      {/* Loading overlay - outside lobby-container to avoid transform issues */}
+      {/* Loading overlay — outside lobby-container to avoid transform issues */}
       {isLoading && (
         <div className="loading-overlay">
           <div className="loading-content">

@@ -134,8 +134,9 @@ src/
 
 ### Prerequisites
 
-- **Node.js v22.15.0**
-- **Docker** (for Aztec tooling)
+- **Node.js 22+**
+- **Yarn 1.22+**
+- **Aztec `4.2.0-aztecnr-rc.2`**
 
 ### Install Aztec Tooling
 
@@ -146,8 +147,7 @@ bash -i <(curl -s https://install.aztec.network)
 Install the correct version:
 
 ```bash
-export VERSION=3.0.0-devnet.20251212
-aztec-up && docker pull aztecprotocol/aztec:$VERSION && docker tag aztecprotocol/aztec:$VERSION aztecprotocol/aztec:latest
+PATH="$HOME/.aztec/bin:$PATH" aztec-up install 4.2.0-aztecnr-rc.2
 ```
 
 ### Install Dependencies
@@ -159,14 +159,51 @@ yarn install
 ### Compile & Generate TypeScript
 
 ```bash
-yarn compile && yarn codegen
+yarn compile
+yarn codegen
 ```
 
 ### Start Local Network
 
 ```bash
-aztec start --local-network
+yarn aztec:start
 ```
+
+Wait until you see `Aztec Server listening on port 8080` before deploying. Stop it later with `yarn aztec:stop`.
+
+### Deploy
+
+```bash
+# Local / devnet
+yarn deploy
+yarn deploy::devnet
+
+# Testnet / Mainnet — requires an L1 account with ETH for gas
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::testnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::mainnet
+```
+
+Deploy outputs by network:
+
+- `yarn deploy` uses SponsoredFPC and writes `../client/.env.local`
+- `yarn deploy::devnet` uses SponsoredFPC and writes `../client/.env.devnet`
+- `yarn deploy::testnet` bridges Fee Juice from L1 and writes `../client/.env.testnet`
+- `yarn deploy::mainnet` bridges Fee Juice from L1 and writes `../client/.env.mainnet`
+
+Each generated client env file includes:
+
+- `VITE_CONTRACT_ADDRESS`
+- `VITE_DEPLOYER_ADDRESS`
+- `VITE_ADMIN_ADDRESS`
+- `VITE_DEPLOYMENT_SALT`
+- `VITE_AZTEC_NODE_URL`
+
+For `deploy::testnet` and `deploy::mainnet`, the script:
+
+1. Creates the `AccountManager` first to derive the deterministic L2 address
+2. Bridges 1000 Fee Juice from your L1 account to that address
+3. Deploys the account using the bridge claim to pay the first fees
+4. Deploys the `TreasureHunt` contract with the funded account
 
 ### Run Tests
 
@@ -255,6 +292,10 @@ The same patterns used in this game apply to:
 ```bash
 yarn compile          # Compile Noir contracts
 yarn codegen          # Generate TypeScript interfaces
+yarn deploy           # Local deploy (SponsoredFPC)
+yarn deploy::devnet   # Devnet deploy (SponsoredFPC)
+yarn deploy::testnet  # Testnet deploy (requires L1_PRIVATE_KEY)
+yarn deploy::mainnet  # Mainnet deploy (requires L1_PRIVATE_KEY)
 yarn test             # Run all tests
 yarn test:js          # Run TypeScript e2e tests only
 yarn test:nr          # Run Noir TXE tests only
@@ -262,18 +303,10 @@ yarn clean            # Remove compiled artifacts
 yarn clear-store      # Clear PXE data (after network restart)
 ```
 
-### Devnet Deployment
-
-Append `::devnet` to any command:
-
-```bash
-yarn deploy::devnet
-yarn test::devnet
-```
-
 ### Important Notes
 
 - Delete `./store` directory after restarting the local network
+- `yarn test::devnet` is available for JS e2e tests against devnet
 - Tests have long timeouts (600s) due to proof generation
 
 ---

@@ -1,15 +1,13 @@
 import { Fr, GrumpkinScalar } from "@aztec/aztec.js/fields";
 import { Logger, createLogger } from "@aztec/aztec.js/log";
 import { AccountManager } from "@aztec/aztec.js/wallet";
-import { PXE } from "@aztec/pxe/client/bundle";
-import { setupWallet } from "./setup_wallet.js";
+import { EmbeddedWallet } from "@aztec/wallets/embedded";
 import * as dotenv from 'dotenv';
-import { TestWallet } from "@aztec/test-wallet/server";
 
 // Load environment variables
 dotenv.config();
 
-export async function createAccountFromEnv(wallet: TestWallet): Promise<AccountManager> {
+export async function createAccountFromEnv(wallet: EmbeddedWallet): Promise<AccountManager> {
     let logger: Logger;
     logger = createLogger('aztec:create-account');
 
@@ -49,24 +47,9 @@ export async function createAccountFromEnv(wallet: TestWallet): Promise<AccountM
 
     // Create Schnorr account with specified values
     logger.info('🏗️  Creating Schnorr account instance with environment values...');
-    let schnorrAccount = await wallet.createSchnorrAccount(secretKey, salt, signingKey);
-    const accountAddress = schnorrAccount.address;
+    const accountManager = await wallet.createSchnorrAccount(secretKey, salt, signingKey);
+    const accountAddress = accountManager.address;
     logger.info(`📍 Account address: ${accountAddress}`);
-
-    // Check if account is already deployed
-    logger.info('🔍 Checking if account is already deployed...');
-    try {
-        const registeredAccounts = await wallet.getAccounts();
-        const isRegistered = registeredAccounts.some(acc => acc.item.equals(accountAddress));
-
-        if (isRegistered) {
-            logger.info('✅ Account is already registered with PXE');
-        } else {
-            logger.info('ℹ️  Account is not yet registered. You may need to deploy it first.');
-        }
-    } catch (error) {
-        logger.warn(`⚠️  Could not check account registration: ${error}`);
-    }
 
     logger.info('🎉 Schnorr account instance created successfully!');
     logger.info(`📋 Account Summary:`);
@@ -74,9 +57,9 @@ export async function createAccountFromEnv(wallet: TestWallet): Promise<AccountM
     logger.info(`   - SECRET (truncated): ${secretEnv.substring(0, 10)}...`);
     logger.info(`   - SALT (truncated): ${saltEnv.substring(0, 10)}...`);
 
-    return schnorrAccount;
+    return accountManager;
 }
 
-export async function getAccountFromEnv(wallet: TestWallet): Promise<AccountManager> {
+export async function getAccountFromEnv(wallet: EmbeddedWallet): Promise<AccountManager> {
     return await createAccountFromEnv(wallet);
-} 
+}

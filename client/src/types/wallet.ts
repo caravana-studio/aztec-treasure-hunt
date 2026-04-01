@@ -1,23 +1,24 @@
-import { AztecAddress } from '@aztec/aztec.js/addresses';
-import { EmbeddedWallet } from '../embedded-wallet';
+import type { AztecAddress } from '@aztec/aztec.js/addresses';
+import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
+import type { WalletType } from '../wallet/types';
 
 export type WalletStatus = 'disconnected' | 'initializing' | 'connecting' | 'connected';
 
 export interface WalletState {
-  wallet: EmbeddedWallet | null;
+  wallet: BaseWallet | null;
   address: AztecAddress | null;
   contractAddress: AztecAddress | null;
+  walletType: WalletType | null;
   status: WalletStatus;
   error: string | null;
 }
 
 export interface WalletActions {
   initialize: (nodeUrl: string) => Promise<void>;
-  createAccount: () => Promise<void>;
-  connectTestAccount: (index: number) => Promise<void>;
-  setError: (error: string | null) => void;
+  connectEmbedded: () => Promise<void>;
+  startAzguardDiscovery: () => Promise<void>;
+  disconnect: () => void;
   clearError: () => void;
-  reset: () => void;
 }
 
 export type WalletStore = WalletState & WalletActions;
