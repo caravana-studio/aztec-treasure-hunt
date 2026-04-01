@@ -51,6 +51,7 @@ function writeClientEnv(
     logger: Logger,
     contractAddress: string,
     deployerAddress: string,
+    adminAddress: string,
     deploymentSalt: string
 ) {
     const env = configManager.getConfig().environment;
@@ -62,6 +63,7 @@ function writeClientEnv(
 
     const envContent = `VITE_CONTRACT_ADDRESS=${contractAddress}
 VITE_DEPLOYER_ADDRESS=${deployerAddress}
+VITE_ADMIN_ADDRESS=${adminAddress}
 VITE_DEPLOYMENT_SALT=${deploymentSalt}
 VITE_AZTEC_NODE_URL=${nodeUrl}
 `;
@@ -183,6 +185,7 @@ async function main() {
         logger,
         treasureHuntContract.address.toString(),
         instance.deployer.toString(),
+        address.toString(),
         instance.salt.toString()
     );
 

@@ -120,7 +120,9 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
     {
       deployer: AztecAddress.fromString(config.deployerAddress),
       salt: Fr.fromString(config.deploymentSalt),
-      constructorArgs: [AztecAddress.fromString(config.deployerAddress)],
+      constructorArgs: [
+        AztecAddress.fromString(config.adminAddress ?? config.deployerAddress),
+      ],
     }
   );
   await wallet.registerContract(gameInstance, TreasureHuntContract.artifact);

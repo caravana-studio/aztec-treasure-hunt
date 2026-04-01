@@ -2,6 +2,7 @@ export interface NetworkConfig {
   nodeUrl: string;
   contractAddress: string;
   deployerAddress: string;
+  adminAddress?: string;
   deploymentSalt: string;
   proverEnabled: boolean;
 }
@@ -9,6 +10,7 @@ export interface NetworkConfig {
 export function getNetworkConfig(): NetworkConfig {
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
   const deployerAddress = import.meta.env.VITE_DEPLOYER_ADDRESS;
+  const adminAddress = import.meta.env.VITE_ADMIN_ADDRESS;
   const deploymentSalt = import.meta.env.VITE_DEPLOYMENT_SALT;
   const nodeUrl = import.meta.env.VITE_AZTEC_NODE_URL || 'http://localhost:8080';
   const proverEnabled = import.meta.env.VITE_PROVER_ENABLED === 'true';
@@ -29,6 +31,7 @@ export function getNetworkConfig(): NetworkConfig {
     nodeUrl,
     contractAddress,
     deployerAddress,
+    adminAddress,
     deploymentSalt,
     proverEnabled,
   };

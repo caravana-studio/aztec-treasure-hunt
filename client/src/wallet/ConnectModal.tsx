@@ -22,6 +22,14 @@ interface WalletOption {
   unavailableReason?: string;
 }
 
+function canRenderProviderIcon(icon: string | undefined): boolean {
+  if (!icon) {
+    return false;
+  }
+
+  return /^(https?:|data:|blob:)/.test(icon);
+}
+
 export function ConnectModal() {
   const {
     connectEmbedded,
@@ -162,7 +170,7 @@ export function ConnectModal() {
               textAlign: 'left',
             }}
           >
-            {provider.icon ? (
+            {canRenderProviderIcon(provider.icon) ? (
               <img
                 src={provider.icon}
                 alt=""
