@@ -1,9 +1,51 @@
+import { createRequire } from 'module';
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import { resolve } from 'path';
+
+const require = createRequire(import.meta.url);
+
+/**
+ * Plugin to redirect bb.js Web Worker file requests to their real location.
+ * bb.js spawns workers via `new Worker(new URL('./main.worker.js', import.meta.url))`.
+ * When Vite pre-bundles bb.js, import.meta.url changes to .vite/deps/ but the
+ * worker files aren't copied there — this plugin fixes that for dev and build.
+ */
+const bbWorkerPlugin = (): Plugin => {
+  const workerFiles: Record<string, string> = {};
+  return {
+    name: 'bb-worker-redirect',
+    configResolved(config) {
+      try {
+        const bbProverPath = require.resolve('@aztec/bb-prover');
+        const bbRequire = createRequire(bbProverPath);
+        const bbEntry = bbRequire.resolve('@aztec/bb.js');
+        const bbRoot = bbEntry.slice(0, bbEntry.indexOf('@aztec/bb.js/') + '@aztec/bb.js/'.length);
+        const bbBrowserDir = resolve(bbRoot, 'dest', 'browser', 'barretenberg_wasm');
+        workerFiles['main.worker.js'] = resolve(bbBrowserDir, 'barretenberg_wasm_main', 'factory', 'browser', 'main.worker.js');
+        workerFiles['thread.worker.js'] = resolve(bbBrowserDir, 'barretenberg_wasm_thread', 'factory', 'browser', 'thread.worker.js');
+        config.logger.info(`[bb-worker-redirect] Resolved worker files in ${bbBrowserDir}`);
+      } catch (err) {
+        config.logger.warn(`[bb-worker-redirect] Could not resolve @aztec/bb.js workers: ${err}`);
+      }
+    },
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (!req.url) return next();
+        for (const [filename, realPath] of Object.entries(workerFiles)) {
+          if (req.url.includes(filename) && req.url.includes('.vite/deps')) {
+            req.url = `/@fs/${realPath}`;
+            break;
+          }
+        }
+        next();
+      });
+    },
+  };
+};
 
 /**
  * Plugin to fix @alejoamiras/aztec-accelerator which is published with a broken
@@ -94,6 +136,7 @@ const nodeBuiltinsShim = (): Plugin => ({
 export default defineConfig({
   plugins: [
     aztecAcceleratorResolve(),
+    bbWorkerPlugin(),
     jsonImportAttributesFix(),
     nodeBuiltinsShim(),
     react(),
@@ -132,7 +175,7 @@ export default defineConfig({
       'lodash.pickby': 'lodash.pickby/index.js',
       'json-stringify-deterministic': 'json-stringify-deterministic/lib/index.js',
     },
-    dedupe: ['@aztec/foundation', '@aztec/circuits.js', '@noble/curves'],
+    dedupe: ['@aztec/foundation', '@aztec/circuits.js', '@noble/curves', '@aztec/bb-prover', '@aztec/bb.js'],
   },
   server: {
     port: 3001,
@@ -154,6 +197,7 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'esnext',
     sourcemap: false,
     minify: 'esbuild',
     chunkSizeWarningLimit: 2000,
@@ -207,6 +251,9 @@ export default defineConfig({
     exclude: [
       '@alejoamiras/aztec-accelerator',
       '@aztec/bb.js',
+      '@aztec/bb-prover',
+      '@aztec/noir-acvm_js',
+      '@aztec/noir-noirc_abi',
       '@aztec/pxe',
       '@aztec/pxe/client/lazy',
       '@aztec/pxe/client/bundle',
