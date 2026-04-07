@@ -7,6 +7,14 @@ export interface NetworkConfig {
   proverEnabled: boolean;
 }
 
+export function usesSponsoredFeePayment(nodeUrl: string): boolean {
+  return (
+    nodeUrl.includes('localhost') ||
+    nodeUrl.includes('127.0.0.1') ||
+    nodeUrl.includes('devnet')
+  );
+}
+
 export function getNetworkConfig(): NetworkConfig {
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
   const deployerAddress = import.meta.env.VITE_DEPLOYER_ADDRESS;

@@ -7,6 +7,7 @@
 import { AztecAddress } from '@aztec/aztec.js/addresses';
 import { Fr } from '@aztec/aztec.js/fields';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
+import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
 import { getContractInstanceFromInstantiationParams } from '@aztec/stdlib/contract';
 import { WalletManager } from '@aztec/wallet-sdk/manager';
 import type {
@@ -17,7 +18,7 @@ import type {
 import { hashToEmoji } from '@aztec/wallet-sdk/crypto';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
 import { TreasureHuntContract } from '../../artifacts/TreasureHunt';
-import { getNetworkConfig } from '../../config/network';
+import { getNetworkConfig, usesSponsoredFeePayment } from '../../config/network';
 
 export type { DiscoverySession, WalletProvider, PendingConnection };
 
@@ -59,15 +60,35 @@ const AZGUARD_TRANSACTION_FUNCTIONS = [
   'use_trap',
 ];
 
-function getRequiredCapabilities(contractAddress: AztecAddress) {
+async function getSponsoredFpcInstance() {
+  return getContractInstanceFromInstantiationParams(
+    SponsoredFPCContract.artifact,
+    { salt: new Fr(0) }
+  );
+}
+
+function getRequiredCapabilities(
+  contractAddress: AztecAddress,
+  sponsoredFpcAddress?: AztecAddress
+) {
   const utilityScope = AZGUARD_UTILITY_FUNCTIONS.map((fn) => ({
     contract: contractAddress,
     function: fn,
   }));
-  const transactionScope = AZGUARD_TRANSACTION_FUNCTIONS.map((fn) => ({
+  const gameTransactionScope = AZGUARD_TRANSACTION_FUNCTIONS.map((fn) => ({
     contract: contractAddress,
     function: fn,
   }));
+  const sponsoredTransactionScope = sponsoredFpcAddress
+    ? [{ contract: sponsoredFpcAddress, function: 'sponsor_unconditionally' }]
+    : [];
+  const transactionScope = [
+    ...sponsoredTransactionScope,
+    ...gameTransactionScope,
+  ];
+  const contracts = sponsoredFpcAddress
+    ? [contractAddress, sponsoredFpcAddress]
+    : [contractAddress];
 
   return [
     {
@@ -76,11 +97,12 @@ function getRequiredCapabilities(contractAddress: AztecAddress) {
     },
     {
       type: 'contracts' as const,
-      contracts: [contractAddress],
+      contracts,
       canRegister: true,
     },
     {
       type: 'simulation' as const,
+      transactions: { scope: transactionScope },
       utilities: { scope: utilityScope },
     },
     {
@@ -239,6 +261,9 @@ export async function confirmConnection(
 ): Promise<AzguardConnectorResult> {
   const config = getNetworkConfig();
   const contractAddress = AztecAddress.fromString(config.contractAddress);
+  const sponsoredFpcInstance = usesSponsoredFeePayment(config.nodeUrl)
+    ? await getSponsoredFpcInstance()
+    : null;
   const node = createAztecNodeClient(config.nodeUrl);
   const expectedNodeInfo = await node.getNodeInfo();
   const expectedChainId = new Fr(expectedNodeInfo.l1ChainId);
@@ -277,7 +302,10 @@ export async function confirmConnection(
           'Strategic treasure hunting with private state on Aztec Network',
         url: typeof window !== 'undefined' ? window.location.origin : '',
       },
-      capabilities: getRequiredCapabilities(contractAddress),
+      capabilities: getRequiredCapabilities(
+        contractAddress,
+        sponsoredFpcInstance?.address
+      ),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -305,6 +333,12 @@ export async function confirmConnection(
 
   const gameInstance = await getRegisteredGameInstance(contractAddress);
   try {
+    if (sponsoredFpcInstance) {
+      await wallet.registerContract(
+        sponsoredFpcInstance,
+        SponsoredFPCContract.artifact
+      );
+    }
     await wallet.registerContract(gameInstance, TreasureHuntContract.artifact);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { AztecAddress } from '@aztec/aztec.js/addresses';
 import { Fr } from '@aztec/aztec.js/fields';
 import { TreasureHuntContract } from '../../artifacts/TreasureHunt';
+import { getNetworkConfig, usesSponsoredFeePayment } from '../../config/network';
 import { useMultiWalletStore } from '../../wallet/store';
 import { getSponsoredFeePaymentMethod } from '../../wallet/connectors/EmbeddedConnector';
 import { useAcceleratorStore } from '../accelerator';
@@ -110,6 +111,11 @@ async function sendTx(
 }
 
 function getSendOptions(from: AztecAddress) {
+  const { nodeUrl } = getNetworkConfig();
+  if (!usesSponsoredFeePayment(nodeUrl)) {
+    return { from };
+  }
+
   const paymentMethod = getSponsoredFeePaymentMethod();
   if (!paymentMethod) {
     return { from };
