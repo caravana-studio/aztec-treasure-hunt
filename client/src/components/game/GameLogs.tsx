@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { GameLog } from '../../types/game';
 
 interface GameLogsProps {
@@ -61,35 +60,15 @@ function formatLogMessage(message: string): JSX.Element {
 }
 
 export function GameLogs({ logs }: GameLogsProps) {
-  const [expanded, setExpanded] = useState(true);
-
   return (
     <div className="logs-panel-glass">
-      <div
-        className={`logs-header-glass ${expanded ? 'expanded' : ''}`}
-        onClick={() => setExpanded(!expanded)}
-      >
+      <div className="logs-header-glass">
         <span>Game Log</span>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M4 6L8 10L12 6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
       </div>
-      <div className={`logs-content-glass ${expanded ? 'expanded' : ''}`}>
+      <div className="logs-content-glass">
         <div className="logs-list-glass">
           {logs.length === 0 ? (
-            <div className="log-entry-glass log-empty">No activity yet...</div>
+            <div className="log-entry-glass log-empty">No activity yet.</div>
           ) : (
             logs.map((log) => (
               <div key={log.id} className="log-entry-glass">

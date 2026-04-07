@@ -32,20 +32,20 @@ function getLoadingModalContent(statusMessage: string) {
   if (normalized === 'Creating game') {
     return {
       title,
-      message: 'Setting up your game and submitting the opening transaction.',
+      message: 'Creating the game and sending the first transaction.',
     };
   }
 
   if (normalized === 'Joining game') {
     return {
       title,
-      message: 'Connecting you to the match and confirming the join transaction.',
+      message: 'Joining the game and confirming the transaction.',
     };
   }
 
   return {
     title,
-    message: 'Please keep this tab open while we finish the action.',
+    message: 'Please keep this tab open.',
   };
 }
 

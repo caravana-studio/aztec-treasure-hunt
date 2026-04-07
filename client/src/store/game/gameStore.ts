@@ -97,10 +97,10 @@ async function sendTx(
   const walletType = useMultiWalletStore.getState().walletType;
   const { available, mode } = useAcceleratorStore.getState();
   const isNative = walletType === 'embedded' && available && mode === 'accelerated';
-  const proverLabel = walletType !== 'embedded' ? 'Azguard' : isNative ? '⚡ Native' : '🌐 WASM';
+  const proverLabel = walletType !== 'embedded' ? 'Azguard' : isNative ? 'Native' : 'WASM';
 
-  console.log(`[tx] ${name} — proving with ${proverLabel}`);
-  addLog(`${name} — proving with ${proverLabel}...`);
+  console.log(`[tx] ${name} (${proverLabel})`);
+  addLog(`${name} started (${proverLabel})`);
 
   const start = Date.now();
   await sendCall;
@@ -149,6 +149,7 @@ interface GameActions {
 
   // UI state
   toggleTreasure: (x: number, y: number) => void;
+  clearSelectedTreasures: () => void;
   setSelectedAction: (action: PowerType) => void;
   setGameId: (gameId: Fr) => void;
   setError: (error: string | null) => void;
@@ -235,6 +236,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
+  clearSelectedTreasures: () => {
+    set({ selectedTreasures: [] });
+  },
+
   resetGame: () => {
     set(initialState);
   },
@@ -250,7 +255,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     try {
-      set({ isLoading: true, statusMessage: 'Refreshing...' });
+      set({ isLoading: true, statusMessage: 'Loading game...' });
 
       const contract = TreasureHuntContract.at(contractAddress, wallet);
 
@@ -286,12 +291,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       } else if (status === STATUS_SETUP) {
         gamePhase = 'setup';
         if (previousPhase === 'lobby') {
-          logPhaseChange('👋 Opponent joined! Both players place your treasures');
+          logPhaseChange('Opponent joined. Place 3 treasures.');
         }
       } else if (status === STATUS_PLAYING) {
         gamePhase = 'playing';
         if (previousPhase === 'setup') {
-          logPhaseChange('⚔️ Game started! Take turns to find opponent\'s treasures');
+          logPhaseChange('Game started. Find the hidden treasures.');
         }
       } else if (status === STATUS_AWAITING) {
         gamePhase = 'awaiting';
@@ -299,7 +304,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         gamePhase = 'finished';
         winner = game.winner.toString() === myAddress.toString() ? 'You Win!' : 'You Lose!';
         if (previousPhase !== 'finished') {
-          logPhaseChange(winner === 'You Win!' ? '🏆 Victory! You found all treasures!' : '😢 Defeat! Opponent found all treasures');
+          logPhaseChange(winner === 'You Win!' ? 'You found all treasures.' : 'Opponent found all treasures.');
         }
       }
 
@@ -363,15 +368,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         if (!wasAlreadyDug) {
           const who = cell.isMine ? 'You' : 'Opponent';
           if (cell.found) {
-            addLog(`${who} found a treasure at (${cell.x}, ${cell.y})!`);
+            addLog(`${who} found a treasure at (${cell.x}, ${cell.y}).`);
           } else if (cell.hitTrap) {
             if (cell.isMine) {
-              addLog(`You hit a trap at (${cell.x}, ${cell.y})! You lose your next turn.`);
+              addLog(`You hit a trap at (${cell.x}, ${cell.y}). Turn lost.`);
             } else {
-              addLog(`Opponent hit your trap at (${cell.x}, ${cell.y})! They lose their next turn.`);
+              addLog(`Opponent hit your trap at (${cell.x}, ${cell.y}). Turn lost.`);
             }
           } else {
-            addLog(`${who} found nothing at (${cell.x}, ${cell.y})`);
+            addLog(`${who} found nothing at (${cell.x}, ${cell.y}).`);
           }
         }
       }
@@ -386,7 +391,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (prevDetectorPos && gamePhase === 'playing' && previousPhase === 'awaiting') {
         // Log the detector result for the player who used it
         const treasureWord = detectorCount === 1 ? 'treasure' : 'treasures';
-        addLog(`Scan complete: ${detectorCount} ${treasureWord} found in 3x3 area around (${prevDetectorPos.x}, ${prevDetectorPos.y})`);
+        addLog(`Scan result: ${detectorCount} ${treasureWord} near (${prevDetectorPos.x}, ${prevDetectorPos.y}).`);
 
         // Create scanned area for visual feedback
         newScannedArea = {
@@ -406,7 +411,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (prevCompassPos && gamePhase === 'playing' && previousPhase === 'awaiting') {
         // Log the compass result for the player who used it
         const cellWord = compassDistance === 1 ? 'cell' : 'cells';
-        addLog(`Compass result: Nearest treasure is ${compassDistance} ${cellWord} away from (${prevCompassPos.x}, ${prevCompassPos.y})`);
+        addLog(`Compass result: ${compassDistance} ${cellWord} from (${prevCompassPos.x}, ${prevCompassPos.y}).`);
 
         newCompassDistance = compassDistance;
         newCompassPosition = null; // Clear after logging
@@ -424,10 +429,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Detect when I just got an extra turn (opponent hit my trap)
       // Check if we already logged this to avoid duplicates from polling
       const alreadyLoggedExtraTurn = currentLogs.some(
-        (log) => log.message === 'Opponent hit your trap! You get an extra turn!'
+        (log) => log.message === 'Opponent hit your trap. Extra turn granted.'
       );
       if (iHaveExtraTurn && !previousHasExtraTurn && !alreadyLoggedExtraTurn) {
-        addLog('Opponent hit your trap! You get an extra turn!');
+        addLog('Opponent hit your trap. Extra turn granted.');
       } else if (!iHaveExtraTurn && previousHasExtraTurn && gamePhase === 'playing') {
         // Extra turn was just consumed
         addLog('Extra turn used.');
@@ -520,7 +525,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ gameId: id, isPlayer1: true });
 
-      addLog(`Game #${toNumber(nextGameId)} created! Share this ID with your opponent`);
+      addLog(`Game ${toNumber(nextGameId)} created. Share the ID.`);
       await refreshGameState(id);
 
       return toNumber(nextGameId);
@@ -549,7 +554,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ gameId: id, isPlayer1: false });
 
-      addLog(`Joined game #${gameIdStr}! Place your 3 treasures on the grid`);
+      addLog(`Joined game ${gameIdStr}. Place 3 treasures.`);
       await refreshGameState(id);
 
       return id;
@@ -580,9 +585,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         addLog,
       );
 
-      set((state) => ({ myTreasurePositions: [...state.selectedTreasures] }));
+      set((state) => ({
+        myTreasurePositions: [...state.selectedTreasures],
+        selectedTreasures: [],
+      }));
 
-      addLog('Your treasures are now hidden!');
+      addLog('Treasures placed.');
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to place treasures - Full error:', err);
@@ -610,7 +618,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       await sendTx('Dig', contract.methods.dig(gameId, x, y).send(getSendOptions(myAddress)), addLog);
 
-      addLog(`You dig at (${x}, ${y})...`);
+      addLog(`Digging at (${x}, ${y}).`);
       // Don't clear activeAction here - keep animation until opponent responds
       await refreshGameState();
     } catch (err: unknown) {
@@ -628,7 +636,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, statusMessage: 'Checking dig result...' });
+    set({ isLoading: true, statusMessage: 'Checking dig...' });
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
@@ -637,7 +645,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       await sendTx('Check dig result', contract.methods.check_dig_result(gameId, pendingX, pendingY).send(getSendOptions(myAddress)), addLog);
 
-      addLog(`Opponent digs at (${pendingX}, ${pendingY})...`);
+      addLog(`Opponent digs at (${pendingX}, ${pendingY}).`);
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to respond - Full error:', err);
@@ -656,7 +664,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       isLoading: true,
-      statusMessage: 'Scanning area...',
+      statusMessage: 'Scanning...',
       lastDetectorPosition: { x, y },
       activeAction: { type: 'detector', position: { x, y } },
     });
@@ -665,7 +673,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       await sendTx('Use detector', contract.methods.use_detector(gameId, x, y).send(getSendOptions(myAddress)), addLog);
 
-      addLog(`You scan area around (${x}, ${y})...`);
+      addLog(`Scanning around (${x}, ${y}).`);
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to use detector - Full error:', err);
@@ -682,7 +690,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, statusMessage: 'Processing scan...' });
+    set({ isLoading: true, statusMessage: 'Checking scan...' });
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
@@ -691,7 +699,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       await sendTx('Respond detector', contract.methods.respond_detector(gameId, pendingX, pendingY).send(getSendOptions(myAddress)), addLog);
 
-      addLog(`Opponent scans area around (${pendingX}, ${pendingY})`);
+      addLog(`Opponent scans around (${pendingX}, ${pendingY}).`);
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to respond to detector - Full error:', err);
@@ -719,7 +727,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const contract = TreasureHuntContract.at(contractAddress, wallet);
       await sendTx('Use compass', contract.methods.use_compass(gameId, x, y).send(getSendOptions(myAddress)), addLog);
 
-      addLog(`You use compass from (${x}, ${y})...`);
+      addLog(`Using compass at (${x}, ${y}).`);
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to use compass - Full error:', err);
@@ -736,7 +744,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    set({ isLoading: true, statusMessage: 'Processing compass...' });
+    set({ isLoading: true, statusMessage: 'Checking compass...' });
 
     try {
       const contract = TreasureHuntContract.at(contractAddress, wallet);
@@ -745,7 +753,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       await sendTx('Respond compass', contract.methods.respond_compass(gameId, pendingX, pendingY).send(getSendOptions(myAddress)), addLog);
 
-      addLog(`Opponent uses compass from (${pendingX}, ${pendingY})`);
+      addLog(`Opponent uses compass at (${pendingX}, ${pendingY}).`);
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to respond to compass - Full error:', err);
@@ -778,7 +786,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pos.x === oldX && pos.y === oldY ? { x: newX, y: newY } : pos
       );
 
-      addLog(`You moved treasure from (${oldX}, ${oldY}) to (${newX}, ${newY})`);
+      addLog(`Treasure moved from (${oldX}, ${oldY}) to (${newX}, ${newY}).`);
       set({ myTreasurePositions: newTreasurePositions, activeAction: null });
       await refreshGameState();
     } catch (err: unknown) {
@@ -809,7 +817,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Add trap position to local state for visual feedback
       const newTrapPositions = [...myTrapPositions, { x, y }];
 
-      addLog(`You placed a trap at (${x}, ${y})`);
+      addLog(`Trap placed at (${x}, ${y}).`);
       set({ activeAction: null, selectedAction: 'dig', myTrapPositions: newTrapPositions });
       await refreshGameState();
     } catch (err: unknown) {

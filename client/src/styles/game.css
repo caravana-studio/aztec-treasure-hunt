@@ -12,25 +12,16 @@
 .game-container::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('/images/background.png');
+  inset: -4%;
+  background-image: url('/game/bg.png');
+  filter: brightness(0.9);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  animation: bg-zoom 20s ease-in-out infinite;
+  transform-origin: center center;
+  animation: menu-background-breathe 18s ease-in-out infinite;
+  will-change: transform;
   z-index: 0;
-}
-
-@keyframes bg-zoom {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
 }
 
 /* Ensure clouds show above background */
@@ -1173,5 +1164,860 @@
     height: min(80vw, 400px);
     padding: var(--space-sm);
     gap: 3px;
+  }
+}
+
+/* ============================================
+   Game screen redesign
+   ============================================ */
+
+/* Optical baseline correction for SF Fedora Titles */
+.turn-text,
+.game-finished-card__title,
+.game-setup-modal__title {
+  transform: translateY(var(--sf-fedora-titles-shift-lg));
+}
+
+.game-rail .treasure-count,
+.game-finished-card__eyebrow,
+.game-empty-card__eyebrow,
+.game-setup-modal__position-pill,
+.game-setup-modal__cancel,
+.game-setup-modal__confirm {
+  transform: translateY(var(--sf-fedora-titles-shift-md));
+}
+
+.game-rail .objects-panel-header > span,
+.logs-header-glass > span {
+  display: inline-block;
+  transform: translateY(var(--sf-fedora-titles-shift-md));
+}
+
+.log-time,
+.game-empty-card__copy,
+.game-setup-modal__copy {
+  transform: translateY(var(--sf-fedora-titles-shift-sm));
+}
+
+.game-container {
+  min-height: 100vh;
+}
+
+.game-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.14), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 36%, rgba(31, 12, 2, 0.18) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.game-clouds {
+  z-index: 1;
+  opacity: 0.52;
+}
+
+.game-shell {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2vh, 28px);
+  padding: clamp(18px, 2.2vw, 34px) clamp(18px, 2.8vw, 42px) clamp(16px, 1.5vw, 24px);
+}
+
+.game-shell--empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.game-topbar {
+  width: min(100%, 1900px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.game-topbar__slot {
+  display: flex;
+  align-items: flex-start;
+}
+
+.game-topbar__slot--left {
+  justify-content: flex-start;
+}
+
+.game-topbar__slot--center {
+  justify-content: center;
+}
+
+.game-topbar__slot--right {
+  justify-content: flex-end;
+}
+
+.game-accelerator-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.game-stage {
+  flex: 1;
+  min-height: 0;
+  width: min(100%, 1900px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(260px, 330px) minmax(680px, 1fr) minmax(260px, 330px);
+  align-items: stretch;
+  gap: clamp(18px, 2.2vw, 42px);
+}
+
+.game-rail {
+  display: flex;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.game-rail__stack {
+  width: min(100%, 340px);
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2vh, 24px);
+}
+
+.game-rail__stack--inactive .player-card,
+.game-rail__stack--inactive .objects-panel-glass {
+  box-shadow:
+    0 18px 30px rgba(28, 13, 3, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  filter: brightness(0.76) saturate(0.78);
+}
+
+.game-rail__stack--inactive .player-avatar-frame::before {
+  opacity: 0.88;
+}
+
+.game-rail__stack--inactive .treasure-progress,
+.game-rail__stack--inactive .dig-action-btn,
+.game-rail__stack--inactive .power-item-btn {
+  filter: brightness(0.94);
+}
+
+.game-center {
+  --game-board-max: clamp(720px, 49vw, 980px);
+  --game-board-fit: calc(100vh - 235px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(18px, 2vh, 26px);
+}
+
+.game-board-frame {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.game-center__logs {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.turn-indicator {
+  grid-column: auto;
+  grid-row: auto;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.turn-indicator-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 68px;
+  padding: 14px 28px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(65, 57, 47, 0.92) 0%, rgba(49, 42, 35, 0.94) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 18px 32px rgba(31, 17, 8, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.turn-text {
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(19px, 1.55vw, 31px);
+  line-height: 1.1;
+  letter-spacing: 0.1em;
+  text-align: center;
+  color: rgba(255, 249, 237, 0.96);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+.turn-indicator-box.loading .turn-text {
+  font-size: clamp(15px, 1.05vw, 22px);
+}
+
+.loading-dot {
+  color: #63f1a3;
+  font-size: 12px;
+}
+
+.game-grid {
+  width: min(100%, var(--game-board-fit));
+  max-width: var(--game-board-max);
+  height: auto;
+  padding: clamp(14px, 1.3vw, 20px);
+  gap: clamp(4px, 0.45vw, 8px);
+  border-radius: 34px;
+  background: linear-gradient(180deg, rgba(220, 197, 162, 0.84) 0%, rgba(199, 173, 137, 0.82) 100%);
+  border: 1px solid rgba(255, 244, 224, 0.28);
+  box-shadow:
+    0 24px 42px rgba(71, 39, 14, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.grid-cell {
+  border-radius: 20px;
+}
+
+.grid-actions {
+  margin-top: 2px;
+}
+
+.game-action-btn {
+  appearance: none;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 14px 26px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ffa71f 0%, #ff8b08 100%);
+  color: #fff8ef;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(16px, 1.1vw, 20px);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow:
+    0 16px 24px rgba(122, 58, 4, 0.28),
+    inset 0 1px 0 rgba(255, 238, 211, 0.42);
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.game-action-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+
+.game-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.18);
+  box-shadow:
+    0 8px 18px rgba(122, 58, 4, 0.14),
+    inset 0 1px 0 rgba(255, 238, 211, 0.2);
+}
+
+.game-rail .player-card {
+  width: 100%;
+  max-width: none;
+  background: linear-gradient(180deg, rgba(221, 200, 171, 0.9) 0%, rgba(198, 169, 133, 0.88) 100%);
+  border: 1px solid rgba(255, 246, 231, 0.22);
+  box-shadow:
+    0 24px 36px rgba(67, 34, 8, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.game-rail .player-card.active-turn {
+  border-color: rgba(91, 230, 148, 0.92);
+  box-shadow:
+    0 0 0 4px rgba(91, 230, 148, 0.32),
+    0 24px 36px rgba(35, 78, 46, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.game-container .grayed-out {
+  filter: saturate(0.72) brightness(0.92);
+  opacity: 0.72;
+}
+
+.game-rail .player-avatar-frame {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: transparent;
+  box-shadow:
+    0 20px 34px rgba(44, 22, 8, 0.2),
+    0 8px 16px rgba(44, 22, 8, 0.14);
+}
+
+.game-rail .player-avatar-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  background-size: auto 100%;
+  filter: blur(1px);
+  animation: player-avatar-pan 52s ease-in-out infinite;
+}
+
+.game-rail .player-avatar-frame--player-1::before {
+  background-image: url('/images/player_1_bg.png');
+}
+
+.game-rail .player-avatar-frame--player-2::before {
+  background-image: url('/images/player_2_bg.png');
+}
+
+.game-rail .player-avatar {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+  display: block;
+  object-fit: cover;
+  object-position: center 14px;
+}
+
+.game-rail .player-avatar-frame--mirrored .player-avatar {
+  transform: scaleX(-1);
+}
+
+.game-rail .treasure-progress {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(252, 245, 231, 0.72) 0%, rgba(239, 225, 198, 0.66) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.36);
+}
+
+.game-rail .treasure-progress-header {
+  margin-bottom: 10px;
+}
+
+.game-rail .treasure-count {
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(18px, 1.05vw, 24px);
+  letter-spacing: 0.04em;
+  color: rgba(77, 54, 28, 0.92);
+}
+
+.game-rail .treasure-progress-step {
+  height: 12px;
+  border-radius: 999px;
+}
+
+.game-rail .objects-panel-glass {
+  width: 100%;
+  max-width: none;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(203, 176, 138, 0.84) 0%, rgba(183, 154, 118, 0.82) 100%);
+  border: 1px solid rgba(255, 246, 231, 0.2);
+  box-shadow:
+    0 24px 36px rgba(67, 34, 8, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.game-rail .objects-panel-header {
+  padding: 14px 18px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(18px, 1vw, 22px);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(82, 58, 30, 0.9);
+}
+
+.game-rail .objects-panel-content {
+  padding: 18px;
+  gap: 14px;
+}
+
+.game-rail .dig-action-btn {
+  min-height: 96px;
+  border-radius: 24px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(28px, 1.8vw, 34px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, rgba(252, 210, 98, 0.9) 0%, rgba(222, 176, 66, 0.84) 100%);
+  color: rgba(95, 63, 18, 0.96);
+  text-shadow: none;
+}
+
+.game-rail .dig-action-btn img {
+  width: 54px;
+  height: 54px;
+}
+
+.game-rail .dig-action-btn.selected {
+  box-shadow:
+    0 0 0 3px rgba(255, 214, 117, 0.46),
+    0 14px 24px rgba(204, 141, 27, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.game-rail .objects-divider {
+  margin: 2px 0;
+}
+
+.game-rail .objects-items-grid {
+  gap: 12px;
+}
+
+.game-rail .power-item-btn {
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(248, 240, 226, 0.66) 0%, rgba(229, 214, 189, 0.64) 100%);
+}
+
+.game-rail .power-item-btn.selected {
+  box-shadow:
+    0 0 0 3px rgba(255, 214, 117, 0.42),
+    0 12px 22px rgba(204, 141, 27, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.game-rail .power-badge {
+  bottom: -6px;
+  right: -6px;
+}
+
+.game-rail__logs {
+  width: 100%;
+  display: flex;
+}
+
+.game-rail .logs-panel-glass {
+  display: flex;
+  flex-direction: column;
+  height: clamp(286px, 34vh, 382px);
+  width: 100%;
+  max-width: none;
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(221, 198, 163, 0.84) 0%, rgba(194, 168, 131, 0.82) 100%);
+  border: 1px solid rgba(255, 246, 231, 0.22);
+  box-shadow:
+    0 20px 34px rgba(67, 34, 8, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.game-center__logs .logs-panel-glass {
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: auto;
+  width: min(100%, var(--game-board-fit));
+  max-width: var(--game-board-max);
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(221, 198, 163, 0.84) 0%, rgba(194, 168, 131, 0.82) 100%);
+  border: 1px solid rgba(255, 246, 231, 0.22);
+  box-shadow:
+    0 20px 34px rgba(67, 34, 8, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.logs-header-glass {
+  justify-content: center;
+  padding: 14px 16px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(18px, 1vw, 22px);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.logs-content-glass {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.logs-list-glass {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.log-entry-glass {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  border-radius: 20px;
+  padding: 10px 12px;
+  background: rgba(255, 250, 242, 0.52);
+}
+
+.log-time {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  padding: 6px 8px 4px;
+  border-radius: 12px;
+  background: rgba(120, 93, 60, 0.12);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: rgba(97, 72, 42, 0.76);
+}
+
+.log-message {
+  min-width: 0;
+  align-self: center;
+  color: rgba(77, 54, 28, 0.92);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.log-empty {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+  color: rgba(97, 72, 42, 0.72);
+}
+
+.game-finished-card {
+  width: min(100%, 640px);
+  padding: 34px 28px 30px;
+  border-radius: 32px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(79, 69, 57, 0.92) 0%, rgba(52, 43, 35, 0.94) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 22px 36px rgba(26, 13, 6, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.game-finished-card__eyebrow {
+  margin: 0 0 12px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 243, 223, 0.72);
+}
+
+.game-finished-card__title {
+  margin: 0 0 24px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(34px, 3vw, 54px);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  color: #fffaf0;
+  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.24);
+}
+
+.game-finished-card__title.is-win {
+  color: #7bf0ab;
+}
+
+.game-finished-card__title.is-loss {
+  color: #ff9b8f;
+}
+
+.game-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: min(100%, 760px);
+}
+
+.game-empty-state__logo {
+  width: min(100%, clamp(360px, 30vw, 620px));
+  height: auto;
+  filter:
+    drop-shadow(0 6px 20px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 20px 28px rgba(60, 20, 0, 0.2));
+}
+
+.game-empty-card {
+  width: min(100%, 440px);
+  padding: 28px 24px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(221, 200, 171, 0.92) 0%, rgba(198, 169, 133, 0.9) 100%);
+  border: 1px solid rgba(255, 246, 231, 0.22);
+  box-shadow:
+    0 24px 36px rgba(67, 34, 8, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  text-align: center;
+}
+
+.game-empty-card__eyebrow {
+  margin: 0 0 10px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(82, 58, 30, 0.68);
+}
+
+.game-empty-card__copy {
+  margin: 0 0 20px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: rgba(77, 54, 28, 0.82);
+}
+
+.game-setup-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 8, 13, 0.56);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.game-setup-modal__dialog {
+  position: relative;
+  width: min(100%, 520px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(221, 198, 163, 0.96) 0%, rgba(194, 168, 131, 0.94) 100%);
+  box-shadow:
+    0 24px 42px rgba(67, 34, 8, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 246, 231, 0.22);
+}
+
+.game-setup-modal__hero {
+  height: 220px;
+  overflow: hidden;
+}
+
+.game-setup-modal__hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+}
+
+.game-setup-modal__body {
+  padding: 18px 20px 22px;
+}
+
+.game-setup-modal__title {
+  margin: 0 0 10px;
+  text-align: center;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(24px, 2vw, 32px);
+  line-height: 1;
+  letter-spacing: 0.05em;
+  color: rgba(77, 54, 28, 0.96);
+  text-transform: uppercase;
+}
+
+.game-setup-modal__copy {
+  margin: 0 0 18px;
+  text-align: center;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  color: rgba(77, 54, 28, 0.78);
+}
+
+.game-setup-modal__positions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.game-setup-modal__position-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 14px 8px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(252, 245, 231, 0.72) 0%, rgba(239, 225, 198, 0.66) 100%);
+  color: rgba(77, 54, 28, 0.92);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.game-setup-modal__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.game-setup-modal__cancel,
+.game-setup-modal__confirm {
+  min-height: 58px;
+  border-radius: 18px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.game-setup-modal__cancel {
+  background: linear-gradient(180deg, rgba(79, 69, 57, 0.92) 0%, rgba(52, 43, 35, 0.94) 100%);
+  color: rgba(255, 249, 237, 0.94);
+  box-shadow:
+    0 12px 20px rgba(43, 23, 8, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.game-setup-modal__confirm {
+  background: linear-gradient(180deg, #ffa71f 0%, #ff8b08 100%);
+  color: #fff8ef;
+  box-shadow:
+    0 14px 24px rgba(255, 136, 10, 0.24),
+    inset 0 1px 0 rgba(255, 234, 195, 0.45);
+}
+
+.game-setup-modal__confirm:disabled {
+  opacity: 0.58;
+}
+
+.game-error-toast {
+  position: fixed;
+  top: clamp(14px, 2vh, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@keyframes player-avatar-pan {
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (min-width: 1700px) {
+  .game-stage {
+    grid-template-columns: minmax(300px, 360px) minmax(760px, 1fr) minmax(300px, 360px);
+    gap: clamp(26px, 2.6vw, 52px);
+  }
+
+  .game-center {
+    --game-board-max: clamp(820px, 50vw, 1080px);
+    --game-board-fit: calc(100vh - 245px);
+  }
+}
+
+@media (max-width: 1440px) {
+  .game-stage {
+    grid-template-columns: minmax(230px, 290px) minmax(580px, 1fr) minmax(230px, 290px);
+    gap: 18px;
+  }
+
+  .game-center {
+    --game-board-max: clamp(620px, 46vw, 840px);
+    --game-board-fit: calc(100vh - 245px);
+  }
+
+  .game-rail .dig-action-btn {
+    min-height: 88px;
+    font-size: clamp(24px, 1.6vw, 30px);
+  }
+}
+
+@media (max-width: 1180px) {
+  .game-shell {
+    gap: 16px;
+  }
+
+  .game-stage {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .game-center {
+    order: 1;
+    --game-board-max: clamp(520px, 74vw, 760px);
+    --game-board-fit: calc(100vh - 330px);
+  }
+
+  .game-rail {
+    width: 100%;
+  }
+
+  .game-rail--left {
+    order: 2;
+  }
+
+  .game-rail--right {
+    order: 3;
+  }
+
+  .game-rail__stack {
+    width: min(100%, 940px);
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    align-items: start;
+  }
+
+  .game-grid {
+    width: min(100%, calc(100vh - 360px));
+  }
+
+  .game-rail .logs-panel-glass {
+    height: clamp(286px, 30vh, 340px);
   }
 }

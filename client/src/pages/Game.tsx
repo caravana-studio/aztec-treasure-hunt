@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Fr } from '@aztec/aztec.js/fields';
 import { useWallet } from '../context/WalletContext';
@@ -49,10 +49,12 @@ export function Game() {
     myTrapPositions,
     hasExtraTurn,
     toggleTreasure,
+    clearSelectedTreasures,
     setSelectedAction,
     resetGame,
     setError,
   } = useGame();
+  const [showTreasureConfirmModal, setShowTreasureConfirmModal] = useState(false);
 
   // Initialize game state from URL param
   useEffect(() => {
@@ -87,6 +89,15 @@ export function Game() {
 
     return () => clearInterval(interval);
   }, [gameId, myAddress, gamePhase, mySetupDone, isMyTurn, isLoading, refreshGameState]);
+
+  useEffect(() => {
+    const shouldShow =
+      gamePhase === 'setup' &&
+      !mySetupDone &&
+      selectedTreasures.length === 3;
+
+    setShowTreasureConfirmModal(shouldShow);
+  }, [gamePhase, mySetupDone, selectedTreasures.length]);
 
   // Handle grid click based on game phase
   const handleGridClick = (x: number, y: number) => {
@@ -132,15 +143,32 @@ export function Game() {
   const myAvatar = isPlayer1 ? '/images/player_1.png' : '/images/player_2.png';
   const opponentAvatar = isPlayer1 ? '/images/player_2.png' : '/images/player_1.png';
 
+  const handleCancelTreasurePlacement = () => {
+    clearSelectedTreasures();
+    setShowTreasureConfirmModal(false);
+  };
+
+  const handleConfirmTreasurePlacement = async () => {
+    setShowTreasureConfirmModal(false);
+    await placeTreasures();
+  };
+
   if (!myAddress) {
     return (
-      <div className="lobby-container">
-        <div className="lobby-card">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-md)' }}>
-            <p style={{ margin: 0, color: 'white', textAlign: 'center' }}>Please connect your wallet first.</p>
-            <button className="glass-btn" onClick={() => navigate('/lobby')}>
-              Go to Lobby
-            </button>
+      <div className="game-container game-container--empty">
+        <AnimatedClouds className="game-clouds" />
+        <div className="game-shell game-shell--empty">
+          <div className="game-empty-state">
+            <img src="/menu/logo.png" alt="Treasure Hunt" className="game-empty-state__logo" />
+            <div className="game-empty-card">
+              <p className="game-empty-card__eyebrow">Wallet required</p>
+              <p className="game-empty-card__copy">
+                Connect a wallet in the lobby to enter a game.
+              </p>
+              <button className="game-action-btn" onClick={() => navigate('/lobby')}>
+                Go to Lobby
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -148,165 +176,189 @@ export function Game() {
   }
 
   return (
-    
     <div className="game-container">
-      <AnimatedClouds />
+      <AnimatedClouds className="game-clouds" />
 
       {error && (
-        <div className="error-toast" onClick={() => setError(null)}>
+        <div className="error-toast game-error-toast" onClick={() => setError(null)}>
           {error}
         </div>
       )}
 
-      <div className="game-layout">
-        {/* Accelerator status — only for embedded wallet */}
-        {walletType === 'embedded' && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-            <AcceleratorBadge />
+      <div className="game-shell">
+        <div className="game-topbar">
+          <div className="game-topbar__slot game-topbar__slot--left">
+            {walletType === 'embedded' && (
+              <div className="game-accelerator-wrap">
+                <AcceleratorBadge />
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Turn indicator */}
-        <TurnIndicator
-          isMyTurn={isMyTurn}
-          gamePhase={gamePhase}
-          gameId={id}
-          isLoading={isLoading}
-          statusMessage={statusMessage}
-          mySetupDone={mySetupDone}
-          hasExtraTurn={hasExtraTurn}
-        />
-
-        {/* Left panel - YOUR info */}
-        <div className="player-panel left">
-          <PlayerCard
-            avatarSrc={myAvatar}
-            score={myScore}
-            isActive={isMyTurn}
-          />
-          <PowersPanel
-            powers={powers}
-            selectedAction={selectedAction}
-            onSelectAction={setSelectedAction}
-            disabled={!isMyTurn || gamePhase !== 'playing'}
-          />
+          <div className="game-topbar__slot game-topbar__slot--center">
+            <TurnIndicator
+              isMyTurn={isMyTurn}
+              gamePhase={gamePhase}
+              gameId={id}
+              isLoading={isLoading}
+              statusMessage={statusMessage}
+              mySetupDone={mySetupDone}
+              hasExtraTurn={hasExtraTurn}
+            />
+          </div>
+          <div className="game-topbar__slot game-topbar__slot--right" />
         </div>
 
-        {/* Center - Grid */}
-        <div className="grid-container">
-          {gamePhase === 'lobby' && (
-            <GameGrid clickable={false} />
-          )}
-
-          {gamePhase === 'setup' && !mySetupDone && (
-            <>
-              <GameGrid
-                selectedCells={selectedTreasures}
-                clickable
-                onCellClick={handleGridClick}
+        <div className="game-stage">
+          <aside className="game-rail game-rail--left">
+            <div className={`game-rail__stack ${isMyTurn ? 'game-rail__stack--active' : 'game-rail__stack--inactive'}`}>
+              <PlayerCard
+                avatarSrc={myAvatar}
+                score={myScore}
+                isActive={isMyTurn}
+                side="left"
               />
-              {!isLoading && (
-                <div className="grid-actions">
-                  <button
-                    className="glass-btn"
-                    onClick={placeTreasures}
-                    disabled={selectedTreasures.length !== 3}
+              <PowersPanel
+                powers={powers}
+                selectedAction={selectedAction}
+                onSelectAction={setSelectedAction}
+                disabled={!isMyTurn || gamePhase !== 'playing'}
+              />
+            </div>
+          </aside>
+
+          <main className="game-center">
+            <div className="game-board-frame">
+              {gamePhase === 'lobby' && (
+                <GameGrid clickable={false} />
+              )}
+
+              {gamePhase === 'setup' && !mySetupDone && (
+                <>
+                  <GameGrid
+                    selectedCells={selectedTreasures}
+                    clickable
+                    onCellClick={handleGridClick}
+                  />
+                </>
+              )}
+
+              {gamePhase === 'setup' && mySetupDone && (
+                <GameGrid
+                  myTreasures={myTreasurePositions}
+                  showTreasures={myTreasurePositions.length > 0}
+                  clickable={false}
+                />
+              )}
+
+              {(gamePhase === 'playing' || gamePhase === 'awaiting') && (
+                <GameGrid
+                  myTreasures={myTreasurePositions}
+                  myTraps={myTrapPositions}
+                  dugCells={dugCells}
+                  clickable={isMyTurn && gamePhase === 'playing'}
+                  onCellClick={handleGridClick}
+                  showTreasures
+                  diggingCell={diggingCell}
+                  activeAction={activeAction}
+                  scannedArea={scannedArea}
+                  compassResult={compassResult}
+                  selectedAction={selectedAction}
+                  shovelSourcePosition={shovelSourcePosition}
+                />
+              )}
+
+              {gamePhase === 'finished' && (
+                <div className="game-finished-card">
+                  <p className="game-finished-card__eyebrow">Game complete</p>
+                  <h2
+                    className={`game-finished-card__title ${winner === 'You Win!' ? 'is-win' : 'is-loss'}`}
                   >
-                    Confirm Treasures Position
+                    {winner}
+                  </h2>
+                  <button
+                    className="game-action-btn"
+                    onClick={() => {
+                      resetGame();
+                      navigate('/lobby');
+                    }}
+                  >
+                    Back to Lobby
                   </button>
                 </div>
               )}
-            </>
-          )}
+            </div>
 
-          {gamePhase === 'setup' && mySetupDone && (
-            <>
-              <GameGrid
-                myTreasures={myTreasurePositions}
-                showTreasures={myTreasurePositions.length > 0}
-                clickable={false}
+          </main>
+
+          <aside className="game-rail game-rail--right">
+            <div className={`game-rail__stack ${!isMyTurn ? 'game-rail__stack--active' : 'game-rail__stack--inactive'}`}>
+              <PlayerCard
+                avatarSrc={opponentAvatar}
+                score={opponentScore}
+                isActive={!isMyTurn}
+                isOpponent
+                side="right"
               />
-              {/* <div className="grid-actions">
-                <p style={{ color: 'white', textAlign: 'center', margin: 0 }}>
-                  ✓ Treasures placed! Waiting for opponent...
-                </p>
-              </div> */}
-            </>
-          )}
-
-          {(gamePhase === 'playing' || gamePhase === 'awaiting') && (
-            <GameGrid
-              myTreasures={myTreasurePositions}
-              myTraps={myTrapPositions}
-              dugCells={dugCells}
-              clickable={isMyTurn && gamePhase === 'playing'}
-              onCellClick={handleGridClick}
-              showTreasures
-              diggingCell={diggingCell}
-              activeAction={activeAction}
-              scannedArea={scannedArea}
-              compassResult={compassResult}
-              selectedAction={selectedAction}
-              shovelSourcePosition={shovelSourcePosition}
-            />
-          )}
-
-          {/* {gamePhase === 'awaiting' && !isMyTurn && (
-            <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
-              <button className="glass-btn" onClick={handleRespond} disabled={isLoading}>
-                Respond to Action
-              </button>
+              {gamePhase !== 'lobby' && (
+                <div className="game-rail__logs">
+                  <GameLogs logs={logs} />
+                </div>
+              )}
             </div>
-          )} */}
-
-          {gamePhase === 'finished' && (
-            <div style={{ textAlign: 'center' }}>
-              <h2
-                style={{
-                  color: winner === 'You Win!' ? '#27ae60' : '#e74c3c',
-                  fontSize: '48px',
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-                  marginBottom: '24px',
-                }}
-              >
-                {winner}
-              </h2>
-              <button
-                className="glass-btn"
-                onClick={() => {
-                  resetGame();
-                  navigate('/lobby');
-                }}
-              >
-                Back to Lobby
-              </button>
-            </div>
-          )}
+          </aside>
         </div>
-
-        {/* Right panel - OPPONENT info */}
-        <div className="player-panel right">
-          <PlayerCard
-            avatarSrc={opponentAvatar}
-            score={opponentScore}
-            isActive={!isMyTurn}
-            isOpponent
-          />
-          <PowersPanel
-            powers={powers}
-            selectedAction={selectedAction}
-            onSelectAction={() => {}}
-            disabled
-            isOpponent
-          />
-        </div>
-
-        {/* Logs panel - only show when both players have joined (setup phase or later) */}
-        {gamePhase !== 'lobby' && (
-          <GameLogs logs={logs} />
-        )}
       </div>
 
+      {showTreasureConfirmModal && (
+        <div
+          className="game-setup-modal"
+          onClick={handleCancelTreasurePlacement}
+        >
+          <div
+            className="game-setup-modal__dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="game-setup-modal__hero">
+              <img src="/menu/new.png" alt="" className="game-setup-modal__hero-image" />
+            </div>
+
+            <div className="game-setup-modal__body">
+              <p className="game-setup-modal__title">CONFIRM TREASURES</p>
+              <p className="game-setup-modal__copy">
+                Lock in your three treasure positions?
+              </p>
+
+              <div className="game-setup-modal__positions">
+                {selectedTreasures.map((treasure, index) => (
+                  <span key={`${treasure.x}-${treasure.y}`} className="game-setup-modal__position-pill">
+                    Chest {index + 1}: ({treasure.x}, {treasure.y})
+                  </span>
+                ))}
+              </div>
+
+              <div className="game-setup-modal__actions">
+                <button
+                  type="button"
+                  className="game-setup-modal__cancel"
+                  onClick={handleCancelTreasurePlacement}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="game-setup-modal__confirm"
+                  onClick={() => {
+                    void handleConfirmTreasurePlacement();
+                  }}
+                  disabled={isLoading}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

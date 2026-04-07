@@ -23,28 +23,27 @@ export function TurnIndicator({
   if (isLoading && statusMessage) {
     text = statusMessage;
   } else if (hasExtraTurn && isMyTurn && gamePhase === 'playing') {
-    // Show extra turn message - opponent hit your trap!
-    text = 'EXTRA TURN! Opponent hit your trap!';
+    text = 'Extra turn';
   } else {
     switch (gamePhase) {
       case 'lobby':
-        text = `Game ID: ${gameId} · Waiting for opponent...`;
+        text = `Game ${gameId} - Waiting for opponent`;
         break;
       case 'setup':
         if (mySetupDone) {
-          text = '✓ Treasures placed! Waiting for opponent...';
+          text = 'Treasures placed. Waiting for opponent';
         } else {
-          text = 'Place Your Treasures (select 3 cells)';
+          text = 'Place 3 treasures';
         }
         break;
       case 'playing':
-        text = isMyTurn ? 'Your Turn - Click a cell to dig' : "Opponent's Turn";
+        text = isMyTurn ? 'Your turn' : "Opponent's turn";
         break;
       case 'awaiting':
-        text = isMyTurn ? 'Waiting for opponent response...' : 'Processing action...';
+        text = isMyTurn ? 'Waiting for response' : 'Resolving action';
         break;
       case 'finished':
-        text = 'Game Over';
+        text = 'Game over';
         break;
       default:
         text = '';

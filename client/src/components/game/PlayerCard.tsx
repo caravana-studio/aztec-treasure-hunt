@@ -3,14 +3,28 @@ interface PlayerCardProps {
   score: number;
   isActive: boolean;
   isOpponent?: boolean;
+  side: 'left' | 'right';
 }
 
 const MAX_TREASURES = 2;
 
-export function PlayerCard({ avatarSrc, score, isActive, isOpponent = false }: PlayerCardProps) {
+export function PlayerCard({ avatarSrc, score, isActive, isOpponent = false, side }: PlayerCardProps) {
+  const avatarVariant = avatarSrc.includes('player_1') ? 'player-1' : 'player-2';
+  const shouldMirror =
+    (avatarVariant === 'player-2' && side === 'left') ||
+    (avatarVariant === 'player-1' && side === 'right');
+
   return (
     <div className={`player-card ${isActive ? 'active-turn' : ''} ${!isActive && isOpponent ? 'grayed-out' : ''}`}>
-      <img src={avatarSrc} alt="Player avatar" className="player-avatar" />
+      <div
+        className={`player-avatar-frame player-avatar-frame--${avatarVariant}${shouldMirror ? ' player-avatar-frame--mirrored' : ''}`}
+      >
+        <img
+          src={avatarSrc}
+          alt="Player avatar"
+          className="player-avatar"
+        />
+      </div>
 
       {/* Treasure progress bar */}
       <div className="treasure-progress">

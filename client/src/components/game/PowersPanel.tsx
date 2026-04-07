@@ -94,7 +94,9 @@ export function PowersPanel({
       )}
 
       <div className={`objects-panel-glass ${isOpponent ? 'grayed-out' : ''}`}>
-        <div className="objects-panel-header">Objects</div>
+        <div className="objects-panel-header">
+          <span>Objects</span>
+        </div>
         <div className="objects-panel-content">
           {/* Dig action - primary, always available */}
           <button
@@ -105,7 +107,7 @@ export function PowersPanel({
             onMouseLeave={handleMouseLeave}
           >
             <img src={powerIcons['dig']} alt="dig" />
-            <span>Dig</span>
+            <span>DIG</span>
           </button>
 
           {/* Divider */}

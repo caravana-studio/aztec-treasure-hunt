@@ -65,6 +65,7 @@ export function useGame() {
     setShovelSource: store.setShovelSource,
     useTrap: store.useTrap,
     toggleTreasure: store.toggleTreasure,
+    clearSelectedTreasures: store.clearSelectedTreasures,
     setSelectedAction: store.setSelectedAction,
     refreshGameState: store.refreshGameState,
     resetGame: store.resetGame,
