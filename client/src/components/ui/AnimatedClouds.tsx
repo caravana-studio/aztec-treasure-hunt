@@ -9,6 +9,10 @@ interface Cloud {
   delay: number;
 }
 
+interface AnimatedCloudsProps {
+  className?: string;
+}
+
 const clouds: Cloud[] = [
   { id: 1, size: 120, top: '5%', opacity: 0.6, duration: 45, delay: 0 },
   { id: 2, size: 80, top: '15%', opacity: 0.4, duration: 55, delay: -20 },
@@ -20,9 +24,9 @@ const clouds: Cloud[] = [
   { id: 8, size: 130, top: '6%', opacity: 0.3, duration: 70, delay: -55 },
 ];
 
-export function AnimatedClouds() {
+export function AnimatedClouds({ className = '' }: AnimatedCloudsProps) {
   return (
-    <div className="clouds-container">
+    <div className={`clouds-container ${className}`.trim()}>
       {clouds.map((cloud) => (
         <img
           key={cloud.id}

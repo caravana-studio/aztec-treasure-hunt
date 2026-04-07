@@ -17,6 +17,7 @@ import type { AztecAddress } from '@aztec/aztec.js/addresses';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
 import { useMultiWalletStore } from '../wallet/store';
 import { getNetworkConfig } from '../config/network';
+import { isUnsupportedMobileDevice } from '../utils/device';
 
 interface WalletContextType {
   wallet: BaseWallet | null;
@@ -35,6 +36,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     useMultiWalletStore();
 
   useEffect(() => {
+    if (isUnsupportedMobileDevice()) {
+      return;
+    }
+
     try {
       const config = getNetworkConfig();
       initialize(config.nodeUrl);

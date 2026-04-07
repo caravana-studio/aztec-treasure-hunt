@@ -1,0 +1,1107 @@
+@font-face {
+  font-family: 'SF Fedora';
+  src: url('/fonts/SF Fedora.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Fedora Titles';
+  src: url('/fonts/SF Fedora Titles.ttf') format('truetype');
+  font-display: swap;
+}
+
+.menu-screen {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(17, 67, 119, 0.08) 0%, rgba(24, 8, 2, 0.24) 100%);
+}
+
+.menu-screen::before {
+  content: '';
+  position: absolute;
+  inset: -4%;
+  background: url('/menu/bg.png') center center / cover no-repeat;
+  transform-origin: center center;
+  animation: menu-background-breathe 18s ease-in-out infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.menu-screen__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.14), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 36%, rgba(31, 12, 2, 0.18) 100%);
+  pointer-events: none;
+}
+
+.menu-clouds {
+  z-index: 1;
+  opacity: 0.52;
+}
+
+.unsupported-screen {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(17, 67, 119, 0.08) 0%, rgba(24, 8, 2, 0.24) 100%),
+    url('/menu/bg.png') center center / cover no-repeat;
+}
+
+.unsupported-screen__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.14), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 36%, rgba(31, 12, 2, 0.26) 100%);
+  pointer-events: none;
+}
+
+.unsupported-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 520px);
+  padding: 28px 24px;
+  border-radius: 28px;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(100, 118, 132, 0.88) 0%, rgba(63, 71, 79, 0.88) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 28px 40px rgba(14, 20, 28, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.unsupported-card__logo {
+  width: min(100%, 320px);
+  height: auto;
+  margin-bottom: 18px;
+  filter:
+    drop-shadow(0 6px 20px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 20px 28px rgba(60, 20, 0, 0.2));
+}
+
+.unsupported-card__eyebrow {
+  margin: 0 0 10px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.unsupported-card__title {
+  margin: 0 0 14px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(24px, 6vw, 34px);
+  line-height: 1.08;
+  letter-spacing: 0.02em;
+  color: #fffaf0;
+}
+
+.unsupported-card__copy {
+  margin: 0;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.menu-shell {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: clamp(18px, 2.2vw, 32px) clamp(18px, 2.7vw, 40px) 14px;
+}
+
+.menu-error-toast {
+  top: 18px;
+}
+
+.menu-stage {
+  flex: 1;
+  display: grid;
+  width: min(100%, 1640px);
+  margin: 0 auto;
+  grid-template-columns: minmax(320px, 480px) minmax(680px, 1020px);
+  justify-content: center;
+  gap: clamp(40px, 4.4vw, 110px);
+  align-items: center;
+}
+
+.menu-column {
+  min-height: 0;
+}
+
+.menu-column--left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(24px, 4.5vh, 50px);
+}
+
+.menu-column--right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.menu-brand__logo {
+  width: min(100%, clamp(360px, 33vw, 660px));
+  min-width: 0;
+  height: auto;
+  image-rendering: auto;
+  filter:
+    drop-shadow(0 6px 20px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 20px 28px rgba(60, 20, 0, 0.2));
+  animation: menu-logo-float 3.6s linear infinite;
+}
+
+.menu-connect-panel {
+  width: min(100%, 430px);
+  padding: 24px 22px 18px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(100, 118, 132, 0.84) 0%, rgba(63, 71, 79, 0.84) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 28px 40px rgba(14, 20, 28, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.menu-connect-content,
+.menu-session {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.menu-panel-kicker {
+  margin: 0;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(18px, 1.45vw, 26px);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: #f2f7fa;
+  text-transform: uppercase;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.32);
+}
+
+.menu-inline-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(141, 27, 26, 0.82);
+  color: #fff1ee;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(91, 7, 7, 0.22);
+}
+
+.menu-connect-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-wallet-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 72px;
+  width: 100%;
+  border-radius: 22px;
+  padding: 16px 20px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.menu-wallet-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.menu-wallet-button:disabled {
+  opacity: 0.62;
+  filter: grayscale(0.2);
+}
+
+.menu-wallet-button--embedded {
+  background: linear-gradient(180deg, #ffa71f 0%, #ff8b08 100%);
+  color: white;
+  box-shadow:
+    0 14px 28px rgba(255, 136, 10, 0.24),
+    inset 0 1px 0 rgba(255, 234, 195, 0.45);
+}
+
+.menu-wallet-button--azguard {
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.96) 0%, rgba(10, 10, 10, 0.98) 100%);
+  color: white;
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.menu-wallet-button__label {
+  display: inline-block;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(18px, 1.45vw, 28px);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  color: inherit;
+  transform: translateY(4px);
+}
+
+.menu-wallet-helper {
+  margin: 2px 0 0;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.menu-azguard-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-azguard-brand__mark,
+.menu-azguard-brand__wordmark {
+  fill: white;
+  flex-shrink: 0;
+}
+
+.menu-connect-panel__brand {
+  display: block;
+  width: min(132px, 44%);
+  margin: 10px auto 0;
+  height: auto;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22));
+}
+
+.menu-session {
+  align-items: center;
+  text-align: center;
+}
+
+.menu-session__wallet-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.menu-session__wallet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 12px 16px 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffa71f 0%, #ff8b08 100%);
+  color: white;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow:
+    0 10px 22px rgba(255, 136, 10, 0.22),
+    inset 0 1px 0 rgba(255, 234, 195, 0.4);
+}
+
+.menu-session__address {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(4, 16, 25, 0.26);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.2;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.menu-session__accelerator {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.menu-session__disconnect {
+  margin-bottom: 12px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: rgba(13, 19, 24, 0.72);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.accelerator-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 4px 4px 9px;
+  border-radius: 999px;
+  background: rgba(18, 31, 39, 0.2);
+  border: 1px solid rgba(255, 200, 80, 0.28);
+  color: rgba(255, 255, 255, 0.88);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.accelerator-badge.is-native {
+  border-color: rgba(99, 255, 180, 0.3);
+}
+
+.accelerator-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #f0c040;
+}
+
+.accelerator-badge.is-native .accelerator-badge__dot {
+  background: #63ffb4;
+  box-shadow: 0 0 8px rgba(99, 255, 180, 0.45);
+}
+
+.accelerator-badge.is-proving .accelerator-badge__dot {
+  animation: accelerator-pulse 1s linear infinite;
+}
+
+.accelerator-badge__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.accelerator-badge__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.accelerator-badge__status--native {
+  color: #63ffb4;
+}
+
+.accelerator-badge__status--warm {
+  color: #f0c040;
+}
+
+.accelerator-badge__time {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 9px;
+}
+
+.accelerator-badge__toggle {
+  min-height: 26px;
+  padding: 6px 9px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.72);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.03em;
+}
+
+.accelerator-badge__toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.menu-actions {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(290px, 1fr));
+  justify-content: center;
+  align-items: center;
+  gap: clamp(24px, 2.2vw, 40px);
+  max-width: 960px;
+}
+
+.menu-action-stack {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.menu-action-card {
+  position: relative;
+  width: min(100%, clamp(300px, 24vw, 438px));
+  aspect-ratio: 454 / 680;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow:
+    0 24px 42px rgba(54, 20, 3, 0.28),
+    0 10px 18px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    filter 200ms ease;
+}
+
+.menu-action-card:hover:not(:disabled) {
+  transform: translateY(-8px);
+  box-shadow:
+    0 30px 48px rgba(54, 20, 3, 0.34),
+    0 14px 22px rgba(0, 0, 0, 0.24);
+}
+
+.menu-action-card.is-locked {
+  filter: saturate(0.62) brightness(0.68) contrast(0.96);
+  box-shadow:
+    0 18px 34px rgba(18, 8, 4, 0.42),
+    0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.menu-action-card.is-locked::after {
+  background:
+    linear-gradient(180deg, rgba(6, 8, 12, 0.18) 0%, rgba(8, 4, 3, 0.2) 38%, rgba(5, 4, 4, 0.68) 100%);
+}
+
+.menu-action-card.is-locked .menu-action-card__label {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow:
+    -3px 0 0 rgba(22, 14, 12, 0.98),
+    0 3px 10px rgba(0, 0, 0, 0.5),
+    0 8px 14px rgba(0, 0, 0, 0.32);
+}
+
+.menu-action-card.is-locked .menu-action-card__hint {
+  background: rgba(8, 10, 14, 0.84);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.menu-action-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-action-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 42%, rgba(8, 4, 3, 0.08) 66%, rgba(5, 4, 4, 0.48) 100%);
+  pointer-events: none;
+}
+
+.menu-action-card__label {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%) skewX(-9deg);
+  z-index: 1;
+  font-family: 'SF Fedora', serif;
+  font-size: clamp(60px, 5vw, 96px);
+  line-height: 0.82;
+  letter-spacing: 0.01em;
+  color: white;
+  text-shadow:
+    -3px 0 0 rgba(31, 18, 14, 0.94),
+    0 3px 12px rgba(0, 0, 0, 0.42),
+    0 8px 14px rgba(0, 0, 0, 0.24);
+  white-space: nowrap;
+}
+
+.menu-action-card__hint {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  padding: 8px 11px 7px;
+  border-radius: 999px;
+  background: rgba(10, 12, 18, 0.72);
+  color: rgba(255, 255, 255, 0.94);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.menu-action-card__status {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2;
+  padding: 12px 14px 10px;
+  border-radius: 18px;
+  background: rgba(11, 15, 22, 0.76);
+  color: #fff;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.menu-join-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 8, 13, 0.56);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.menu-join-modal__dialog {
+  position: relative;
+  width: min(100%, 460px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(86, 66, 51, 0.98) 0%, rgba(73, 56, 44, 0.98) 100%);
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.35),
+    0 10px 18px rgba(53, 23, 5, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.menu-join-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(15, 18, 23, 0.52);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.menu-join-modal__hero {
+  height: 230px;
+  overflow: hidden;
+}
+
+.menu-join-modal__hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.menu-join-modal__body {
+  padding: 16px 18px 20px;
+}
+
+.menu-join-modal__title {
+  margin: 0 0 18px;
+  text-align: center;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: clamp(26px, 2vw, 34px);
+  line-height: 1;
+  letter-spacing: 0.05em;
+  color: #f7f1e6;
+  text-transform: uppercase;
+}
+
+.menu-join-modal__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.menu-join-modal__input {
+  min-width: 0;
+  width: 100%;
+  padding: 17px 18px 13px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(252, 252, 252, 0.98) 0%, rgba(236, 236, 236, 0.98) 100%);
+  color: #433023;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 18px;
+  line-height: 1.18;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.menu-join-modal__input::placeholder {
+  color: rgba(67, 48, 35, 0.38);
+  line-height: 1.18;
+}
+
+.menu-join-modal__submit {
+  min-width: 132px;
+  padding: 16px 24px 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffa71f 0%, #ff8b08 100%);
+  color: white;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow:
+    0 14px 24px rgba(255, 136, 10, 0.24),
+    inset 0 1px 0 rgba(255, 234, 195, 0.45);
+}
+
+.menu-join-modal__submit:disabled {
+  opacity: 0.58;
+}
+
+.menu-startup-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 12, 18, 0.26);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.menu-startup-modal__dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 380px);
+  padding: 28px 26px 24px;
+  border-radius: 28px;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(100, 118, 132, 0.9) 0%, rgba(63, 71, 79, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 28px 40px rgba(14, 20, 28, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.menu-startup-modal__eyebrow {
+  margin: 0;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.menu-startup-modal__copy {
+  margin: 0;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  color: #fffaf0;
+}
+
+.menu-connect-content--flow {
+  gap: 14px;
+}
+
+.menu-flow-back {
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(17, 24, 31, 0.52);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.menu-flow-copy,
+.menu-flow-note {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.menu-flow-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.menu-provider-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-provider-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(10, 12, 16, 0.56);
+  color: white;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.menu-provider-button__icon,
+.menu-provider-button__fallback {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.menu-provider-button__content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.menu-provider-button__name,
+.menu-provider-button__hint {
+  font-family: 'SF Fedora Titles', sans-serif;
+  line-height: 1;
+  letter-spacing: 0.05em;
+}
+
+.menu-provider-button__name {
+  font-size: 14px;
+}
+
+.menu-provider-button__hint {
+  font-size: 11px;
+  opacity: 0.72;
+}
+
+.menu-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(9, 14, 18, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.menu-emoji-grid__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 34px;
+}
+
+.menu-flow-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.menu-flow-button {
+  min-height: 54px;
+  padding: 14px 16px 12px;
+  border-radius: 18px;
+  font-family: 'SF Fedora Titles', sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.menu-flow-button--secondary {
+  background: rgba(10, 12, 16, 0.56);
+  color: white;
+}
+
+.menu-flow-button--primary {
+  background: linear-gradient(180deg, #ffa71f 0%, #ff8b08 100%);
+  color: white;
+}
+
+.menu-footer {
+  margin-top: auto;
+  padding-top: 18px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  line-height: 1.35;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.36);
+}
+
+@keyframes menu-logo-float {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  12.5% {
+    transform: translateY(-2px) scale(1.003);
+  }
+  25% {
+    transform: translateY(-4px) scale(1.006);
+  }
+  37.5% {
+    transform: translateY(-6px) scale(1.009);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.012);
+  }
+  62.5% {
+    transform: translateY(-6px) scale(1.009);
+  }
+  75% {
+    transform: translateY(-4px) scale(1.006);
+  }
+  87.5% {
+    transform: translateY(-2px) scale(1.003);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-background-breathe {
+  0%,
+  100% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.04) translate3d(0.6%, -0.8%, 0);
+  }
+}
+
+@keyframes accelerator-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-screen::before {
+    animation: none;
+  }
+
+  .menu-brand__logo {
+    animation: none;
+  }
+}
+
+@media (min-width: 1700px) {
+  .menu-stage {
+    width: min(100%, 1840px);
+    grid-template-columns: minmax(360px, 560px) minmax(860px, 1220px);
+    gap: clamp(56px, 5vw, 132px);
+  }
+
+  .menu-column--left {
+    gap: clamp(28px, 4.5vh, 58px);
+  }
+
+  .menu-brand__logo {
+    width: min(100%, clamp(420px, 34vw, 760px));
+  }
+
+  .menu-connect-panel {
+    width: min(100%, 470px);
+  }
+
+  .menu-actions {
+    max-width: 1080px;
+    gap: clamp(28px, 2.4vw, 44px);
+  }
+
+  .menu-action-card {
+    width: min(100%, clamp(340px, 23vw, 490px));
+  }
+
+  .menu-join-panel {
+    width: min(100%, 490px);
+  }
+}
+
+@media (min-width: 2100px) {
+  .menu-stage {
+    width: min(100%, 1980px);
+    grid-template-columns: minmax(400px, 620px) minmax(960px, 1320px);
+    gap: clamp(72px, 5.4vw, 160px);
+  }
+
+  .menu-brand__logo {
+    width: min(100%, clamp(480px, 35vw, 860px));
+  }
+
+  .menu-connect-panel {
+    width: min(100%, 510px);
+  }
+
+  .menu-actions {
+    max-width: 1180px;
+  }
+
+  .menu-action-card {
+    width: min(100%, clamp(380px, 24vw, 540px));
+  }
+
+  .menu-join-panel {
+    width: min(100%, 540px);
+  }
+}
+
+@media (max-width: 1200px) {
+  .menu-stage {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    justify-items: center;
+    align-items: center;
+  }
+
+  .menu-column--left,
+  .menu-column--right {
+    width: 100%;
+  }
+
+  .menu-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 920px) {
+  .menu-brand {
+    justify-content: center;
+  }
+
+  .menu-brand__logo {
+    width: min(88vw, 520px);
+    animation-duration: 6.4s;
+  }
+
+  .menu-actions {
+    grid-template-columns: 1fr;
+    width: min(100%, 438px);
+  }
+
+  .menu-connect-panel {
+    width: min(100%, 430px);
+  }
+}
+
+@media (max-width: 640px) {
+  .menu-shell {
+    padding: 16px 16px 12px;
+  }
+
+  .menu-connect-panel {
+    padding: 22px 18px 18px;
+    border-radius: 24px;
+  }
+
+  .menu-wallet-button {
+    min-height: 66px;
+    border-radius: 18px;
+  }
+
+  .menu-wallet-button__label {
+    font-size: 18px;
+  }
+
+  .menu-azguard-brand {
+    gap: 10px;
+    transform: scale(0.9);
+  }
+
+  .menu-action-card__label {
+    bottom: 20px;
+    font-size: clamp(48px, 18vw, 88px);
+  }
+
+  .menu-join-panel {
+    position: static;
+    grid-template-columns: 1fr;
+    width: 100%;
+    margin-top: 12px;
+    visibility: visible;
+    transform: none;
+  }
+
+  .menu-join-panel__submit {
+    min-width: 0;
+  }
+
+  .menu-join-panel:not(.is-open) {
+    display: none;
+  }
+}

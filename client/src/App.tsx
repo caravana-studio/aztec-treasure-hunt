@@ -1,33 +1,39 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useWallet } from './context/WalletContext';
+import { Routes, Route } from 'react-router-dom';
 import { Lobby } from './pages/Lobby';
 import { Game } from './pages/Game';
-import { AnimatedClouds } from './components/ui/AnimatedClouds';
+import { useIsDesktopSupported } from './utils/device';
 
-function LoadingScreen() {
+function UnsupportedDeviceScreen() {
   return (
-    <div className="lobby-container">
-      <AnimatedClouds />
-      <div className="lobby-card" style={{ textAlign: 'center' }}>
-        <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
-        <p style={{ margin: 0, color: 'white', textAlign: 'center' }}>Connecting to Aztec network...</p>
+    <div className="unsupported-screen">
+      <div className="unsupported-screen__shade" />
+      <div className="unsupported-card">
+        <img
+          src="/menu/logo.png"
+          alt="Treasure Hunt"
+          className="unsupported-card__logo"
+        />
+        <p className="unsupported-card__eyebrow">Desktop Only</p>
+        <h1 className="unsupported-card__title">This game is not supported on mobile or tablet.</h1>
+        <p className="unsupported-card__copy">
+          Open Treasure Hunt from a desktop or laptop browser to connect your wallet
+          and play.
+        </p>
       </div>
     </div>
   );
 }
 
 function App() {
-  const { isInitializing } = useWallet();
+  const isDesktopSupported = useIsDesktopSupported();
 
-  // Only block render while PXE is initializing.
-  // Wallet connection errors are shown inline in ConnectModal.
-  if (isInitializing) {
-    return <LoadingScreen />;
+  if (!isDesktopSupported) {
+    return <UnsupportedDeviceScreen />;
   }
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/lobby" replace />} />
+      <Route path="/" element={<Lobby />} />
       <Route path="/lobby" element={<Lobby />} />
       <Route path="/game/:id" element={<Game />} />
     </Routes>

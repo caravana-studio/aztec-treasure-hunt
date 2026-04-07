@@ -7,6 +7,7 @@ import './styles/index.css';
 import './styles/glass.css';
 import './styles/game.css';
 import './styles/clouds.css';
+import './styles/lobby.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
