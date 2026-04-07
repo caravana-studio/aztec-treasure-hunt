@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Fr } from '@aztec/aztec.js/fields';
 import { useWallet } from '../context/WalletContext';
 import { useGame } from '../hooks/useGame';
+import { useGameAudio } from '../hooks/useGameAudio';
 import { useMultiWalletStore } from '../wallet/store';
 import { PlayerCard, PowersPanel, GameGrid, GameLogs, TurnIndicator } from '../components/game';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
@@ -55,6 +56,15 @@ export function Game() {
     setError,
   } = useGame();
   const [showTreasureConfirmModal, setShowTreasureConfirmModal] = useState(false);
+
+  useGameAudio({
+    enabled: Boolean(myAddress),
+    resetKey: gameId?.toString() ?? id ?? '',
+    gamePhase,
+    selectedTreasureCount: selectedTreasures.length,
+    activeAction,
+    dugCells,
+  });
 
   // Initialize game state from URL param
   useEffect(() => {
