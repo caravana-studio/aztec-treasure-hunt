@@ -141,7 +141,12 @@ export function Game() {
 
   // Get avatars based on whether you're player 1 or 2
   const myAvatar = isPlayer1 ? '/images/player_1.png' : '/images/player_2.png';
-  const opponentAvatar = isPlayer1 ? '/images/player_2.png' : '/images/player_1.png';
+  const isWaitingForOpponent = gamePhase === 'lobby';
+  const opponentAvatar = isWaitingForOpponent
+    ? '/images/void_player.png'
+    : isPlayer1
+      ? '/images/player_2.png'
+      : '/images/player_1.png';
 
   const handleCancelTreasurePlacement = () => {
     clearSelectedTreasures();
@@ -199,13 +204,17 @@ export function Game() {
               isMyTurn={isMyTurn}
               gamePhase={gamePhase}
               gameId={id}
-              isLoading={isLoading}
-              statusMessage={statusMessage}
               mySetupDone={mySetupDone}
               hasExtraTurn={hasExtraTurn}
             />
           </div>
-          <div className="game-topbar__slot game-topbar__slot--right" />
+          <div className="game-topbar__slot game-topbar__slot--right">
+            {isLoading && (
+              <div className="game-activity-indicator" role="status" aria-live="polite" aria-label={statusMessage || 'Syncing game state'}>
+                <span className="game-activity-indicator__spinner" aria-hidden="true" />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="game-stage">
@@ -291,15 +300,24 @@ export function Game() {
           </main>
 
           <aside className="game-rail game-rail--right">
-            <div className={`game-rail__stack ${!isMyTurn ? 'game-rail__stack--active' : 'game-rail__stack--inactive'}`}>
+            <div
+              className={`game-rail__stack ${
+                isWaitingForOpponent
+                  ? 'game-rail__stack--waiting'
+                  : !isMyTurn
+                    ? 'game-rail__stack--active'
+                    : 'game-rail__stack--inactive'
+              }`}
+            >
               <PlayerCard
                 avatarSrc={opponentAvatar}
                 score={opponentScore}
-                isActive={!isMyTurn}
+                isActive={!isWaitingForOpponent && !isMyTurn}
                 isOpponent
                 side="right"
+                isWaiting={isWaitingForOpponent}
               />
-              {gamePhase !== 'lobby' && (
+              {!isWaitingForOpponent && (
                 <div className="game-rail__logs">
                   <GameLogs logs={logs} />
                 </div>
@@ -319,7 +337,7 @@ export function Game() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="game-setup-modal__hero">
-              <img src="/menu/new.png" alt="" className="game-setup-modal__hero-image" />
+              <img src="/menu/hide_treasure.png" alt="" className="game-setup-modal__hero-image" />
             </div>
 
             <div className="game-setup-modal__body">

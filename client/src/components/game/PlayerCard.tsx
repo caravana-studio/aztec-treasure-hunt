@@ -4,24 +4,41 @@ interface PlayerCardProps {
   isActive: boolean;
   isOpponent?: boolean;
   side: 'left' | 'right';
+  isWaiting?: boolean;
 }
 
 const MAX_TREASURES = 2;
 
-export function PlayerCard({ avatarSrc, score, isActive, isOpponent = false, side }: PlayerCardProps) {
-  const avatarVariant = avatarSrc.includes('player_1') ? 'player-1' : 'player-2';
+export function PlayerCard({
+  avatarSrc,
+  score,
+  isActive,
+  isOpponent = false,
+  side,
+  isWaiting = false,
+}: PlayerCardProps) {
+  const avatarVariant = isWaiting
+    ? 'void'
+    : avatarSrc.includes('player_1')
+      ? 'player-1'
+      : 'player-2';
   const shouldMirror =
+    !isWaiting &&
     (avatarVariant === 'player-2' && side === 'left') ||
     (avatarVariant === 'player-1' && side === 'right');
 
   return (
-    <div className={`player-card ${isActive ? 'active-turn' : ''} ${!isActive && isOpponent ? 'grayed-out' : ''}`}>
+    <div
+      className={`player-card ${isActive ? 'active-turn' : ''} ${!isActive && isOpponent && !isWaiting ? 'grayed-out' : ''} ${
+        isWaiting ? 'player-card--waiting' : ''
+      }`}
+    >
       <div
         className={`player-avatar-frame player-avatar-frame--${avatarVariant}${shouldMirror ? ' player-avatar-frame--mirrored' : ''}`}
       >
         <img
           src={avatarSrc}
-          alt="Player avatar"
+          alt={isWaiting ? 'Waiting for player' : 'Player avatar'}
           className="player-avatar"
         />
       </div>

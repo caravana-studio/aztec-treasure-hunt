@@ -84,24 +84,6 @@
   letter-spacing: 2px;
 }
 
-/* Loading state for TurnIndicator */
-.turn-indicator-box.loading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.loading-dot {
-  color: #f39c12;
-  animation: pulse-dot 1s ease-in-out infinite;
-  font-size: 16px;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
 /* Lobby indicator in TurnIndicator */
 .turn-indicator-box.lobby-indicator {
   display: flex;
@@ -1265,6 +1247,33 @@
   align-items: center;
 }
 
+.game-activity-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 46px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(221, 198, 163, 0.92) 0%, rgba(194, 168, 131, 0.9) 100%);
+  border: 1px solid rgba(255, 246, 231, 0.28);
+  box-shadow:
+    0 16px 30px rgba(67, 34, 8, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  color: rgba(77, 54, 28, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.game-activity-indicator__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(77, 54, 28, 0.16);
+  border-left-color: rgba(77, 54, 28, 0.9);
+  border-radius: 50%;
+  animation: spin 0.72s linear infinite;
+  flex: 0 0 auto;
+}
+
 .game-stage {
   flex: 1;
   min-height: 0;
@@ -1303,6 +1312,12 @@
 .game-rail__stack--inactive .dig-action-btn,
 .game-rail__stack--inactive .power-item-btn {
   filter: brightness(0.94);
+}
+
+.game-rail__stack--waiting .player-card,
+.game-rail__stack--waiting .treasure-progress {
+  filter: none;
+  opacity: 1;
 }
 
 .game-center {
@@ -1491,6 +1506,10 @@
   background-image: url('/images/player_2_bg.png');
 }
 
+.game-rail .player-avatar-frame--void::before {
+  background-image: url('/images/player_void_bg.png');
+}
+
 .game-rail .player-avatar {
   width: 100%;
   height: 100%;
@@ -1503,6 +1522,10 @@
 
 .game-rail .player-avatar-frame--mirrored .player-avatar {
   transform: scaleX(-1);
+}
+
+.game-rail .player-card--waiting .player-avatar {
+  object-position: center bottom;
 }
 
 .game-rail .treasure-progress {

@@ -2,8 +2,6 @@ interface TurnIndicatorProps {
   isMyTurn: boolean;
   gamePhase: string;
   gameId?: string;
-  isLoading?: boolean;
-  statusMessage?: string;
   mySetupDone?: boolean;
   hasExtraTurn?: boolean;
 }
@@ -12,17 +10,12 @@ export function TurnIndicator({
   isMyTurn,
   gamePhase,
   gameId,
-  isLoading,
-  statusMessage,
   mySetupDone,
   hasExtraTurn
 }: TurnIndicatorProps) {
   let text = '';
 
-  // If loading, show the status message
-  if (isLoading && statusMessage) {
-    text = statusMessage;
-  } else if (hasExtraTurn && isMyTurn && gamePhase === 'playing') {
+  if (hasExtraTurn && isMyTurn && gamePhase === 'playing') {
     text = 'Extra turn';
   } else {
     switch (gamePhase) {
@@ -54,8 +47,7 @@ export function TurnIndicator({
 
   return (
     <div className="turn-indicator">
-      <div className={`turn-indicator-box ${isLoading ? 'loading' : ''}`}>
-        {isLoading && <span className="loading-dot">●</span>}
+      <div className="turn-indicator-box">
         <span className="turn-text">{text}</span>
       </div>
     </div>
