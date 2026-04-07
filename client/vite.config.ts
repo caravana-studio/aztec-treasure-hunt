@@ -25,6 +25,122 @@ const aztecAcceleratorResolve = (): Plugin => ({
 });
 
 /**
+ * `ms` ships as CommonJS-only. When Vite serves the accelerator package directly
+ * in dev, the browser sees `import ms from "ms"` and crashes before the app loads.
+ * Intercept only that import edge and provide a tiny ESM-compatible shim.
+ */
+const acceleratorMsShim = (): Plugin => ({
+  name: 'accelerator-ms-shim',
+  enforce: 'pre',
+  resolveId(source, importer) {
+    if (
+      source === 'ms' &&
+      importer &&
+      importer.includes('/@alejoamiras/aztec-accelerator/')
+    ) {
+      return '\0virtual:accelerator-ms';
+    }
+    return null;
+  },
+  load(id) {
+    if (id !== '\0virtual:accelerator-ms') {
+      return null;
+    }
+
+    return `
+      const SECOND = 1000;
+      const MINUTE = SECOND * 60;
+      const HOUR = MINUTE * 60;
+      const DAY = HOUR * 24;
+      const WEEK = DAY * 7;
+      const YEAR = DAY * 365.25;
+
+      const UNITS = {
+        y: YEAR,
+        yr: YEAR,
+        yrs: YEAR,
+        year: YEAR,
+        years: YEAR,
+        w: WEEK,
+        week: WEEK,
+        weeks: WEEK,
+        d: DAY,
+        day: DAY,
+        days: DAY,
+        h: HOUR,
+        hr: HOUR,
+        hrs: HOUR,
+        hour: HOUR,
+        hours: HOUR,
+        m: MINUTE,
+        min: MINUTE,
+        mins: MINUTE,
+        minute: MINUTE,
+        minutes: MINUTE,
+        s: SECOND,
+        sec: SECOND,
+        secs: SECOND,
+        second: SECOND,
+        seconds: SECOND,
+        ms: 1,
+        msec: 1,
+        msecs: 1,
+        millisecond: 1,
+        milliseconds: 1,
+      };
+
+      const PATTERN = /^(-?(?:\\d+)?\\.?\\d+)\\s*(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i;
+
+      const formatShort = (value) => {
+        const absolute = Math.abs(value);
+        if (absolute >= DAY) return Math.round(value / DAY) + 'd';
+        if (absolute >= HOUR) return Math.round(value / HOUR) + 'h';
+        if (absolute >= MINUTE) return Math.round(value / MINUTE) + 'm';
+        if (absolute >= SECOND) return Math.round(value / SECOND) + 's';
+        return value + 'ms';
+      };
+
+      const formatLong = (value) => {
+        const absolute = Math.abs(value);
+
+        const plural = (unitValue, unitName) => {
+          const rounded = Math.round(value / unitValue);
+          const suffix = absolute >= unitValue * 1.5 ? 's' : '';
+          return rounded + ' ' + unitName + suffix;
+        };
+
+        if (absolute >= DAY) return plural(DAY, 'day');
+        if (absolute >= HOUR) return plural(HOUR, 'hour');
+        if (absolute >= MINUTE) return plural(MINUTE, 'minute');
+        if (absolute >= SECOND) return plural(SECOND, 'second');
+        return value + ' ms';
+      };
+
+      const parse = (value) => {
+        const input = String(value).trim();
+        const match = PATTERN.exec(input);
+        if (!match) return undefined;
+
+        const amount = Number.parseFloat(match[1]);
+        const unit = (match[2] || 'ms').toLowerCase();
+        const multiplier = UNITS[unit];
+        return multiplier === undefined ? undefined : amount * multiplier;
+      };
+
+      export default function ms(value, options = {}) {
+        if (typeof value === 'string' && value.length > 0) {
+          return parse(value);
+        }
+        if (typeof value === 'number' && Number.isFinite(value)) {
+          return options.long ? formatLong(value) : formatShort(value);
+        }
+        throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(value));
+      }
+    `;
+  },
+});
+
+/**
  * Plugin to strip import attributes from JSON imports so Rollup
  * doesn't complain about inconsistent `with { type: "json" }`.
  */
@@ -130,6 +246,7 @@ const nameAnonymousClassAssignments = (): Plugin => ({
 export default defineConfig({
   plugins: [
     aztecAcceleratorResolve(),
+    acceleratorMsShim(),
     jsonImportAttributesFix(),
     nodeBuiltinsShim(),
     nameAnonymousClassAssignments(),

@@ -31,6 +31,29 @@ var aztecAcceleratorResolve = function () { return ({
     },
 }); };
 /**
+ * `ms` ships as CommonJS-only. When Vite serves the accelerator package directly
+ * in dev, the browser sees `import ms from "ms"` and crashes before the app loads.
+ * Intercept only that import edge and provide a tiny ESM-compatible shim.
+ */
+var acceleratorMsShim = function () { return ({
+    name: 'accelerator-ms-shim',
+    enforce: 'pre',
+    resolveId: function (source, importer) {
+        if (source === 'ms' &&
+            importer &&
+            importer.includes('/@alejoamiras/aztec-accelerator/')) {
+            return '\0virtual:accelerator-ms';
+        }
+        return null;
+    },
+    load: function (id) {
+        if (id !== '\0virtual:accelerator-ms') {
+            return null;
+        }
+        return "\n      const SECOND = 1000;\n      const MINUTE = SECOND * 60;\n      const HOUR = MINUTE * 60;\n      const DAY = HOUR * 24;\n      const WEEK = DAY * 7;\n      const YEAR = DAY * 365.25;\n\n      const UNITS = {\n        y: YEAR,\n        yr: YEAR,\n        yrs: YEAR,\n        year: YEAR,\n        years: YEAR,\n        w: WEEK,\n        week: WEEK,\n        weeks: WEEK,\n        d: DAY,\n        day: DAY,\n        days: DAY,\n        h: HOUR,\n        hr: HOUR,\n        hrs: HOUR,\n        hour: HOUR,\n        hours: HOUR,\n        m: MINUTE,\n        min: MINUTE,\n        mins: MINUTE,\n        minute: MINUTE,\n        minutes: MINUTE,\n        s: SECOND,\n        sec: SECOND,\n        secs: SECOND,\n        second: SECOND,\n        seconds: SECOND,\n        ms: 1,\n        msec: 1,\n        msecs: 1,\n        millisecond: 1,\n        milliseconds: 1,\n      };\n\n      const PATTERN = /^(-?(?:\\d+)?\\.?\\d+)\\s*(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i;\n\n      const formatShort = (value) => {\n        const absolute = Math.abs(value);\n        if (absolute >= DAY) return Math.round(value / DAY) + 'd';\n        if (absolute >= HOUR) return Math.round(value / HOUR) + 'h';\n        if (absolute >= MINUTE) return Math.round(value / MINUTE) + 'm';\n        if (absolute >= SECOND) return Math.round(value / SECOND) + 's';\n        return value + 'ms';\n      };\n\n      const formatLong = (value) => {\n        const absolute = Math.abs(value);\n\n        const plural = (unitValue, unitName) => {\n          const rounded = Math.round(value / unitValue);\n          const suffix = absolute >= unitValue * 1.5 ? 's' : '';\n          return rounded + ' ' + unitName + suffix;\n        };\n\n        if (absolute >= DAY) return plural(DAY, 'day');\n        if (absolute >= HOUR) return plural(HOUR, 'hour');\n        if (absolute >= MINUTE) return plural(MINUTE, 'minute');\n        if (absolute >= SECOND) return plural(SECOND, 'second');\n        return value + ' ms';\n      };\n\n      const parse = (value) => {\n        const input = String(value).trim();\n        const match = PATTERN.exec(input);\n        if (!match) return undefined;\n\n        const amount = Number.parseFloat(match[1]);\n        const unit = (match[2] || 'ms').toLowerCase();\n        const multiplier = UNITS[unit];\n        return multiplier === undefined ? undefined : amount * multiplier;\n      };\n\n      export default function ms(value, options = {}) {\n        if (typeof value === 'string' && value.length > 0) {\n          return parse(value);\n        }\n        if (typeof value === 'number' && Number.isFinite(value)) {\n          return options.long ? formatLong(value) : formatShort(value);\n        }\n        throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(value));\n      }\n    ";
+    },
+}); };
+/**
  * Plugin to strip import attributes from JSON imports so Rollup
  * doesn't complain about inconsistent `with { type: "json" }`.
  */
@@ -106,6 +129,7 @@ var nameAnonymousClassAssignments = function () { return ({
 export default defineConfig({
     plugins: [
         aztecAcceleratorResolve(),
+        acceleratorMsShim(),
         jsonImportAttributesFix(),
         nodeBuiltinsShim(),
         nameAnonymousClassAssignments(),
