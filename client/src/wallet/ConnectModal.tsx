@@ -58,6 +58,7 @@ export function ConnectModal() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [hasAzguard, setHasAzguard] = useState(false);
   const [view, setView] = useState<ModalView>('select');
+  const [autoSelectingProviderId, setAutoSelectingProviderId] = useState<string | null>(null);
 
   useEffect(() => {
     isAzguardInstalled().then(setHasAzguard);
@@ -76,13 +77,17 @@ export function ConnectModal() {
 
   const handleAzguard = () => {
     clearError();
+    setAutoSelectingProviderId(null);
     setView('azguard-discovery');
     startAzguardDiscovery();
   };
 
   const handleSelectProvider = async (provider: WalletProvider) => {
     await selectAzguardProvider(provider);
-    setView('azguard-verify');
+    const nextState = useMultiWalletStore.getState();
+    if (nextState.status === 'verifying' && nextState.azguard.pending) {
+      setView('azguard-verify');
+    }
   };
 
   const handleConfirm = async () => {
@@ -91,14 +96,54 @@ export function ConnectModal() {
 
   const handleBack = () => {
     cancelAzguardConnection();
+    setAutoSelectingProviderId(null);
     setView('select');
   };
 
   const isConnecting =
     status === 'connecting' || status === 'discovering' || connecting !== null;
 
+  useEffect(() => {
+    if (view !== 'azguard-discovery') {
+      return;
+    }
+
+    if (azguard.providers.length !== 1) {
+      return;
+    }
+
+    const [provider] = azguard.providers;
+    if (!provider) {
+      return;
+    }
+
+    if (autoSelectingProviderId === provider.id) {
+      return;
+    }
+
+    if (status === 'connecting' || status === 'verifying' || azguard.pending) {
+      return;
+    }
+
+    setAutoSelectingProviderId(provider.id);
+    void handleSelectProvider(provider);
+  }, [
+    azguard.pending,
+    azguard.providers,
+    autoSelectingProviderId,
+    status,
+    view,
+  ]);
+
   // --- Azguard Discovery View ---
   if (view === 'azguard-discovery') {
+    const singleProvider = azguard.providers.length === 1 ? azguard.providers[0] : null;
+    const isAutoConnectingSingleProvider =
+      !!singleProvider &&
+      (autoSelectingProviderId === singleProvider.id ||
+        status === 'connecting' ||
+        status === 'verifying');
+
     return (
       <div className="menu-connect-content menu-connect-content--flow">
         <button
@@ -110,7 +155,11 @@ export function ConnectModal() {
         </button>
 
         <p className="menu-panel-kicker">AZGUARD</p>
-        <p className="menu-flow-copy">Unlock the extension and choose a wallet to continue.</p>
+        <p className="menu-flow-copy">
+          {singleProvider
+            ? 'Unlock the extension. We will connect to your wallet automatically.'
+            : 'Unlock the extension and choose a wallet to continue.'}
+        </p>
 
         {error && (
           <div className="menu-inline-error" onClick={clearError}>
@@ -127,33 +176,42 @@ export function ConnectModal() {
           </div>
         )}
 
-        <div className="menu-provider-list">
-          {azguard.providers.map((provider) => (
-            <button
-              key={provider.id}
-              type="button"
-              className="menu-provider-button"
-              onClick={() => handleSelectProvider(provider)}
-              disabled={status === 'connecting'}
-            >
-              {canRenderProviderIcon(provider.icon) ? (
-                <img
-                  src={provider.icon}
-                  alt=""
-                  className="menu-provider-button__icon"
-                />
-              ) : (
-                <span className="menu-provider-button__fallback">🛡️</span>
-              )}
-              <span className="menu-provider-button__content">
-                <span className="menu-provider-button__name">
-                  {provider.name || 'Azguard Wallet'}
+        {isAutoConnectingSingleProvider ? (
+          <div className="menu-flow-spinner">
+            <div
+              className="loading-spinner"
+              style={{ width: '28px', height: '28px' }}
+            />
+          </div>
+        ) : (
+          <div className="menu-provider-list">
+            {azguard.providers.map((provider) => (
+              <button
+                key={provider.id}
+                type="button"
+                className="menu-provider-button"
+                onClick={() => handleSelectProvider(provider)}
+                disabled={status === 'connecting'}
+              >
+                {canRenderProviderIcon(provider.icon) ? (
+                  <img
+                    src={provider.icon}
+                    alt=""
+                    className="menu-provider-button__icon"
+                  />
+                ) : (
+                  <span className="menu-provider-button__fallback">🛡️</span>
+                )}
+                <span className="menu-provider-button__content">
+                  <span className="menu-provider-button__name">
+                    {provider.name || 'Azguard Wallet'}
+                  </span>
+                  <span className="menu-provider-button__hint">CLICK TO CONNECT</span>
                 </span>
-                <span className="menu-provider-button__hint">CLICK TO CONNECT</span>
-              </span>
-            </button>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
+        )}
 
         {status !== 'discovering' && azguard.providers.length === 0 && !error && (
           <p className="menu-flow-note">

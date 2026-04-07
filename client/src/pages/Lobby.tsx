@@ -7,6 +7,7 @@ import { AcceleratorBadge } from '../components/ui/AcceleratorBadge';
 import { ConnectModal } from '../wallet/ConnectModal';
 import { getNetworkConfig } from '../config/network';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
+import { StatusModal } from '../components/ui/StatusModal';
 
 function getNetworkLabel(nodeUrl: string): string {
   if (nodeUrl.includes('localhost') || nodeUrl.includes('127.0.0.1')) {
@@ -22,6 +23,30 @@ function getNetworkLabel(nodeUrl: string): string {
     return 'Aztec Mainnet';
   }
   return 'Aztec Network';
+}
+
+function getLoadingModalContent(statusMessage: string) {
+  const normalized = statusMessage.replace(/\.\.\.$/, '').trim();
+  const title = normalized.toUpperCase();
+
+  if (normalized === 'Creating game') {
+    return {
+      title,
+      message: 'Setting up your game and submitting the opening transaction.',
+    };
+  }
+
+  if (normalized === 'Joining game') {
+    return {
+      title,
+      message: 'Connecting you to the match and confirming the join transaction.',
+    };
+  }
+
+  return {
+    title,
+    message: 'Please keep this tab open while we finish the action.',
+  };
 }
 
 export function Lobby() {
@@ -94,6 +119,7 @@ export function Lobby() {
       : walletType === 'azguard'
       ? 'Azguard'
       : 'Connected';
+  const loadingContent = getLoadingModalContent(statusMessage || 'Processing...');
 
   return (
     <>
@@ -253,23 +279,17 @@ export function Lobby() {
       )}
 
       {isInitializing && (
-        <div className="menu-startup-modal" aria-live="polite" aria-busy="true">
-          <div className="menu-startup-modal__dialog">
-            <div className="loading-spinner" />
-            <p className="menu-startup-modal__eyebrow">INITIALIZING</p>
-            <p className="menu-startup-modal__copy">Connecting to Aztec network...</p>
-          </div>
-        </div>
+        <StatusModal
+          title="INITIALIZING"
+          message="Connecting to Aztec network..."
+        />
       )}
 
-      {/* Loading overlay — outside lobby-container to avoid transform issues */}
       {isLoading && (
-        <div className="loading-overlay">
-          <div className="loading-content">
-            <div className="loading-spinner" />
-            <p>{statusMessage || 'Processing...'}</p>
-          </div>
-        </div>
+        <StatusModal
+          title={loadingContent.title}
+          message={loadingContent.message}
+        />
       )}
     </>
   );
