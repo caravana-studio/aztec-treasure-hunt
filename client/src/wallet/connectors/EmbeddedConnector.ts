@@ -71,6 +71,8 @@ let cachedWallet: EmbeddedWallet | null = null;
 let cachedFeePaymentMethod: SponsoredFeePaymentMethod | null = null;
 
 const REMOTE_EMBEDDED_FEE_JUICE_AMOUNT = 1_000_000_000_000_000_000_000n;
+const MAX_INIT_ATTEMPTS = 3;
+const AZTEC_DB_PREFIXES = ['pxe-', 'wallet-', 'aztec-'];
 
 
 export function getSponsoredFeePaymentMethod(): SponsoredFeePaymentMethod | null {
@@ -87,6 +89,12 @@ export interface EmbeddedConnectorResult {
   wallet: BaseWallet;
   address: AztecAddress;
   contractAddress: AztecAddress;
+}
+
+function resetCachedEmbeddedState() {
+  cachedWallet = null;
+  cachedFeePaymentMethod = null;
+  cachedProver = null;
 }
 
 interface Eip1193Provider {
@@ -233,7 +241,28 @@ async function deployRemoteEmbeddedAccount(wallet: EmbeddedWallet, nodeUrl: stri
   return accountManager.address;
 }
 
-async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
+async function clearAztecIndexedDB(): Promise<void> {
+  if (typeof indexedDB === 'undefined' || typeof indexedDB.databases !== 'function') {
+    return;
+  }
+
+  const databases = await indexedDB.databases();
+  const deletions = databases
+    .filter((db) => db.name && AZTEC_DB_PREFIXES.some((prefix) => db.name!.startsWith(prefix)))
+    .map(
+      (db) =>
+        new Promise<void>((resolve) => {
+          const request = indexedDB.deleteDatabase(db.name!);
+          request.onsuccess = () => resolve();
+          request.onerror = () => resolve();
+          request.onblocked = () => resolve();
+        })
+    );
+
+  await Promise.all(deletions);
+}
+
+async function doInitWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   if (cachedWallet) return cachedWallet;
 
   const config = getNetworkConfig();
@@ -318,6 +347,27 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
 
   cachedWallet = wallet;
   return wallet;
+}
+
+async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
+  for (let attempt = 1; attempt <= MAX_INIT_ATTEMPTS; attempt++) {
+    try {
+      return await doInitWallet(nodeUrl);
+    } catch (error) {
+      resetCachedEmbeddedState();
+
+      if (attempt === MAX_INIT_ATTEMPTS) {
+        throw error;
+      }
+
+      console.warn(
+        `[embedded] Wallet initialization failed (attempt ${attempt}/${MAX_INIT_ATTEMPTS}), clearing stale IndexedDB and retrying...`
+      );
+      await clearAztecIndexedDB();
+    }
+  }
+
+  throw new Error('Embedded wallet initialization failed.');
 }
 
 /** Try to reconnect a previously saved embedded account */
