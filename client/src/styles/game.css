@@ -1674,6 +1674,8 @@
   display: flex;
   flex: 1;
   min-height: 0;
+  max-height: none;
+  overflow: visible;
 }
 
 .logs-list-glass {
@@ -1681,6 +1683,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  max-height: none;
   padding: 12px;
   gap: 8px;
   overflow-y: auto;
