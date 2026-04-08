@@ -15,6 +15,7 @@ import { Fr } from '@aztec/aztec.js/fields';
 import { L1FeeJuicePortalManager } from '@aztec/aztec.js/ethereum';
 import { waitForL1ToL2MessageReady } from '@aztec/aztec.js/messaging';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
+import { getFeeJuiceBalance } from '@aztec/aztec.js/utils';
 import { ContractInitializationStatus } from '@aztec/aztec.js/wallet';
 import { createEthereumChain } from '@aztec/ethereum/chain';
 import { createStore } from '@aztec/kv-store/indexeddb';
@@ -71,6 +72,7 @@ let cachedWallet: EmbeddedWallet | null = null;
 let cachedFeePaymentMethod: SponsoredFeePaymentMethod | null = null;
 
 const REMOTE_EMBEDDED_FEE_JUICE_AMOUNT = 1_000_000_000_000_000_000_000n;
+const REMOTE_EMBEDDED_MIN_READY_BALANCE = 1_000_000_000_000_000_000n;
 const MAX_INIT_ATTEMPTS = 3;
 const AZTEC_DB_PREFIXES = ['pxe-', 'wallet-', 'aztec-'];
 
@@ -191,20 +193,48 @@ async function createInjectedL1Client(chainId: number) {
   }).extend(publicActions);
 }
 
-async function findReconnectableAccount(wallet: EmbeddedWallet): Promise<AztecAddress | null> {
+async function findReconnectableAccount(
+  wallet: EmbeddedWallet,
+  nodeUrl: string
+): Promise<AztecAddress | null> {
   const accounts = await wallet.getAccounts();
   if (!accounts.length) {
     return null;
   }
 
+  if (usesSponsoredFeePayment(nodeUrl)) {
+    for (const account of accounts) {
+      const metadata = await wallet.getContractMetadata(account.item);
+      if (metadata.initializationStatus === ContractInitializationStatus.INITIALIZED) {
+        return account.item;
+      }
+    }
+
+    return null;
+  }
+
+  const node = createAztecNodeClient(nodeUrl);
+  let bestAddress: AztecAddress | null = null;
+  let bestBalance = 0n;
+
   for (const account of accounts) {
     const metadata = await wallet.getContractMetadata(account.item);
-    if (metadata.initializationStatus === ContractInitializationStatus.INITIALIZED) {
-      return account.item;
+    if (metadata.initializationStatus !== ContractInitializationStatus.INITIALIZED) {
+      continue;
+    }
+
+    try {
+      const balance = await getFeeJuiceBalance(account.item, node);
+      if (balance >= REMOTE_EMBEDDED_MIN_READY_BALANCE && balance > bestBalance) {
+        bestAddress = account.item;
+        bestBalance = balance;
+      }
+    } catch (error) {
+      console.warn('[embedded] Failed to read Fee Juice balance for account', account.item.toString(), error);
     }
   }
 
-  return null;
+  return bestAddress;
 }
 
 async function deployRemoteEmbeddedAccount(wallet: EmbeddedWallet, nodeUrl: string) {
@@ -376,7 +406,7 @@ export async function reconnectEmbedded(
 ): Promise<EmbeddedConnectorResult | null> {
   const config = getNetworkConfig();
   const wallet = await initWallet(nodeUrl);
-  const address = await findReconnectableAccount(wallet);
+  const address = await findReconnectableAccount(wallet, nodeUrl);
   if (!address) return null;
 
   return {
@@ -392,7 +422,7 @@ export async function createEmbeddedAccount(
 ): Promise<EmbeddedConnectorResult> {
   const config = getNetworkConfig();
   const wallet = await initWallet(nodeUrl);
-  const existingAddress = await findReconnectableAccount(wallet);
+  const existingAddress = await findReconnectableAccount(wallet, nodeUrl);
 
   if (existingAddress) {
     return {
