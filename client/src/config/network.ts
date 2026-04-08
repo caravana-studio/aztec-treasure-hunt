@@ -5,13 +5,25 @@ export interface NetworkConfig {
   adminAddress?: string;
   deploymentSalt: string;
   proverEnabled: boolean;
+  sponsoredFpcAddress?: string;
+  sponsoredFpcSalt?: string;
+}
+
+export function getConfiguredSponsoredFpcAddress(): string | undefined {
+  return import.meta.env.VITE_SPONSORED_FPC_ADDRESS || undefined;
+}
+
+export function getConfiguredSponsoredFpcSalt(): string | undefined {
+  return import.meta.env.VITE_SPONSORED_FPC_SALT || undefined;
 }
 
 export function usesSponsoredFeePayment(nodeUrl: string): boolean {
   return (
     nodeUrl.includes('localhost') ||
     nodeUrl.includes('127.0.0.1') ||
-    nodeUrl.includes('devnet')
+    nodeUrl.includes('devnet') ||
+    !!getConfiguredSponsoredFpcAddress() ||
+    !!getConfiguredSponsoredFpcSalt()
   );
 }
 
@@ -42,6 +54,8 @@ export function getNetworkConfig(): NetworkConfig {
   const deploymentSalt = import.meta.env.VITE_DEPLOYMENT_SALT;
   const nodeUrl = import.meta.env.VITE_AZTEC_NODE_URL || 'http://localhost:8080';
   const proverEnabled = import.meta.env.VITE_PROVER_ENABLED === 'true';
+  const sponsoredFpcAddress = getConfiguredSponsoredFpcAddress();
+  const sponsoredFpcSalt = getConfiguredSponsoredFpcSalt();
 
   if (!contractAddress) {
     throw new Error('Missing VITE_CONTRACT_ADDRESS. Run yarn deploy-contracts first.');
@@ -62,5 +76,7 @@ export function getNetworkConfig(): NetworkConfig {
     adminAddress,
     deploymentSalt,
     proverEnabled,
+    sponsoredFpcAddress,
+    sponsoredFpcSalt,
   };
 }

@@ -9,8 +9,9 @@
   "settings": {
     "skipLocalNetwork": true,
     "version": "4.2.0-aztecnr-rc.2",
-    "sponsoredFPC": false,
-    "bridgeAmount": "1000000000000000000000"
+    "sponsoredFPC": true,
+    "bridgeAmount": "1000000000000000000000",
+    "sponsoredFPCFundingAmount": "1000000000000000000000"
   },
   "timeouts": {
     "deployTimeout": 1200000,

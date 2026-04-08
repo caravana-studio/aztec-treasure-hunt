@@ -26,6 +26,7 @@ export interface EnvironmentConfig {
     version: string;
     sponsoredFPC?: boolean;
     bridgeAmount?: string;
+    sponsoredFPCFundingAmount?: string;
   };
   timeouts?: TimeoutConfig;
 }
@@ -84,8 +85,8 @@ export class ConfigManager {
   }
 
   public hasSponsoredFPC(): boolean {
-    // SponsoredFPC is only available on local (auto-deployed) and devnet (canonical deployment).
-    // Mainnet and testnet require paying fees via Fee Juice bridged from L1.
+    // SponsoredFPC can be enabled explicitly per-network.
+    // By default we assume it exists only on local and devnet.
     if (this.config.settings.sponsoredFPC !== undefined) {
       return this.config.settings.sponsoredFPC;
     }

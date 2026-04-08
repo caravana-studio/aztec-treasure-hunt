@@ -34,6 +34,7 @@ import {
 } from '../../config/network';
 import { useAcceleratorStore } from '../../store/accelerator';
 import type { AcceleratorPhaseLabel } from '../../store/accelerator';
+import { getSponsoredFpcInstance } from './sponsoredFpc';
 
 /**
  * Lazy account contracts provider — uses dynamic imports so Vite can
@@ -350,12 +351,9 @@ async function doInitWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   const wallet = new EmbeddedWallet(pxe, aztecNode, walletDB, lazyAccountContracts);
 
   if (usesSponsoredFeePayment(nodeUrl)) {
-    // Local and devnet expose the canonical SponsoredFPC so account deploys
-    // can be paid without bridging Fee Juice from L1.
-    const fpcInstance = await getContractInstanceFromInstantiationParams(
-      SponsoredFPCContract.artifact,
-      { salt: new Fr(0) }
-    );
+    // Local/devnet use the canonical sponsor. Remote networks can opt into
+    // the same UX by configuring a project-owned SponsoredFPC in env.
+    const fpcInstance = await getSponsoredFpcInstance();
     await wallet.registerContract(fpcInstance, SponsoredFPCContract.artifact);
     cachedFeePaymentMethod = new SponsoredFeePaymentMethod(fpcInstance.address);
   } else {

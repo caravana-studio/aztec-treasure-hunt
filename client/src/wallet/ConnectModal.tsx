@@ -61,7 +61,7 @@ export function ConnectModal() {
   const [view, setView] = useState<ModalView>('select');
   const [autoSelectingProviderId, setAutoSelectingProviderId] = useState<string | null>(null);
   const networkConfig = getNetworkConfig();
-  const remoteEmbeddedFlow = !usesSponsoredFeePayment(networkConfig.nodeUrl);
+  const requiresManualEmbeddedFunding = !usesSponsoredFeePayment(networkConfig.nodeUrl);
 
   useEffect(() => {
     isAzguardInstalled().then(setHasAzguard);
@@ -319,7 +319,7 @@ export function ConnectModal() {
           )}
         </button>
 
-        {remoteEmbeddedFlow && (
+        {requiresManualEmbeddedFunding && (
           <p className="menu-flow-note menu-connect-note">
             Requires an L1 wallet with ETH to bridge Fee Juice before the first transaction.
           </p>

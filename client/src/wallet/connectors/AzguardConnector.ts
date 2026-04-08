@@ -19,6 +19,7 @@ import { hashToEmoji } from '@aztec/wallet-sdk/crypto';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
 import { TreasureHuntContract } from '../../artifacts/TreasureHunt';
 import { getNetworkConfig, usesSponsoredFeePayment } from '../../config/network';
+import { getSponsoredFpcInstance } from './sponsoredFpc';
 
 export type { DiscoverySession, WalletProvider, PendingConnection };
 
@@ -59,13 +60,6 @@ const AZGUARD_TRANSACTION_FUNCTIONS = [
   'use_shovel',
   'use_trap',
 ];
-
-async function getSponsoredFpcInstance() {
-  return getContractInstanceFromInstantiationParams(
-    SponsoredFPCContract.artifact,
-    { salt: new Fr(0) }
-  );
-}
 
 function getRequiredCapabilities(
   contractAddress: AztecAddress,

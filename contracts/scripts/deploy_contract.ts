@@ -1,8 +1,14 @@
 import { TreasureHuntContract } from "../src/artifacts/TreasureHunt.js"
 import { Logger, createLogger } from "@aztec/aztec.js/log";
 import { SponsoredFeePaymentMethod, FeeJuicePaymentMethodWithClaim } from "@aztec/aztec.js/fee";
+import { FeeJuiceContract } from "@aztec/noir-contracts.js/FeeJuice";
 import { setupWallet } from "../src/utils/setup_wallet.js";
-import { getSponsoredFPCInstance } from "../src/utils/sponsored_fpc.js";
+import {
+    CANONICAL_SPONSORED_FPC_SALT,
+    REMOTE_SPONSORED_FPC_SALT,
+    getSponsoredFPCInstance,
+    setupSponsoredFPC,
+} from "../src/utils/sponsored_fpc.js";
 import { SponsoredFPCContractArtifact } from "@aztec/noir-contracts.js/SponsoredFPC";
 import {
     deploySchnorrAccount,
@@ -12,6 +18,7 @@ import {
 import { bridgeFeeJuice, DEFAULT_FEE_JUICE_AMOUNT } from "../src/utils/bridge_fee_juice.js";
 import { getTimeouts, getAztecNodeUrl } from "../config/config.js";
 import configManager from "../config/config.js";
+import { getCanonicalFeeJuice } from "@aztec/protocol-contracts/fee-juice";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
@@ -52,7 +59,9 @@ function writeClientEnv(
     contractAddress: string,
     deployerAddress: string,
     adminAddress: string,
-    deploymentSalt: string
+    deploymentSalt: string,
+    sponsoredFpcAddress?: string,
+    sponsoredFpcSalt?: string
 ) {
     const env = configManager.getConfig().environment;
     const envSuffix = env === 'local' ? '.env.local' : `.env.${env}`;
@@ -66,6 +75,7 @@ VITE_DEPLOYER_ADDRESS=${deployerAddress}
 VITE_ADMIN_ADDRESS=${adminAddress}
 VITE_DEPLOYMENT_SALT=${deploymentSalt}
 VITE_AZTEC_NODE_URL=${nodeUrl}
+${sponsoredFpcAddress ? `VITE_SPONSORED_FPC_ADDRESS=${sponsoredFpcAddress}\n` : ''}${sponsoredFpcSalt ? `VITE_SPONSORED_FPC_SALT=${sponsoredFpcSalt}\n` : ''}
 `;
 
     fs.writeFileSync(envFilePath, envContent);
@@ -86,18 +96,93 @@ async function main() {
 
     let accountManager;
     let contractPaymentMethod;
+    let sponsoredFpcAddress: string | undefined;
+    let sponsoredFpcSalt: string | undefined;
 
-    if (hasSponsoredFPC) {
+    if (hasSponsoredFPC && (configManager.isLocalNetwork() || configManager.isDevnet())) {
         // ── Local / Devnet: use SponsoredFPC ──────────────────────────────
         logger.info('💰 Setting up SponsoredFPC fee payment...');
-        const sponsoredFPC = await getSponsoredFPCInstance();
+        const sponsoredFPC = await getSponsoredFPCInstance(CANONICAL_SPONSORED_FPC_SALT);
         await wallet.registerContract(sponsoredFPC, SponsoredFPCContractArtifact);
         const sponsoredPaymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
         logger.info(`✅ SponsoredFPC configured at: ${sponsoredFPC.address}`);
+        sponsoredFpcAddress = sponsoredFPC.address.toString();
+        sponsoredFpcSalt = CANONICAL_SPONSORED_FPC_SALT.toString();
 
         logger.info('👤 Deploying Schnorr account...');
         accountManager = await deploySchnorrAccount(wallet);
         logger.info(`✅ Account deployed at: ${accountManager.address}`);
+
+        contractPaymentMethod = sponsoredPaymentMethod;
+
+    } else if (hasSponsoredFPC) {
+        // ── Testnet with app-sponsored fees ────────────────────────────────
+        const l1PrivateKey = process.env.L1_PRIVATE_KEY;
+        if (!l1PrivateKey) {
+            throw new Error(
+                '❌ L1_PRIVATE_KEY env var is required for sponsored testnet deploy.\n' +
+                '   The deploy script uses it once to fund the deployer account and the SponsoredFPC.\n' +
+                '   Example: L1_PRIVATE_KEY=0x... yarn deploy::testnet'
+            );
+        }
+
+        logger.info('👤 Creating Schnorr account (not yet deployed)...');
+        accountManager = await createSchnorrAccountManager(wallet);
+        logger.info(`📍 Account address: ${accountManager.address}`);
+
+        const deployerBridgeAmount = BigInt(
+            configManager.getConfig().settings.bridgeAmount ?? DEFAULT_FEE_JUICE_AMOUNT
+        );
+        const deployerClaim = await bridgeFeeJuice(
+            accountManager.address,
+            l1PrivateKey,
+            deployerBridgeAmount,
+            logger
+        );
+
+        logger.info('👤 Deploying account with Fee Juice claim...');
+        const claimPaymentMethod = new FeeJuicePaymentMethodWithClaim(accountManager.address, deployerClaim);
+        await deployAccountManager(wallet, accountManager, claimPaymentMethod, logger);
+        logger.info(`✅ Account deployed at: ${accountManager.address}`);
+
+        logger.info('💰 Deploying SponsoredFPC for app-paid embedded wallet fees...');
+        const sponsoredFPC = await setupSponsoredFPC(
+            wallet,
+            (message: string) => logger.info(message),
+            REMOTE_SPONSORED_FPC_SALT
+        );
+        await wallet.registerContract(sponsoredFPC, SponsoredFPCContractArtifact);
+        const sponsoredPaymentMethod = new SponsoredFeePaymentMethod(sponsoredFPC.address);
+        sponsoredFpcAddress = sponsoredFPC.address.toString();
+        sponsoredFpcSalt = REMOTE_SPONSORED_FPC_SALT.toString();
+
+        logger.info(`🌉 Funding SponsoredFPC at ${sponsoredFPC.address}...`);
+        const sponsoredFpcFundingAmount = BigInt(
+            configManager.getConfig().settings.sponsoredFPCFundingAmount ?? DEFAULT_FEE_JUICE_AMOUNT
+        );
+        const sponsoredClaim = await bridgeFeeJuice(
+            sponsoredFPC.address,
+            l1PrivateKey,
+            sponsoredFpcFundingAmount,
+            logger
+        );
+
+        const feeJuiceInstance = await getCanonicalFeeJuice();
+        await wallet.registerContract(feeJuiceInstance.instance, FeeJuiceContract.artifact);
+        const feeJuice = await FeeJuiceContract.at(feeJuiceInstance.address, wallet);
+        await feeJuice.methods
+            .claim(
+                sponsoredFPC.address,
+                sponsoredClaim.claimAmount,
+                sponsoredClaim.claimSecret,
+                sponsoredClaim.messageLeafIndex
+            )
+            .send({ from: accountManager.address });
+
+        const sponsoredBalance = await feeJuice.methods
+            .balance_of_public(sponsoredFPC.address)
+            .simulate({ from: accountManager.address });
+        logger.info(`✅ SponsoredFPC funded with Fee Juice balance: ${sponsoredBalance}`);
 
         contractPaymentMethod = sponsoredPaymentMethod;
 
@@ -186,7 +271,9 @@ async function main() {
         treasureHuntContract.address.toString(),
         instance.deployer.toString(),
         address.toString(),
-        instance.salt.toString()
+        instance.salt.toString(),
+        sponsoredFpcAddress,
+        sponsoredFpcSalt
     );
 
     logger.info('🏁 Deployment process completed successfully!');
