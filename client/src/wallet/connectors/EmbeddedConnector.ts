@@ -7,18 +7,30 @@
  */
 import { AztecAddress } from '@aztec/aztec.js/addresses';
 import { NO_FROM } from '@aztec/aztec.js/account';
-import { SponsoredFeePaymentMethod } from '@aztec/aztec.js/fee';
+import {
+  FeeJuicePaymentMethodWithClaim,
+  SponsoredFeePaymentMethod,
+} from '@aztec/aztec.js/fee';
 import { Fr } from '@aztec/aztec.js/fields';
+import { L1FeeJuicePortalManager } from '@aztec/aztec.js/ethereum';
+import { waitForL1ToL2MessageReady } from '@aztec/aztec.js/messaging';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
+import { ContractInitializationStatus } from '@aztec/aztec.js/wallet';
+import { createEthereumChain } from '@aztec/ethereum/chain';
 import { createStore } from '@aztec/kv-store/indexeddb';
 import { SponsoredFPCContract } from '@aztec/noir-contracts.js/SponsoredFPC';
 import { AcceleratorProver } from '@alejoamiras/aztec-accelerator';
 import { createPXE, getPXEConfig } from '@aztec/pxe/client/lazy';
 import { getContractInstanceFromInstantiationParams } from '@aztec/stdlib/contract';
+import { createWalletClient, custom, publicActions } from 'viem';
 import type { BaseWallet } from '@aztec/wallet-sdk/base-wallet';
 import { EmbeddedWallet, WalletDB } from '@aztec/wallets/embedded';
 import { TreasureHuntContract } from '../../artifacts/TreasureHunt';
-import { getNetworkConfig } from '../../config/network';
+import {
+  getDefaultL1RpcUrl,
+  getNetworkConfig,
+  usesSponsoredFeePayment,
+} from '../../config/network';
 import { useAcceleratorStore } from '../../store/accelerator';
 import type { AcceleratorPhaseLabel } from '../../store/accelerator';
 
@@ -58,6 +70,8 @@ const lazyAccountContracts = {
 let cachedWallet: EmbeddedWallet | null = null;
 let cachedFeePaymentMethod: SponsoredFeePaymentMethod | null = null;
 
+const REMOTE_EMBEDDED_FEE_JUICE_AMOUNT = 1_000_000_000_000_000_000_000n;
+
 
 export function getSponsoredFeePaymentMethod(): SponsoredFeePaymentMethod | null {
   return cachedFeePaymentMethod;
@@ -73,6 +87,150 @@ export interface EmbeddedConnectorResult {
   wallet: BaseWallet;
   address: AztecAddress;
   contractAddress: AztecAddress;
+}
+
+interface Eip1193Provider {
+  request(args: { method: string; params?: unknown[] | object }): Promise<unknown>;
+  on?(event: string, listener: (...args: unknown[]) => void): void;
+  removeListener?(event: string, listener: (...args: unknown[]) => void): void;
+}
+
+function getInjectedEthereumProvider(): Eip1193Provider | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const maybeProvider = (window as Window & { ethereum?: Eip1193Provider }).ethereum;
+  return maybeProvider ?? null;
+}
+
+function toChainHex(chainId: number): `0x${string}` {
+  return `0x${chainId.toString(16)}`;
+}
+
+function createBrowserLogger() {
+  return {
+    info: (...args: unknown[]) => console.log('[embedded:l1]', ...args),
+    debug: (...args: unknown[]) => console.debug('[embedded:l1]', ...args),
+    verbose: (...args: unknown[]) => console.debug('[embedded:l1]', ...args),
+    warn: (...args: unknown[]) => console.warn('[embedded:l1]', ...args),
+    error: (...args: unknown[]) => console.error('[embedded:l1]', ...args),
+    fatal: (...args: unknown[]) => console.error('[embedded:l1]', ...args),
+  } as any;
+}
+
+async function ensureInjectedChain(provider: Eip1193Provider, chainId: number) {
+  const currentChainHex = await provider.request({ method: 'eth_chainId' });
+  const expectedChainHex = toChainHex(chainId);
+
+  if (currentChainHex === expectedChainHex) {
+    return;
+  }
+
+  try {
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: expectedChainHex }],
+    });
+    return;
+  } catch (error) {
+    const code = (error as { code?: number } | undefined)?.code;
+    if (code !== 4902) {
+      throw error;
+    }
+  }
+
+  const l1RpcUrl = getDefaultL1RpcUrl(chainId);
+  if (!l1RpcUrl) {
+    throw new Error(`Unsupported L1 chain ${chainId}. Switch your L1 wallet manually and try again.`);
+  }
+
+  const chain = createEthereumChain([l1RpcUrl], chainId).chainInfo;
+  await provider.request({
+    method: 'wallet_addEthereumChain',
+    params: [
+      {
+        chainId: expectedChainHex,
+        chainName: chain.name,
+        rpcUrls: chain.rpcUrls.default.http,
+        nativeCurrency: chain.nativeCurrency,
+      },
+    ],
+  });
+}
+
+async function createInjectedL1Client(chainId: number) {
+  const provider = getInjectedEthereumProvider();
+  if (!provider) {
+    throw new Error(
+      'Embedded Wallet on testnet or mainnet needs an injected Ethereum wallet with ETH for L1 gas.'
+    );
+  }
+
+  await ensureInjectedChain(provider, chainId);
+  const addresses = await provider.request({ method: 'eth_requestAccounts' });
+  if (!Array.isArray(addresses) || typeof addresses[0] !== 'string') {
+    throw new Error('No Ethereum account was provided by the injected wallet.');
+  }
+
+  const l1RpcUrl = getDefaultL1RpcUrl(chainId);
+  const chain = createEthereumChain(l1RpcUrl ? [l1RpcUrl] : [], chainId).chainInfo;
+
+  return createWalletClient({
+    account: addresses[0] as `0x${string}`,
+    chain,
+    transport: custom(provider),
+  }).extend(publicActions);
+}
+
+async function findReconnectableAccount(wallet: EmbeddedWallet): Promise<AztecAddress | null> {
+  const accounts = await wallet.getAccounts();
+  if (!accounts.length) {
+    return null;
+  }
+
+  for (const account of accounts) {
+    const metadata = await wallet.getContractMetadata(account.item);
+    if (metadata.initializationStatus === ContractInitializationStatus.INITIALIZED) {
+      return account.item;
+    }
+  }
+
+  return null;
+}
+
+async function deployRemoteEmbeddedAccount(wallet: EmbeddedWallet, nodeUrl: string) {
+  const node = createAztecNodeClient(nodeUrl);
+  const nodeInfo = await node.getNodeInfo();
+  const l1Client = await createInjectedL1Client(nodeInfo.l1ChainId);
+  const logger = createBrowserLogger();
+
+  const secret = Fr.random();
+  const salt = Fr.random();
+  const accountManager = await wallet.createSchnorrAccount(secret, salt);
+
+  const portalManager = await L1FeeJuicePortalManager.new(node, l1Client as any, logger);
+  const claim = await portalManager.bridgeTokensPublic(
+    accountManager.address,
+    REMOTE_EMBEDDED_FEE_JUICE_AMOUNT,
+    nodeInfo.l1ChainId !== 1
+  );
+
+  await waitForL1ToL2MessageReady(node, Fr.fromString(claim.messageHash), {
+    timeoutSeconds: 300,
+  });
+
+  const deployMethod = await accountManager.getDeployMethod();
+  await deployMethod.send({
+    from: NO_FROM,
+    skipClassPublication: true,
+    fee: {
+      paymentMethod: new FeeJuicePaymentMethodWithClaim(accountManager.address, claim),
+    },
+    wait: { timeout: 300000 },
+  });
+
+  return accountManager.address;
 }
 
 async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
@@ -132,14 +290,18 @@ async function initWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   // Create EmbeddedWallet
   const wallet = new EmbeddedWallet(pxe, aztecNode, walletDB, lazyAccountContracts);
 
-  // SponsoredFPC is available on all Aztec networks (local, devnet, testnet).
-  // Use salt=0 as the canonical default, matching the playground.
-  const fpcInstance = await getContractInstanceFromInstantiationParams(
-    SponsoredFPCContract.artifact,
-    { salt: new Fr(0) }
-  );
-  await wallet.registerContract(fpcInstance, SponsoredFPCContract.artifact);
-  cachedFeePaymentMethod = new SponsoredFeePaymentMethod(fpcInstance.address);
+  if (usesSponsoredFeePayment(nodeUrl)) {
+    // Local and devnet expose the canonical SponsoredFPC so account deploys
+    // can be paid without bridging Fee Juice from L1.
+    const fpcInstance = await getContractInstanceFromInstantiationParams(
+      SponsoredFPCContract.artifact,
+      { salt: new Fr(0) }
+    );
+    await wallet.registerContract(fpcInstance, SponsoredFPCContract.artifact);
+    cachedFeePaymentMethod = new SponsoredFeePaymentMethod(fpcInstance.address);
+  } else {
+    cachedFeePaymentMethod = null;
+  }
 
   // Register game contract
   const gameInstance = await getContractInstanceFromInstantiationParams(
@@ -164,11 +326,9 @@ export async function reconnectEmbedded(
 ): Promise<EmbeddedConnectorResult | null> {
   const config = getNetworkConfig();
   const wallet = await initWallet(nodeUrl);
+  const address = await findReconnectableAccount(wallet);
+  if (!address) return null;
 
-  const accounts = await wallet.getAccounts();
-  if (!accounts || accounts.length === 0) return null;
-
-  const address = accounts[0].item;
   return {
     wallet,
     address,
@@ -182,30 +342,46 @@ export async function createEmbeddedAccount(
 ): Promise<EmbeddedConnectorResult> {
   const config = getNetworkConfig();
   const wallet = await initWallet(nodeUrl);
+  const existingAddress = await findReconnectableAccount(wallet);
 
-  const secret = Fr.random();
-  const salt = Fr.random();
-  const accountManager = await wallet.createSchnorrAccount(secret, salt);
-
-  if (!cachedFeePaymentMethod) {
-    throw new Error('Fee payment method not initialized. Call initWallet first.');
+  if (existingAddress) {
+    return {
+      wallet,
+      address: existingAddress,
+      contractAddress: AztecAddress.fromString(config.contractAddress),
+    };
   }
 
-  // Deploy account with sponsored fees
-  // additionalScopes is required: the account constructor initializes private storage
-  // and needs its own nullifier key in scope (same pattern as the playground).
-  const deployMethod = await accountManager.getDeployMethod();
-  await deployMethod.send({
-    from: NO_FROM,
-    skipClassPublication: true,
-    fee: { paymentMethod: cachedFeePaymentMethod! },
-    additionalScopes: [accountManager.address],
-    wait: { timeout: 120000 },
-  });
+  let address: AztecAddress;
+
+  if (usesSponsoredFeePayment(nodeUrl)) {
+    const secret = Fr.random();
+    const salt = Fr.random();
+    const accountManager = await wallet.createSchnorrAccount(secret, salt);
+
+    if (!cachedFeePaymentMethod) {
+      throw new Error('Fee payment method not initialized. Call initWallet first.');
+    }
+
+    // additionalScopes is required here because the constructor initializes
+    // private storage and needs the account's nullifier key in scope.
+    const deployMethod = await accountManager.getDeployMethod();
+    await deployMethod.send({
+      from: NO_FROM,
+      skipClassPublication: true,
+      fee: { paymentMethod: cachedFeePaymentMethod },
+      additionalScopes: [accountManager.address],
+      wait: { timeout: 120000 },
+    });
+
+    address = accountManager.address;
+  } else {
+    address = await deployRemoteEmbeddedAccount(wallet, nodeUrl);
+  }
 
   return {
     wallet,
-    address: accountManager.address,
+    address,
     contractAddress: AztecAddress.fromString(config.contractAddress),
   };
 }

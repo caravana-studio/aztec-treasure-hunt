@@ -44,22 +44,40 @@ function getScannedCells(centerX: number, centerY: number): Position[] {
 
 // Helper to extract error message from various error types
 function extractErrorMessage(err: unknown): string {
+  let rawMessage = '';
+
   if (err instanceof Error) {
     const anyErr = err as unknown as Record<string, unknown>;
     if (typeof anyErr.reason === 'string' && anyErr.reason) {
-      return anyErr.reason;
+      rawMessage = anyErr.reason;
+    } else if (typeof anyErr.cause === 'string' && anyErr.cause) {
+      rawMessage = anyErr.cause;
+    } else if (err.message) {
+      rawMessage = err.message;
     }
-    if (typeof anyErr.cause === 'string' && anyErr.cause) {
-      return anyErr.cause;
-    }
-    if (err.message) {
-      return err.message;
-    }
+  } else if (typeof err === 'string') {
+    rawMessage = err;
+  } else {
+    rawMessage = JSON.stringify(err);
   }
-  if (typeof err === 'string') {
-    return err;
+
+  const normalized = rawMessage.toLowerCase();
+  if (normalized.includes('not enough balance for fee payer')) {
+    const { nodeUrl } = getNetworkConfig();
+    const walletType = useMultiWalletStore.getState().walletType;
+
+    if (!usesSponsoredFeePayment(nodeUrl)) {
+      if (walletType === 'embedded') {
+        return 'This embedded wallet does not have enough Fee Juice to pay transaction fees. Fund it again from L1 and try again.';
+      }
+
+      return 'This wallet does not have enough Fee Juice to pay transaction fees on this network.';
+    }
+
+    return 'This wallet does not have enough balance to pay transaction fees.';
   }
-  return JSON.stringify(err);
+
+  return rawMessage;
 }
 
 type SimulatedValue<T> = T | { result: T };

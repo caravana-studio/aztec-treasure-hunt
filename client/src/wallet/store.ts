@@ -90,7 +90,8 @@ export const useMultiWalletStore = create<MultiWalletStore>((set, get) => ({
     if (get().status === 'connecting') return;
     set({ status: 'connecting', error: null });
     try {
-      const result = await createEmbeddedAccount(getNodeUrl());
+      const nodeUrl = getNodeUrl();
+      const result = await createEmbeddedAccount(nodeUrl);
       localStorage.setItem('aztec-wallet-type', WalletType.EMBEDDED);
       set({
         wallet: result.wallet,

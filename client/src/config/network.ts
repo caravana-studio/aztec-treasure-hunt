@@ -15,6 +15,26 @@ export function usesSponsoredFeePayment(nodeUrl: string): boolean {
   );
 }
 
+export function supportsEmbeddedWallet(nodeUrl: string): boolean {
+  return !!nodeUrl;
+}
+
+export function getDefaultL1RpcUrl(l1ChainId: number): string | null {
+  if (l1ChainId === 11155111) {
+    return 'https://ethereum-sepolia-rpc.publicnode.com';
+  }
+
+  if (l1ChainId === 1) {
+    return 'https://ethereum.publicnode.com';
+  }
+
+  if (l1ChainId === 31337) {
+    return 'http://127.0.0.1:8545';
+  }
+
+  return null;
+}
+
 export function getNetworkConfig(): NetworkConfig {
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
   const deployerAddress = import.meta.env.VITE_DEPLOYER_ADDRESS;

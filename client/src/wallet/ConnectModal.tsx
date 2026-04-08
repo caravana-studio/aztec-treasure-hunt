@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useMultiWalletStore } from './store';
 import { isAzguardInstalled } from './connectors/AzguardConnector';
 import type { WalletProvider } from './connectors/AzguardConnector';
+import { getNetworkConfig, usesSponsoredFeePayment } from '../config/network';
 
 type ModalView = 'select' | 'azguard-discovery' | 'azguard-verify';
 
@@ -59,6 +60,8 @@ export function ConnectModal() {
   const [hasAzguard, setHasAzguard] = useState(false);
   const [view, setView] = useState<ModalView>('select');
   const [autoSelectingProviderId, setAutoSelectingProviderId] = useState<string | null>(null);
+  const networkConfig = getNetworkConfig();
+  const remoteEmbeddedFlow = !usesSponsoredFeePayment(networkConfig.nodeUrl);
 
   useEffect(() => {
     isAzguardInstalled().then(setHasAzguard);
@@ -317,6 +320,12 @@ export function ConnectModal() {
             />
           )}
         </button>
+
+        {remoteEmbeddedFlow && (
+          <p className="menu-flow-note menu-connect-note">
+            Requires an L1 wallet with ETH to bridge Fee Juice before the first transaction.
+          </p>
+        )}
 
         <button
           type="button"
