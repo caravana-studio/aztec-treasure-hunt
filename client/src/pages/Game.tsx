@@ -4,16 +4,13 @@ import { Fr } from '@aztec/aztec.js/fields';
 import { useWallet } from '../context/WalletContext';
 import { useGame } from '../hooks/useGame';
 import { useGameAudio } from '../hooks/useGameAudio';
-import { useMultiWalletStore } from '../wallet/store';
 import { PlayerCard, PowersPanel, GameGrid, GameLogs, TurnIndicator } from '../components/game';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
-import { AcceleratorBadge } from '../components/ui/AcceleratorBadge';
 
 export function Game() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { myAddress } = useWallet();
-  const { walletType } = useMultiWalletStore();
 
   const {
     gameId,
@@ -211,11 +208,6 @@ export function Game() {
       <div className="game-shell">
         <div className="game-topbar">
           <div className="game-topbar__slot game-topbar__slot--left">
-            {walletType === 'embedded' && (
-              <div className="game-accelerator-wrap">
-                <AcceleratorBadge />
-              </div>
-            )}
           </div>
           <div className="game-topbar__slot game-topbar__slot--center">
             <TurnIndicator

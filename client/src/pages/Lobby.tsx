@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
 import { useMultiWalletStore } from '../wallet/store';
 import { useGame } from '../hooks/useGame';
-import { AcceleratorBadge } from '../components/ui/AcceleratorBadge';
 import { ConnectModal } from '../wallet/ConnectModal';
 import { getNetworkConfig, getNetworkLabel } from '../config/network';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
@@ -133,11 +132,6 @@ export function Lobby() {
 
                     <div className="menu-session__wallet-row">
                       <div className="menu-session__wallet">{walletLabel}</div>
-                      {walletType === 'embedded' && (
-                        <div className="menu-session__accelerator">
-                          <AcceleratorBadge />
-                        </div>
-                      )}
                     </div>
 
                     <div className="menu-session__address">
