@@ -276,13 +276,11 @@ export function ConnectModal() {
             disabled={isConfirming}
           >
             {isConfirming ? (
-              <>
-                Confirming...
-                <div
-                  className="loading-spinner"
-                  style={{ width: '16px', height: '16px' }}
-                />
-              </>
+              <div
+                className="loading-spinner"
+                style={{ width: '18px', height: '18px' }}
+                aria-hidden="true"
+              />
             ) : (
               'Confirm'
             )}

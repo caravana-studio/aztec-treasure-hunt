@@ -911,6 +911,9 @@
 }
 
 .menu-flow-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 54px;
   padding: 14px 16px 12px;
   border-radius: 18px;
