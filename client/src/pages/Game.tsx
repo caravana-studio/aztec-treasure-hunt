@@ -255,6 +255,7 @@ export function Game() {
                 <>
                   <GameGrid
                     selectedCells={selectedTreasures}
+                    isTreasureSelectionMode
                     clickable={!isLoading}
                     onCellClick={handleGridClick}
                   />
@@ -265,6 +266,7 @@ export function Game() {
                 <GameGrid
                   myTreasures={myTreasurePositions}
                   showTreasures={myTreasurePositions.length > 0}
+                  isTreasureSelectionMode={false}
                   clickable={false}
                 />
               )}
@@ -274,6 +276,7 @@ export function Game() {
                   myTreasures={myTreasurePositions}
                   myTraps={myTrapPositions}
                   dugCells={dugCells}
+                  isTreasureSelectionMode={false}
                   clickable={isMyTurn && gamePhase === 'playing' && !isActionLocked}
                   onCellClick={handleGridClick}
                   showTreasures

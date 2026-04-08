@@ -8,7 +8,6 @@ export type PowerType = 'dig' | 'shovel' | 'detector' | 'compass' | 'trap';
 export interface GameLog {
   id: number;
   message: string;
-  timestamp: Date;
 }
 
 export interface DugCell extends Position {

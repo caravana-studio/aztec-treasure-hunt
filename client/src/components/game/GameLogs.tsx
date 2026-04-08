@@ -72,9 +72,6 @@ export function GameLogs({ logs }: GameLogsProps) {
           ) : (
             logs.map((log) => (
               <div key={log.id} className="log-entry-glass">
-                <span className="log-time">
-                  {log.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
                 <span className="log-message">{formatLogMessage(log.message)}</span>
               </div>
             ))

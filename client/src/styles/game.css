@@ -1175,7 +1175,6 @@
   transform: translateY(var(--sf-fedora-titles-shift-md));
 }
 
-.log-time,
 .game-empty-card__copy,
 .game-setup-modal__copy {
   transform: translateY(var(--sf-fedora-titles-shift-sm));
@@ -1688,41 +1687,23 @@
 }
 
 .log-entry-glass {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 10px;
+  display: flex;
+  align-items: center;
   border-radius: 20px;
   padding: 10px 12px;
   background: rgba(255, 250, 242, 0.52);
 }
 
-.log-time {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 68px;
-  padding: 6px 8px 4px;
-  border-radius: 12px;
-  background: rgba(120, 93, 60, 0.12);
-  font-family: 'SF Fedora Titles', sans-serif;
-  font-size: 11px;
-  line-height: 1;
-  letter-spacing: 0.06em;
-  color: rgba(97, 72, 42, 0.76);
-}
-
 .log-message {
   min-width: 0;
-  align-self: center;
+  width: 100%;
   color: rgba(77, 54, 28, 0.92);
   font-size: 14px;
   line-height: 1.35;
 }
 
 .log-empty {
-  grid-template-columns: 1fr;
-  justify-items: center;
+  justify-content: center;
   text-align: center;
   color: rgba(97, 72, 42, 0.72);
 }

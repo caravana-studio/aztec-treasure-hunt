@@ -7,6 +7,7 @@ interface GameGridProps {
   myTraps?: Position[];
   dugCells?: DugCell[];
   selectedCells?: Position[];
+  isTreasureSelectionMode?: boolean;
   clickable?: boolean;
   onCellClick?: (x: number, y: number) => void;
   showTreasures?: boolean;
@@ -102,6 +103,7 @@ export function GameGrid({
   myTraps = [],
   dugCells = [],
   selectedCells = [],
+  isTreasureSelectionMode = false,
   clickable = false,
   onCellClick,
   showTreasures = false,
@@ -257,7 +259,7 @@ export function GameGrid({
           const isMyTreasure = showTreasures && myTreasures.some((t) => t.x === x && t.y === y);
 
           // Show action preview on hover (only during gameplay, not during treasure selection setup)
-          const isTreasureSelection = selectedCells.length > 0 || myTreasures.length === 0;
+          const isTreasureSelection = isTreasureSelectionMode;
           // Show preview on all cells except those dug by me (opponent's dug cells can still show preview)
           const canShowPreview = !dugCell || !dugCell.isMine;
           const showActionPreview = clickable && cellHovered && canShowPreview && !hasActiveAction && !isTreasureSelection;

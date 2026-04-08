@@ -103,6 +103,79 @@ function toNumber(value: bigint | number | string | Fr): number {
   return value instanceof Fr ? Number(value.toBigInt()) : Number(value);
 }
 
+function getInitialGameLog(gamePhase: GamePhase, isMyTurn: boolean, mySetupDone: boolean, winner: string | null): string {
+  switch (gamePhase) {
+    case 'lobby':
+      return 'Waiting for opponent to join.';
+    case 'setup':
+      return mySetupDone ? 'Waiting for opponent to place treasures.' : 'Place 3 treasures.';
+    case 'playing':
+      return isMyTurn ? 'Your turn.' : 'Opponent turn.';
+    case 'awaiting':
+      return isMyTurn ? 'Waiting for opponent response.' : 'Resolving opponent action.';
+    case 'finished':
+      return winner === 'You Win!' ? 'You found all treasures.' : 'Opponent found all treasures.';
+    default:
+      return 'Game ready.';
+  }
+}
+
+interface PersistedPrivateBoardState {
+  treasures: Position[];
+  traps: Position[];
+}
+
+function getPrivateBoardStorageKey(
+  contractAddress: AztecAddress,
+  playerAddress: AztecAddress,
+  gameId: Fr,
+): string {
+  return `treasure-hunt:private-board:${contractAddress.toString()}:${playerAddress.toString()}:${gameId.toString()}`;
+}
+
+function loadPrivateBoardState(
+  contractAddress: AztecAddress | null | undefined,
+  playerAddress: AztecAddress | null | undefined,
+  gameId: Fr | null | undefined,
+): PersistedPrivateBoardState | null {
+  if (typeof window === 'undefined' || !contractAddress || !playerAddress || !gameId) {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(
+      getPrivateBoardStorageKey(contractAddress, playerAddress, gameId)
+    );
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<PersistedPrivateBoardState>;
+    return {
+      treasures: Array.isArray(parsed.treasures) ? parsed.treasures : [],
+      traps: Array.isArray(parsed.traps) ? parsed.traps : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function savePrivateBoardState(
+  contractAddress: AztecAddress | null | undefined,
+  playerAddress: AztecAddress | null | undefined,
+  gameId: Fr | null | undefined,
+  state: PersistedPrivateBoardState,
+): void {
+  if (typeof window === 'undefined' || !contractAddress || !playerAddress || !gameId) {
+    return;
+  }
+
+  window.localStorage.setItem(
+    getPrivateBoardStorageKey(contractAddress, playerAddress, gameId),
+    JSON.stringify(state)
+  );
+}
+
 /**
  * Wraps a contract .send() call with timing and accelerator logs.
  * Logs go to both console and the in-game log panel.
@@ -216,7 +289,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addLog: (message: string) => {
     set((state) => ({
       logs: [
-        { id: Date.now(), message, timestamp: new Date() },
+        { id: Date.now(), message },
         ...state.logs.slice(0, 49),
       ],
     }));
@@ -281,6 +354,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ isLoading: true, statusMessage: 'Loading game...' });
 
       const contract = TreasureHuntContract.at(contractAddress, wallet);
+      const cachedBoardState = loadPrivateBoardState(contractAddress, myAddress, gameIdToUse);
 
       // Use get_game to fetch all public game state in a single call
       const game = unwrapSimulationResult(await contract.methods.get_game(gameIdToUse).simulate({ from: myAddress }));
@@ -307,7 +381,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       let gamePhase: GamePhase = 'lobby';
       let winner: string | null = null;
 
-      const { gamePhase: previousPhase, addLog: logPhaseChange, lastDetectorPosition: prevDetectorPos, lastCompassPosition: prevCompassPos } = get();
+      const sameGameInMemory = stateGameId?.toString() === gameIdToUse.toString();
+
+      const {
+        gamePhase: previousPhase,
+        addLog: logPhaseChange,
+        lastDetectorPosition: prevDetectorPos,
+        lastCompassPosition: prevCompassPos,
+        myTreasurePositions: currentTreasurePositions,
+        myTrapPositions: currentTrapPositions,
+      } = get();
 
       if (status === STATUS_CREATED) {
         gamePhase = 'lobby';
@@ -482,10 +565,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastCompassDistance: newCompassDistance,
         lastCompassPosition: newCompassPosition,
         compassResult: newCompassResult,
+        myTreasurePositions:
+          sameGameInMemory && currentTreasurePositions.length > 0
+            ? currentTreasurePositions
+            : cachedBoardState?.treasures ?? [],
+        myTrapPositions:
+          sameGameInMemory && currentTrapPositions.length > 0
+            ? currentTrapPositions
+            : cachedBoardState?.traps ?? [],
         hasExtraTurn: iHaveExtraTurn,
         ...(shouldClearDiggingCell && { diggingCell: null }),
         ...(shouldClearActiveAction && { activeAction: null }),
       });
+
+      if (get().logs.length === 0) {
+        addLog(getInitialGameLog(gamePhase, myTurn, Boolean(mySetupDone), winner));
+      }
 
       // Auto-respond to pending actions if needed
       // When game is awaiting and it's NOT my turn, I need to respond
@@ -624,6 +719,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         myTreasurePositions: [...state.selectedTreasures],
         selectedTreasures: [],
       }));
+
+      savePrivateBoardState(contractAddress, myAddress, gameId, {
+        treasures: [...selectedTreasures],
+        traps: get().myTrapPositions,
+      });
 
       addLog('Treasures placed.');
       await refreshGameState();
@@ -855,6 +955,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       addLog(`Treasure moved from (${oldX}, ${oldY}) to (${newX}, ${newY}).`);
       set({ myTreasurePositions: newTreasurePositions, activeAction: null });
+      savePrivateBoardState(contractAddress, myAddress, gameId, {
+        treasures: newTreasurePositions,
+        traps: get().myTrapPositions,
+      });
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to use shovel - Full error:', err);
@@ -891,6 +995,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       addLog(`Trap placed at (${x}, ${y}).`);
       set({ activeAction: null, selectedAction: 'dig', myTrapPositions: newTrapPositions });
+      savePrivateBoardState(contractAddress, myAddress, gameId, {
+        treasures: get().myTreasurePositions,
+        traps: newTrapPositions,
+      });
       await refreshGameState();
     } catch (err: unknown) {
       console.error('Failed to use trap - Full error:', err);
