@@ -4,6 +4,7 @@ import {
   type ContractInstanceWithAddress,
 } from '@aztec/aztec.js/contracts';
 import { createAztecNodeClient } from '@aztec/aztec.js/node';
+import type { AztecAddress } from '@aztec/aztec.js/addresses';
 import type { Wallet } from '@aztec/aztec.js/wallet';
 import type { LogFn } from '@aztec/foundation/log';
 import { SponsoredFPCContract, SponsoredFPCContractArtifact } from '@aztec/noir-contracts.js/SponsoredFPC';
@@ -28,7 +29,8 @@ export async function getSponsoredFPCAddress(salt: Fr = CANONICAL_SPONSORED_FPC_
 export async function setupSponsoredFPC(
   deployer: Wallet,
   log: LogFn,
-  salt: Fr = CANONICAL_SPONSORED_FPC_SALT
+  salt: Fr = CANONICAL_SPONSORED_FPC_SALT,
+  fromAddress?: AztecAddress
 ) {
   const instance = await getSponsoredFPCInstance(salt);
   const node = createAztecNodeClient(getAztecNodeUrl());
@@ -39,7 +41,11 @@ export async function setupSponsoredFPC(
     return instance;
   }
 
-  const [{ item: from }] = await deployer.getAccounts();
+  const from = fromAddress ?? (await deployer.getAccounts())[0]?.item;
+  if (!from) {
+    throw new Error('No deployed account available to deploy SponsoredFPC.');
+  }
+
   const deployed = await SponsoredFPCContract.deploy(deployer)
     .send({
       from,
