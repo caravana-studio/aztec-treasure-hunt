@@ -1305,13 +1305,13 @@
   box-shadow:
     0 18px 30px rgba(28, 13, 3, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  filter: brightness(0.6) saturate(0.6);
+  filter: brightness(0.62) saturate(0.58);
 }
 
 .game-rail__stack--inactive .treasure-progress,
 .game-rail__stack--inactive .dig-action-btn,
 .game-rail__stack--inactive .power-item-btn {
-  filter: brightness(0.94);
+  filter: brightness(0.88) saturate(0.84);
 }
 
 .game-rail__stack--waiting .player-card,
@@ -1470,11 +1470,6 @@
     0 0 0 4px rgba(91, 230, 148, 0.32),
     0 24px 36px rgba(35, 78, 46, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.34);
-}
-
-.game-container .grayed-out {
-  filter: saturate(0.72) brightness(0.92);
-  opacity: 0.72;
 }
 
 .game-rail .player-avatar-frame {

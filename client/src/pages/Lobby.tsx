@@ -5,25 +5,9 @@ import { useMultiWalletStore } from '../wallet/store';
 import { useGame } from '../hooks/useGame';
 import { AcceleratorBadge } from '../components/ui/AcceleratorBadge';
 import { ConnectModal } from '../wallet/ConnectModal';
-import { getNetworkConfig } from '../config/network';
+import { getNetworkConfig, getNetworkLabel } from '../config/network';
 import { AnimatedClouds } from '../components/ui/AnimatedClouds';
 import { StatusModal } from '../components/ui/StatusModal';
-
-function getNetworkLabel(nodeUrl: string): string {
-  if (nodeUrl.includes('localhost') || nodeUrl.includes('127.0.0.1')) {
-    return 'Aztec Local';
-  }
-  if (nodeUrl.includes('devnet')) {
-    return 'Aztec Devnet';
-  }
-  if (nodeUrl.includes('testnet')) {
-    return 'Aztec Testnet';
-  }
-  if (nodeUrl.includes('mainnet')) {
-    return 'Aztec Mainnet';
-  }
-  return 'Aztec Network';
-}
 
 function getLoadingModalContent(statusMessage: string) {
   const normalized = statusMessage.replace(/\.\.\.$/, '').trim();

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ActiveAction, DugCell, GamePhase } from '../types/game';
+import { useAudioSettingsStore } from '../store/audioSettings';
 
 type SoundEffectName =
   | 'treasureSelect'
@@ -58,7 +59,7 @@ export function useGameAudio({
   activeAction,
   dugCells,
 }: UseGameAudioOptions) {
-  const musicRef = useRef<HTMLAudioElement | null>(null);
+  const sfxVolume = useAudioSettingsStore((state) => state.sfxVolume);
   const effectTemplatesRef = useRef<Record<SoundEffectName, HTMLAudioElement> | null>(null);
   const previousTreasureCountRef = useRef(selectedTreasureCount);
   const previousActionKeyRef = useRef(getActionKey(activeAction));
@@ -70,8 +71,9 @@ export function useGameAudio({
       return;
     }
 
-    const instance = template.cloneNode() as HTMLAudioElement;
-    instance.volume = template.volume;
+    const instance = new Audio(template.currentSrc || template.src);
+    instance.preload = 'auto';
+    instance.volume = template.volume * sfxVolume;
     instance.currentTime = 0;
     void instance.play().catch(() => {});
   };
@@ -80,21 +82,13 @@ export function useGameAudio({
     previousTreasureCountRef.current = selectedTreasureCount;
     previousActionKeyRef.current = getActionKey(activeAction);
     previousDugKeysRef.current = new Set(dugCells.map(getDugCellKey));
-  }, [enabled, resetKey, selectedTreasureCount, activeAction, dugCells]);
+  }, [enabled, resetKey]);
 
   useEffect(() => {
     if (!enabled) {
-      musicRef.current?.pause();
-      musicRef.current = null;
       effectTemplatesRef.current = null;
       return;
     }
-
-    const music = new Audio('/sounds/game_music.mp3');
-    music.loop = true;
-    music.volume = 0.22;
-    music.preload = 'auto';
-    musicRef.current = music;
 
     const templates = Object.fromEntries(
       Object.entries(SOUND_FILES).map(([name, src]) => {
@@ -106,38 +100,7 @@ export function useGameAudio({
     ) as Record<SoundEffectName, HTMLAudioElement>;
     effectTemplatesRef.current = templates;
 
-    const removeUnlockListeners = () => {
-      document.removeEventListener('pointerdown', unlockMusic);
-      document.removeEventListener('keydown', unlockMusic);
-    };
-
-    const startMusic = () => {
-      void music.play().then(removeUnlockListeners).catch(() => {});
-    };
-
-    const unlockMusic = () => {
-      startMusic();
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        music.pause();
-      } else {
-        startMusic();
-      }
-    };
-
-    startMusic();
-    document.addEventListener('pointerdown', unlockMusic);
-    document.addEventListener('keydown', unlockMusic);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
-      removeUnlockListeners();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      music.pause();
-      music.currentTime = 0;
-      musicRef.current = null;
       effectTemplatesRef.current = null;
     };
   }, [enabled]);

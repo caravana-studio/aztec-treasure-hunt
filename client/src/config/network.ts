@@ -9,6 +9,22 @@ export interface NetworkConfig {
   sponsoredFpcSalt?: string;
 }
 
+export function getNetworkLabel(nodeUrl: string): string {
+  if (nodeUrl.includes('localhost') || nodeUrl.includes('127.0.0.1')) {
+    return 'Aztec Local';
+  }
+  if (nodeUrl.includes('devnet')) {
+    return 'Aztec Devnet';
+  }
+  if (nodeUrl.includes('testnet')) {
+    return 'Aztec Testnet';
+  }
+  if (nodeUrl.includes('mainnet')) {
+    return 'Aztec Mainnet';
+  }
+  return 'Aztec Network';
+}
+
 export function getConfiguredSponsoredFpcAddress(): string | undefined {
   return import.meta.env.VITE_SPONSORED_FPC_ADDRESS || undefined;
 }

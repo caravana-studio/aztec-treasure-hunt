@@ -1,7 +1,9 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Lobby } from './pages/Lobby';
 import { Game } from './pages/Game';
 import { useIsDesktopSupported } from './utils/device';
+import { useBackgroundMusic } from './hooks/useBackgroundMusic';
+import { SettingsModal } from './components/ui/SettingsModal';
 
 function UnsupportedDeviceScreen() {
   return (
@@ -26,17 +28,26 @@ function UnsupportedDeviceScreen() {
 
 function App() {
   const isDesktopSupported = useIsDesktopSupported();
+  const location = useLocation();
+  const isGameRoute = location.pathname.startsWith('/game/');
+  const backgroundMusicTrack = isGameRoute ? '/sounds/game_music.mp3' : '/sounds/menu_music.mp3';
+  const backgroundMusicVolume = isGameRoute ? 0.22 : 0.2;
+
+  useBackgroundMusic(backgroundMusicTrack, backgroundMusicVolume);
 
   if (!isDesktopSupported) {
     return <UnsupportedDeviceScreen />;
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Lobby />} />
-      <Route path="/lobby" element={<Lobby />} />
-      <Route path="/game/:id" element={<Game />} />
-    </Routes>
+    <>
+      <SettingsModal />
+      <Routes>
+        <Route path="/" element={<Lobby />} />
+        <Route path="/lobby" element={<Lobby />} />
+        <Route path="/game/:id" element={<Game />} />
+      </Routes>
+    </>
   );
 }
 

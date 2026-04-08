@@ -56,6 +56,10 @@ export function Game() {
     setError,
   } = useGame();
   const [showTreasureConfirmModal, setShowTreasureConfirmModal] = useState(false);
+  const isActionLocked =
+    isLoading ||
+    gamePhase === 'awaiting' ||
+    Boolean(activeAction);
 
   useGameAudio({
     enabled: Boolean(myAddress),
@@ -111,6 +115,10 @@ export function Game() {
 
   // Handle grid click based on game phase
   const handleGridClick = (x: number, y: number) => {
+    if (isActionLocked) {
+      return;
+    }
+
     if (gamePhase === 'setup') {
       toggleTreasure(x, y);
     } else if (gamePhase === 'playing' && isMyTurn) {
@@ -240,7 +248,7 @@ export function Game() {
                 powers={powers}
                 selectedAction={selectedAction}
                 onSelectAction={setSelectedAction}
-                disabled={!isMyTurn || gamePhase !== 'playing'}
+                disabled={!isMyTurn || gamePhase !== 'playing' || isActionLocked}
               />
             </div>
           </aside>
@@ -255,7 +263,7 @@ export function Game() {
                 <>
                   <GameGrid
                     selectedCells={selectedTreasures}
-                    clickable
+                    clickable={!isLoading}
                     onCellClick={handleGridClick}
                   />
                 </>
@@ -274,7 +282,7 @@ export function Game() {
                   myTreasures={myTreasurePositions}
                   myTraps={myTrapPositions}
                   dugCells={dugCells}
-                  clickable={isMyTurn && gamePhase === 'playing'}
+                  clickable={isMyTurn && gamePhase === 'playing' && !isActionLocked}
                   onCellClick={handleGridClick}
                   showTreasures
                   diggingCell={diggingCell}

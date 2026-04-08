@@ -231,6 +231,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   setSelectedAction: (action: PowerType) => {
+    const { isLoading, gamePhase, activeAction } = get();
+    if (isLoading || gamePhase === 'awaiting' || activeAction) {
+      return;
+    }
+
     set({ selectedAction: action, shovelSourcePosition: null });
   },
 
@@ -532,6 +537,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return null;
     }
 
+    if (get().isLoading) {
+      return null;
+    }
+
     set({ isLoading: true, statusMessage: 'Creating game...', error: null });
 
     try {
@@ -563,6 +572,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return null;
     }
 
+    if (get().isLoading) {
+      return null;
+    }
+
     set({ isLoading: true, statusMessage: 'Joining game...', error: null });
 
     try {
@@ -589,6 +602,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { wallet, address: myAddress, contractAddress } = useMultiWalletStore.getState();
 
     if (!wallet || !myAddress || !contractAddress || !gameId || selectedTreasures.length !== 3) {
+      return;
+    }
+
+    if (get().isLoading) {
       return;
     }
 
@@ -625,6 +642,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    const { isLoading, activeAction } = get();
+    if (isLoading || activeAction) {
+      return;
+    }
+
     set({
       isLoading: true,
       statusMessage: 'Digging...',
@@ -654,6 +676,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    if (get().isLoading) {
+      return;
+    }
+
     set({ isLoading: true, statusMessage: 'Checking dig...' });
 
     try {
@@ -677,6 +703,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { wallet, address: myAddress, contractAddress } = useMultiWalletStore.getState();
 
     if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    const { isLoading, activeAction } = get();
+    if (isLoading || activeAction) {
       return;
     }
 
@@ -708,6 +739,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    if (get().isLoading) {
+      return;
+    }
+
     set({ isLoading: true, statusMessage: 'Checking scan...' });
 
     try {
@@ -731,6 +766,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { wallet, address: myAddress, contractAddress } = useMultiWalletStore.getState();
 
     if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    const { isLoading, activeAction } = get();
+    if (isLoading || activeAction) {
       return;
     }
 
@@ -762,6 +802,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    if (get().isLoading) {
+      return;
+    }
+
     set({ isLoading: true, statusMessage: 'Checking compass...' });
 
     try {
@@ -785,6 +829,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { wallet, address: myAddress, contractAddress } = useMultiWalletStore.getState();
 
     if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    const { isLoading, activeAction } = get();
+    if (isLoading || activeAction) {
       return;
     }
 
@@ -819,6 +868,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { wallet, address: myAddress, contractAddress } = useMultiWalletStore.getState();
 
     if (!wallet || !myAddress || !contractAddress || !gameId) {
+      return;
+    }
+
+    const { isLoading, activeAction } = get();
+    if (isLoading || activeAction) {
       return;
     }
 

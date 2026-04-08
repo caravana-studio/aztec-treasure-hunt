@@ -13,7 +13,6 @@ export function PlayerCard({
   avatarSrc,
   score,
   isActive,
-  isOpponent = false,
   side,
   isWaiting = false,
 }: PlayerCardProps) {
@@ -29,9 +28,7 @@ export function PlayerCard({
 
   return (
     <div
-      className={`player-card ${isActive ? 'active-turn' : ''} ${!isActive && isOpponent && !isWaiting ? 'grayed-out' : ''} ${
-        isWaiting ? 'player-card--waiting' : ''
-      }`}
+      className={`player-card ${isActive ? 'active-turn' : ''} ${isWaiting ? 'player-card--waiting' : ''}`}
     >
       <div
         className={`player-avatar-frame player-avatar-frame--${avatarVariant}${shouldMirror ? ' player-avatar-frame--mirrored' : ''}`}

@@ -93,7 +93,7 @@ export function PowersPanel({
         </div>
       )}
 
-      <div className={`objects-panel-glass ${isOpponent ? 'grayed-out' : ''}`}>
+      <div className="objects-panel-glass">
         <div className="objects-panel-header">
           <span>Objects</span>
         </div>
