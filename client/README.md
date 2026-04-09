@@ -5,7 +5,7 @@ React/Vite client for the Treasure Hunt game. Contract compilation and deploymen
 ## Install
 
 ```sh
-yarn install
+npm install
 ```
 
 ## Deploy contracts first
@@ -13,19 +13,28 @@ yarn install
 Run these commands from [`/contracts`](../contracts):
 
 ```sh
-yarn compile
-yarn codegen
+npm run compile
+npm run codegen
 
 # Local / devnet
-yarn deploy
-yarn deploy::devnet
+npm run deploy
+npm run deploy::devnet
 
 # Testnet / Mainnet — requires an L1 account with ETH for gas
-L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::testnet
-L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::mainnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> npm run deploy::testnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> npm run deploy::mainnet
 ```
 
-Local and devnet use SponsoredFPC. Testnet and mainnet create the `AccountManager` first, bridge Fee Juice from L1 to its deterministic L2 address, deploy the account with that claim, and then deploy the contract.
+Local and devnet use SponsoredFPC. Testnet and mainnet now deploy and fund a project-sponsored FPC as well, so embedded wallets can transact without asking end users to bridge their own Fee Juice.
+
+## Wallet support
+
+| Network | Embedded Wallet | Azguard | Notes |
+|---------|-----------------|---------|-------|
+| Local | Yes | Yes | Uses local SponsoredFPC |
+| Devnet | Yes | Yes | Uses devnet SponsoredFPC |
+| Testnet | Yes | Yes | Uses project-sponsored FPC written by deploy script |
+| Mainnet | Planned | Planned | Same env shape as testnet |
 
 ## Environment files
 
@@ -33,32 +42,34 @@ The deploy script writes one frontend env file per network:
 
 | Network | Generated file | How to use it |
 |---------|----------------|---------------|
-| Local | `.env.local` | Picked up automatically by `yarn dev` |
-| Devnet | `.env.devnet` | Copy to `.env.local` before `yarn dev` |
-| Testnet | `.env.testnet` | Copy to `.env.local` before `yarn dev` |
-| Mainnet | `.env.mainnet` | Copy to `.env.local` before `yarn dev` |
+| Local | `.env.local` | Picked up automatically by `npm run dev` |
+| Devnet | `.env.devnet` | Copy to `.env.local` before `npm run dev` |
+| Testnet | `.env.testnet` | Copy to `.env.local` before `npm run dev` |
+| Mainnet | `.env.mainnet` | Copy to `.env.local` before `npm run dev` |
 
 Examples:
 
 ```sh
 # Local
-yarn dev
+npm run dev
 
 # Devnet / testnet / mainnet
 cp .env.devnet .env.local      # or .env.testnet / .env.mainnet
-yarn dev
+npm run dev
 ```
 
 Important:
 
-- Vite gives `.env.local` priority over `.env` during `yarn dev`.
+- Vite gives `.env.local` priority over `.env` during `npm run dev`.
 - If you switch from local/devnet to testnet/mainnet, replace `.env.local` or remove the old one first.
-- The generated env files include the contract deployment metadata used by the client and Azguard: contract address, deployer, admin, deployment salt, and node URL.
+- The generated env files include the contract deployment metadata used by the client and Azguard: contract address, deployer, admin, deployment salt, node URL, and when available the SponsoredFPC address and salt.
 
 The dev server runs on [http://localhost:3001](http://localhost:3001).
 
 ## Notes
 
 - `contracts/scripts/deploy_contract.ts` currently copies contract artifacts into `client/src/artifacts` only on local deploy. Remote deploys update the env file but skip artifact copying.
-- `yarn build` creates the production bundle.
-- `yarn lint` runs the Prettier check used by this frontend.
+- `npm run build` creates the production bundle.
+- `npm run typecheck` runs the TypeScript build check.
+- `npm run lint` runs the Prettier check used by this frontend.
+- The app is desktop-first; mobile and tablet currently show a not-supported screen.

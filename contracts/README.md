@@ -1,23 +1,15 @@
-<div align="center">
-  <a href="https://aztec.network">
-    <img src="https://cdn.prod.website-files.com/6847005bc403085c1aa846e0/6847514dc37a9e8cfe8a66b8_aztec-logo.svg" alt="Aztec Protocol Logo" width="300">
-  </a>
-</div>
+# Treasure Hunt Contracts
 
-# Treasure Hunt - An Aztec Game
+Noir contracts, deployment scripts, and end-to-end tests for Treasure Hunt.
 
-A two-player treasure hunt game that showcases **why Aztec's private state is fundamentally different from commit-reveal schemes**.
+This package contains the onchain and private-state logic that powers:
 
-<div align="center">
+- hidden treasure placement
+- hidden traps
+- private power inventory
+- post-start private state changes such as the Golden Shovel
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/AztecProtocol/aztec-starter?logo=github&color=yellow)](https://github.com/AztecProtocol/aztec-starter/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/AztecProtocol/aztec-starter?logo=github&color=blue)](https://github.com/AztecProtocol/aztec-starter/network/members)
-[![License](https://img.shields.io/github/license/AztecProtocol/aztec-starter)](https://github.com/AztecProtocol/aztec-starter/blob/main/LICENSE)
-[![Discord](https://img.shields.io/badge/discord-join%20chat-5B5EA6)](https://discord.gg/aztec)
-
-</div>
-
----
+If you want the full project overview and frontend setup, start from the repo root README.
 
 ## The Game
 
@@ -135,7 +127,7 @@ src/
 ### Prerequisites
 
 - **Node.js 22+**
-- **Yarn 1.22+**
+- **npm 10+** recommended
 - **Aztec `4.2.0-aztecnr-rc.2`**
 
 ### Install Aztec Tooling
@@ -153,42 +145,44 @@ PATH="$HOME/.aztec/bin:$PATH" aztec-up install 4.2.0-aztecnr-rc.2
 ### Install Dependencies
 
 ```bash
-yarn install
+npm install
 ```
+
+All commands below use `npm run`.
 
 ### Compile & Generate TypeScript
 
 ```bash
-yarn compile
-yarn codegen
+npm run compile
+npm run codegen
 ```
 
 ### Start Local Network
 
 ```bash
-yarn aztec:start
+npm run aztec:start
 ```
 
-Wait until you see `Aztec Server listening on port 8080` before deploying. Stop it later with `yarn aztec:stop`.
+Wait until you see `Aztec Server listening on port 8080` before deploying. Stop it later with `npm run aztec:stop`.
 
 ### Deploy
 
 ```bash
 # Local / devnet
-yarn deploy
-yarn deploy::devnet
+npm run deploy
+npm run deploy::devnet
 
 # Testnet / Mainnet — requires an L1 account with ETH for gas
-L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::testnet
-L1_PRIVATE_KEY=0x<your-ethereum-private-key> yarn deploy::mainnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> npm run deploy::testnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> npm run deploy::mainnet
 ```
 
 Deploy outputs by network:
 
-- `yarn deploy` uses SponsoredFPC and writes `../client/.env.local`
-- `yarn deploy::devnet` uses SponsoredFPC and writes `../client/.env.devnet`
-- `yarn deploy::testnet` bridges Fee Juice from L1 and writes `../client/.env.testnet`
-- `yarn deploy::mainnet` bridges Fee Juice from L1 and writes `../client/.env.mainnet`
+- `npm run deploy` uses SponsoredFPC and writes `../client/.env.local`
+- `npm run deploy::devnet` uses SponsoredFPC and writes `../client/.env.devnet`
+- `npm run deploy::testnet` deploys and funds a SponsoredFPC for app-sponsored embedded wallet fees and writes `../client/.env.testnet`
+- `npm run deploy::mainnet` deploys and funds a SponsoredFPC for app-sponsored embedded wallet fees and writes `../client/.env.mainnet`
 
 Each generated client env file includes:
 
@@ -201,14 +195,30 @@ Each generated client env file includes:
 For `deploy::testnet` and `deploy::mainnet`, the script:
 
 1. Creates the `AccountManager` first to derive the deterministic L2 address
-2. Bridges 1000 Fee Juice from your L1 account to that address
-3. Deploys the account using the bridge claim to pay the first fees
-4. Deploys the `TreasureHunt` contract with the funded account
+2. Funds and deploys the admin account
+3. Deploys a `SponsoredFPC`
+4. Bridges Fee Juice from L1 into that sponsor
+5. Deploys the `TreasureHunt` contract with sponsored fee support for embedded wallets
+
+To refill the sponsor later:
+
+```bash
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> npm run refill-sponsored-fpc::testnet
+L1_PRIVATE_KEY=0x<your-ethereum-private-key> npm run refill-sponsored-fpc::mainnet
+```
 
 ### Run Tests
 
 ```bash
-yarn test
+npm test
+```
+
+Additional test commands:
+
+```bash
+npm run test:js
+npm run test:nr
+npm run test::devnet
 ```
 
 ---
@@ -290,23 +300,23 @@ The same patterns used in this game apply to:
 ### Commands
 
 ```bash
-yarn compile          # Compile Noir contracts
-yarn codegen          # Generate TypeScript interfaces
-yarn deploy           # Local deploy (SponsoredFPC)
-yarn deploy::devnet   # Devnet deploy (SponsoredFPC)
-yarn deploy::testnet  # Testnet deploy (requires L1_PRIVATE_KEY)
-yarn deploy::mainnet  # Mainnet deploy (requires L1_PRIVATE_KEY)
-yarn test             # Run all tests
-yarn test:js          # Run TypeScript e2e tests only
-yarn test:nr          # Run Noir TXE tests only
-yarn clean            # Remove compiled artifacts
-yarn clear-store      # Clear PXE data (after network restart)
+npm run compile          # Compile Noir contracts
+npm run codegen          # Generate TypeScript interfaces
+npm run deploy           # Local deploy (SponsoredFPC)
+npm run deploy::devnet   # Devnet deploy (SponsoredFPC)
+npm run deploy::testnet  # Testnet deploy (requires L1_PRIVATE_KEY)
+npm run deploy::mainnet  # Mainnet deploy (requires L1_PRIVATE_KEY)
+npm test                 # Run all tests
+npm run test:js          # Run TypeScript e2e tests only
+npm run test:nr          # Run Noir TXE tests only
+npm run clean            # Remove compiled artifacts
+npm run clear-store      # Clear PXE data (after network restart)
 ```
 
 ### Important Notes
 
 - Delete `./store` directory after restarting the local network
-- `yarn test::devnet` is available for JS e2e tests against devnet
+- `npm run test::devnet` is available for JS e2e tests against devnet
 - Tests have long timeouts (600s) due to proof generation
 
 ---
