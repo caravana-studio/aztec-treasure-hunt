@@ -315,7 +315,9 @@ async function doInitWallet(nodeUrl: string): Promise<EmbeddedWallet> {
   cachedProver = prover;
 
   const acceleratorStatus = await prover.checkAcceleratorStatus();
-  const { setAvailable, setPhase, setLastProofMs } = useAcceleratorStore.getState();
+  const { mode, setAvailable, setPhase, setLastProofMs, bumpProofSequence } =
+    useAcceleratorStore.getState();
+  prover.setForceLocal(mode === 'wasm');
   setAvailable(acceleratorStatus.available);
 
   if (acceleratorStatus.available) {
@@ -328,6 +330,7 @@ async function doInitWallet(nodeUrl: string): Promise<EmbeddedWallet> {
     setPhase(phase as AcceleratorPhaseLabel);
     if (phase === 'proved') {
       if (data?.durationMs) setLastProofMs(data.durationMs);
+      bumpProofSequence();
       console.log(`[accelerator] Proof complete${data?.durationMs ? ` in ${(data.durationMs / 1000).toFixed(1)}s` : ''}`);
       // Clear phase after a short delay so UI returns to idle
       setTimeout(() => setPhase(null), 2000);
